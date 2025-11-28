@@ -15,52 +15,44 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Using the new "Solaris" palette for the dark theme
+// Playful color scheme for the Dark Theme
 private val DarkColorScheme = darkColorScheme(
-    primary = SolarFlare,
-    onPrimary = DeepSpace,
-    primaryContainer = LunarRock,
-    onPrimaryContainer = MorningSky,
-
-    secondary = SilverLining,
-    onSecondary = DeepSpace,
-
-    background = DeepSpace,
-    onBackground = MorningSky,
-
-    surface = LunarRock,
-    onSurface = MorningSky,
-    surfaceVariant = LunarRock,
-    onSurfaceVariant = SilverLining,
-
-    outline = SilverLining
+    primary = FlippyOrange,         // Bright, clickable elements
+    onPrimary = DarkText,           // Text on top of primary elements
+    secondary = FlippyBlue,         // Secondary actions or accents
+    onSecondary = BrightText,       // Text on top of secondary elements
+    background = NightSky,          // Dark background for less eye strain
+    onBackground = BrightText,      // Default text color
+    surface = MoonRock,             // Cards and elevated surfaces
+    onSurface = BrightText,         // Text on cards
+    surfaceVariant = MoonRock,
+    onSurfaceVariant = BrightText,
+    outline = FlippyBlue,
+    error = PlayfulPink,            // Using pink for errors for a softer feel
+    onError = BrightText
 )
 
-// Using the new "Solaris" palette for the light theme
+// Playful color scheme for the Light Theme
 private val LightColorScheme = lightColorScheme(
-    primary = SolarFlare,
-    onPrimary = PureWhite,
-    primaryContainer = MorningSky,
-    onPrimaryContainer = SoftBlack,
-
-    secondary = LunarRock,
-    onSecondary = PureWhite,
-
-    background = MorningSky,
-    onBackground = SoftBlack,
-
-    surface = PureWhite,
-    onSurface = SoftBlack,
-    surfaceVariant = MorningSky,
-    onSurfaceVariant = LunarRock,
-
-    outline = SilverLining
+    primary = FlippyOrange,         // Bright, clickable elements
+    onPrimary = LightCloud,         // Text on top of primary elements
+    secondary = FlippyBlue,         // Secondary actions or accents
+    onSecondary = LightCloud,       // Text on top of secondary elements
+    background = SunnyDay,          // Warm, friendly background
+    onBackground = DarkText,        // Default text color
+    surface = LightCloud,           // Cards and elevated surfaces
+    onSurface = DarkText,           // Text on cards
+    surfaceVariant = SunnyDay,
+    onSurfaceVariant = DarkText,
+    outline = FlippyBlue,
+    error = PlayfulPink,
+    onError = LightCloud
 )
 
 @Composable
 fun FlippyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Set to false to always use our custom theme
+    dynamicColor: Boolean = false, // Set to false to always use our custom playful theme
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

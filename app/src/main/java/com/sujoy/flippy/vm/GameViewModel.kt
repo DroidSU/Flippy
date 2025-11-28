@@ -1,13 +1,11 @@
-// File: app/src/main/java/com/sujoy/flippy/vm/GameViewModel.kt
 package com.sujoy.flippy.vm
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sujoy.flippy.models.CardType
 import com.sujoy.flippy.models.Tile
+import com.sujoy.flippy.repositories.game.SoundRepository
 import com.sujoy.flippy.utils.GameStatus
-import com.sujoy.flippy.utils.SoundPlayer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -17,12 +15,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-// Inherit from AndroidViewModel to get access to the Application context
+// Inherit from ViewModel instead of AndroidViewModel
 class GameViewModel(
-    application: Application,
-    private val soundPlayer: SoundPlayer,
+    private val soundRepository: SoundRepository,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     private val _tiles = MutableStateFlow(List(16) { Tile(it) })
     val tiles = _tiles.asStateFlow()
@@ -42,7 +39,7 @@ class GameViewModel(
         _lives.value = 3
         _tiles.value = List(16) { Tile(it) }
         _status.value = GameStatus.PLAYING
-        soundPlayer.startBackgroundMusic()
+        soundRepository.startBackgroundMusic()
         viewModelScope.launch(dispatcher) {
             gameLoop()
         }
@@ -100,12 +97,12 @@ class GameViewModel(
 
             CardType.BOMB -> {
                 // Play bomb sound
-                soundPlayer.playBombSound()
+                soundRepository.playBombSound()
                 _lives.update { it - 1 }
                 if (_lives.value <= 0) {
                     _status.value = GameStatus.GAME_OVER
                     // Play game over sound
-                    soundPlayer.playGameOverSound()
+                    soundRepository.playGameOverSound()
                 }
             }
             CardType.HIDDEN -> { /* No action */ }

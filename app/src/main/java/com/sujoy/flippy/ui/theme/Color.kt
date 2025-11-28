@@ -2,23 +2,22 @@ package com.sujoy.flippy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// --- Solaris Palette ---
+// --- Flippy's Playful Palette ---
 
-// Primary Accent
-val SolarFlare = Color(0xFFFFA726) // A slightly softer, Material-friendly orange
+// Primary & Brand Colors
+val FlippyOrange = Color(0xFFFFA900) // A bright, cheerful orange for main actions
+val FlippyBlue = Color(0xFF1976D2)   // A friendly, trusting blue
 
-// Dark Theme Neutrals
-val DeepSpace = Color(0xFF263238) // Dark Slate Gray for backgrounds
-val LunarRock = Color(0xFF37474F) // Lighter Slate for surfaces
+// UI Accent & State Colors
+val SuccessGreen = Color(0xFF388E3C) // For positive feedback or alternate actions
+val PlayfulPink = Color(0xFFE91E63)   // An energetic accent
 
 // Light Theme Neutrals
-val MorningSky = Color(0xFFF5F5F5) // Very light gray for backgrounds
-val SilverLining = Color(0xFFB0BEC5) // Muted gray for text/icons
+val SunnyDay = Color(0xFFFFFBEA)     // A very light, warm yellow for backgrounds
+val LightCloud = Color(0xFFFFFFFF)    // For cards and surfaces
+val DarkText = Color(0xFF333333)     // Soft, readable black for text
 
-// Universal
-val PureWhite = Color(0xFFFFFFFF)
-val SoftBlack = Color(0xFF212121) // For high-contrast text in light theme
-
-// Special Glassy Effect
-val GlassySolar = Color(0x4DFFFFFF) // A subtle white glass effect for dark theme
-val GlassyShadow = Color(0x26212121) // A subtle dark glass for light theme
+// Dark Theme Neutrals
+val NightSky = Color(0xFF121212)      // A deep black for dark mode background
+val MoonRock = Color(0xFF1E1E1E)      // Lighter gray for surfaces in dark mode
+val BrightText = Color(0xFFF5F5F5)    // Off-white for text in dark mode

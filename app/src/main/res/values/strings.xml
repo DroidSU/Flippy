@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Flippy</string>
+    <string name="title_activity_authentication">AuthenticationActivity</string>
+    <string name="app_logo_description">Flippy Logo</string>
+    <string name="welcome_to_flippy">WELCOME TO FLIPPY</string>
+    <string name="sign_in_to_continue">Sign In To Continue</string>
+    <string name="continue_with_google">Continue With Google</string>
+    <string name="continue_with_phone">Continue With Phone</string>
+    <string name="terms_and_conditions"><![CDATA[Terms & Conditions]]></string>
+    <string name="default_web_client_id">00000 //Change later</string>
 </resources>

@@ -1,6 +1,5 @@
 package com.sujoy.flippy.components
 
-import android.app.Application
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.R
 import com.sujoy.flippy.models.CardType
 import com.sujoy.flippy.models.Tile
+import com.sujoy.flippy.repositories.game.SoundRepository
 import com.sujoy.flippy.ui.theme.FlippyTheme
 import com.sujoy.flippy.utils.GameStatus
 import com.sujoy.flippy.utils.SoundPlayer
@@ -244,14 +244,14 @@ private fun GameStatusOverlay(status: GameStatus, onPlayAgain: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun GameScreenPreview() {
+    // Single instance of SoundRepository for all sounds
+    lateinit var soundRepository: SoundRepository
+
     FlippyTheme {
         val context = LocalContext.current
         val soundPlayer = SoundPlayer(context)
         GameScreen(
-            viewModel = GameViewModel(
-                context.applicationContext as Application,
-                soundPlayer = soundPlayer
-            )
+            viewModel = GameViewModel(soundRepository)
         )
     }
 }
