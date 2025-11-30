@@ -51,4 +51,18 @@ class AuthRepositoryImpl : AuthRepository {
     override fun getPhoneAuthCredential(verificationId: String, otpCode: String): AuthCredential {
         return PhoneAuthProvider.getCredential(verificationId, otpCode)
     }
+
+    override fun guestLogin(): Flow<AuthResult> = flow {
+        try {
+            auth.signInAnonymously().await()
+            Log.d(TAG, "Firebase anonymous sign-in successful.")
+            emit(AuthResult.Success)
+        } catch (e: FirebaseAuthException) {
+            Log.w(TAG, "Firebase anonymous sign-in failed: ${e.errorCode}", e)
+            emit(AuthResult.Failure(e.message ?: "An unknown authentication error occurred."))
+        }
+    }.catch { e ->
+        Log.e(TAG, "A non-Firebase exception occurred during anonymous sign-in.", e)
+        emit(AuthResult.Failure(e.message ?: "An unexpected error occurred."))
+    }
 }

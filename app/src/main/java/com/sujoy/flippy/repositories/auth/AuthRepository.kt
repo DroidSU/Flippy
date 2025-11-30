@@ -20,4 +20,6 @@ interface AuthRepository {
      * Creates a credential from the verification ID and OTP code.
      */
     fun getPhoneAuthCredential(verificationId: String, otpCode: String): AuthCredential
+
+    fun guestLogin() : Flow<AuthResult>
 }

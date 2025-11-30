@@ -46,6 +46,7 @@ fun AuthenticationScreen(
     onAuthSuccess: () -> Unit,
     onGoogleSignIn: () -> Unit,
     onPhoneSignIn: (String) -> Unit,
+    onGuestSignIn: () -> Unit,
     onVerifyOtp: (String) -> Unit,
     onResetAuthFlow: () -> Unit,
     onErrorShown: () -> Unit
@@ -111,7 +112,8 @@ fun AuthenticationScreen(
                         LoginOptionsView(
                             isLoading = uiState.isLoading,
                             onGoogleSignIn = onGoogleSignIn,
-                            onPhoneSignIn = onPhoneSignIn
+                            onPhoneSignIn = onPhoneSignIn,
+                            onGuestSignIn = onGuestSignIn
                         )
                     }
                 }
@@ -187,6 +189,7 @@ private fun AuthenticationScreenPreview() {
             onAuthSuccess = {},
             onGoogleSignIn = {},
             onPhoneSignIn = {},
+            onGuestSignIn = {},
             onVerifyOtp = {},
             onResetAuthFlow = {},
             onErrorShown = {}

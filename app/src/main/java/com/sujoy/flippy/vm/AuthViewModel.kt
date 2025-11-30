@@ -59,6 +59,33 @@ class AuthViewModel(
     }
 
     /**
+     * Signs in the user anonymously as a guest.
+     */
+    fun signInAsGuest() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            repository.guestLogin().collect { result ->
+                when (result) {
+                    is AuthResult.Success -> {
+                        Log.d(TAG, "Guest sign-in successful.")
+                        _uiState.update {
+                            it.copy(isLoading = false, isAuthSuccessful = true)
+                        }
+                    }
+
+                    is AuthResult.Failure -> {
+                        Log.w(TAG, "Guest sign-in error: ${result.message}")
+                        _uiState.update {
+                            it.copy(isLoading = false, error = result.message)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
      * Kicks off the phone number verification process by sending an OTP.
      */
     fun sendOtp(activity: Activity, phoneNumber: String) {

@@ -1,6 +1,7 @@
 package com.sujoy.flippy.views
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -19,6 +20,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.sujoy.flippy.R
 import com.sujoy.flippy.components.auth.AuthenticationScreen
 import com.sujoy.flippy.repositories.game.SoundRepository
+import com.sujoy.flippy.repositories.game.SoundRepositoryImpl
 import com.sujoy.flippy.ui.theme.FlippyTheme
 import com.sujoy.flippy.vm.AuthViewModel
 import com.sujoy.flippy.vm.ViewModelFactory
@@ -42,6 +44,9 @@ class AuthenticationActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        soundRepository = SoundRepositoryImpl(this)
+
         enableEdgeToEdge()
         setContent {
             FlippyTheme {
@@ -51,9 +56,9 @@ class AuthenticationActivity : ComponentActivity() {
                     uiState = uiState,
                     onAuthSuccess = {
                         Toast.makeText(this, "Welcome to Flippy!", Toast.LENGTH_SHORT).show()
-                        // val intent = Intent(this, MainActivity::class.java)
-                        // startActivity(intent)
-                        // finish()
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
                     },
                     onGoogleSignIn = {
                         googleSignInClient.signOut().addOnCompleteListener {
@@ -62,6 +67,12 @@ class AuthenticationActivity : ComponentActivity() {
                         }
                     },
                     onPhoneSignIn = { phoneNumber -> viewModel.sendOtp(this, phoneNumber) },
+                    onGuestSignIn = {
+//                        viewModel.signInAsGuest()
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    },
                     onVerifyOtp = viewModel::verifyOtp,
                     onResetAuthFlow = viewModel::resetAuthFlow,
                     onErrorShown = viewModel::errorShown
@@ -82,7 +93,8 @@ class AuthenticationActivity : ComponentActivity() {
                 viewModel.signInWithCredential(credential)
             } catch (e: ApiException) {
                 Log.w(TAG, "Google Sign-In failed.", e)
-                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         } else {
             Log.w(TAG, "Google Sign-In flow was cancelled by user.")

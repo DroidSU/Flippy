@@ -45,9 +45,18 @@ class GameViewModel(
         }
     }
 
+    fun resetGame() {
+        _score.value = 0
+        _lives.value = 3
+        _tiles.value = List(16) { Tile(it) }
+        _status.value = GameStatus.READY
+        soundRepository.startBackgroundMusic()
+    }
+
     private suspend fun gameLoop() {
         while (_status.value == GameStatus.PLAYING) {
-            delay((500L..1500L).random())
+//            delay((500L..1500L).random())
+            delay(800L)
             if (_status.value != GameStatus.PLAYING) {
                 break
             }
