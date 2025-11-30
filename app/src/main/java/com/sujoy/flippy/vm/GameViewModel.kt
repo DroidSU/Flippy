@@ -1,67 +1,120 @@
 package com.sujoy.flippy.vm
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.sujoy.flippy.models.GameTile
+import androidx.lifecycle.viewModelScope
+import com.sujoy.flippy.models.CardType
+import com.sujoy.flippy.models.Tile
+import com.sujoy.flippy.repositories.game.SoundRepository
 import com.sujoy.flippy.utils.GameStatus
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+// Inherit from ViewModel instead of AndroidViewModel
+class GameViewModel(
+    private val soundRepository: SoundRepository,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ViewModel() {
 
-class GameViewModel : ViewModel() {
-    private val _tiles = mutableStateOf<List<GameTile>>(emptyList())
-    val tiles: State<List<GameTile>> = _tiles
+    private val _tiles = MutableStateFlow(List(16) { Tile(it) })
+    val tiles = _tiles.asStateFlow()
 
-    private val _score = mutableStateOf(30)
-    val score: State<Int> = _score
+    private val _score = MutableStateFlow(0)
+    val score = _score.asStateFlow()
 
-    private val _status = mutableStateOf<GameStatus>(GameStatus.PLAYING)
-    val status: State<GameStatus> = _status
+    private val _lives = MutableStateFlow(3)
+    val lives = _lives.asStateFlow()
 
-    init {
-        resetGame()
-    }
+    private val _status = MutableStateFlow<GameStatus>(GameStatus.READY)
+    val status = _status.asStateFlow()
 
-    fun onTileFlipped(tileId: Int) {
-        // Prevent action if game is already over
-        if (_status.value != GameStatus.PLAYING) return
 
-        val updatedTiles = _tiles.value.toMutableList()
-        val tileIndex = updatedTiles.indexOfFirst { it.id == tileId }
-        val tile = updatedTiles[tileIndex]
-
-        // Ignore if already flipped
-        if (tile.isFlipped) return
-
-        // Flip the tile
-        updatedTiles[tileIndex] = tile.copy(isFlipped = true)
-        _tiles.value = updatedTiles
-
-        if (tile.isImage) {
-            // Player won
-            _status.value = GameStatus.WON
-        } else {
-            // Deduct score
-            val newScore = _score.value + tile.value
-            _score.value = newScore
-
-            if (newScore <= 0) {
-                // Player lost
-                _status.value = GameStatus.LOST
-            }
+    fun startGame() {
+        _score.value = 0
+        _lives.value = 3
+        _tiles.value = List(16) { Tile(it) }
+        _status.value = GameStatus.PLAYING
+        soundRepository.startBackgroundMusic()
+        viewModelScope.launch(dispatcher) {
+            gameLoop()
         }
     }
 
     fun resetGame() {
-        _score.value = 30
-        _status.value = GameStatus.PLAYING
-        _tiles.value = generateTiles()
+        _score.value = 0
+        _lives.value = 3
+        _tiles.value = List(16) { Tile(it) }
+        _status.value = GameStatus.READY
+        soundRepository.startBackgroundMusic()
     }
 
-    private fun generateTiles(gridSize: Int = 16): List<GameTile> {
-        val imagePosition = Random.nextInt(0, gridSize)
-        return List(gridSize) { index ->
-            GameTile(id = index, isImage = (index == imagePosition))
+    private suspend fun gameLoop() {
+        while (_status.value == GameStatus.PLAYING) {
+//            delay((500L..1500L).random())
+            delay(800L)
+            if (_status.value != GameStatus.PLAYING) {
+                break
+            }
+            val hiddenTiles = _tiles.value.filter { !it.isRevealed }
+            if (hiddenTiles.isNotEmpty()) {
+                val tileToReveal = hiddenTiles.random()
+                revealAndHideTile(tileToReveal.id)
+            }
+        }
+    }
+
+
+    private fun revealAndHideTile(tileId: Int) {
+        viewModelScope.launch(dispatcher) {
+            val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
+            updateTile(tileId) {
+                it.copy(isRevealed = true, type = newType)
+            }
+            delay(1200)
+            if (_tiles.value.find { it.id == tileId }?.isRevealed == true) {
+                updateTile(tileId) {
+                    it.copy(isRevealed = false)
+                }
+            }
+        }
+    }
+
+    private fun updateTile(tileId: Int, updateAction: (Tile) -> Tile) {
+        _tiles.update { currentTiles ->
+            currentTiles.map { if (it.id == tileId) updateAction(it) else it }
+        }
+    }
+
+    fun onTileTapped(tileId: Int) {
+        val tile = _tiles.value.find { it.id == tileId } ?: return
+
+        if (!tile.isRevealed || _status.value != GameStatus.PLAYING) {
+            return
+        }
+
+        updateTile(tileId) { it.copy(isRevealed = false) }
+
+        when (tile.type) {
+            CardType.COIN -> {
+                _score.update { it + 1 }
+            }
+
+            CardType.BOMB -> {
+                // Play bomb sound
+                soundRepository.playBombSound()
+                _lives.update { it - 1 }
+                if (_lives.value <= 0) {
+                    _status.value = GameStatus.GAME_OVER
+                    // Play game over sound
+                    soundRepository.playGameOverSound()
+                }
+            }
+            CardType.HIDDEN -> { /* No action */ }
         }
     }
 }
