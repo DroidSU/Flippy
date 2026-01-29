@@ -21,3 +21,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "Flippy"
 include(":app")
+include(":core")
+include(":auth")
+include(":game-engine")
+include(":common")
+include(":database")

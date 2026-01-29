@@ -1,18 +1,19 @@
 [versions]
-agp = "8.13.1"
-kotlin = "2.0.21"
+agp = "9.0.0"
+kotlin = "2.3.0"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.12.0"
-composeBom = "2024.09.00"
+activityCompose = "1.12.3"
+composeBom = "2026.01.01"
 lottieCompose = "6.7.1"
-firebaseBom = "34.6.0"
+firebaseBom = "34.8.0"
 play-services-auth = "21.2.0"
 googleGmsPlugin = "4.4.2"
 firebaseAppcheckDebug = "19.0.1"
+room = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,10 +37,14 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "play-services-auth" }
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottieCompose" }
 firebase-appcheck-debug = { group = "com.google.firebase", name = "firebase-appcheck-debug", version.ref = "firebaseAppcheckDebug" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+#kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-gms = { id = "com.google.gms.google-services", version.ref = "googleGmsPlugin" }
-
+ksp = { id = "com.google.devtools.ksp", version = "2.2.10-1.0.28" }

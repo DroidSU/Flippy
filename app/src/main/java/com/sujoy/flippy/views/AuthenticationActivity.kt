@@ -18,11 +18,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.sujoy.flippy.R
-import com.sujoy.flippy.components.auth.AuthenticationScreen
-import com.sujoy.flippy.repositories.game.SoundRepository
-import com.sujoy.flippy.repositories.game.SoundRepositoryImpl
-import com.sujoy.flippy.ui.theme.FlippyTheme
-import com.sujoy.flippy.vm.AuthViewModel
+import com.sujoy.flippy.auth.viewmodel.AuthViewModel
+import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.game_engine.repository.SoundRepository
+import com.sujoy.flippy.game_engine.repository.SoundRepositoryImpl
 import com.sujoy.flippy.vm.ViewModelFactory
 
 private const val TAG = "AuthenticationActivity"
@@ -37,9 +36,7 @@ class AuthenticationActivity : ComponentActivity() {
         GoogleSignIn.getClient(this, gso)
     }
 
-    // Single instance of SoundRepository for all sounds
     private lateinit var soundRepository: SoundRepository
-
     private val viewModel: AuthViewModel by viewModels { ViewModelFactory(soundRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +65,6 @@ class AuthenticationActivity : ComponentActivity() {
                     },
                     onPhoneSignIn = { phoneNumber -> viewModel.sendOtp(this, phoneNumber) },
                     onGuestSignIn = {
-//                        viewModel.signInAsGuest()
                         val intent = Intent(this, MainActivity::class.java)
                         startActivity(intent)
                         finish()
@@ -101,4 +97,3 @@ class AuthenticationActivity : ComponentActivity() {
         }
     }
 }
-

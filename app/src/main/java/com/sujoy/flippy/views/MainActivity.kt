@@ -5,11 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import com.sujoy.flippy.components.GameScreen
-import com.sujoy.flippy.repositories.game.SoundRepository
-import com.sujoy.flippy.repositories.game.SoundRepositoryImpl
-import com.sujoy.flippy.ui.theme.FlippyTheme
-import com.sujoy.flippy.vm.GameViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.game_engine.repository.SoundRepository
+import com.sujoy.flippy.game_engine.repository.SoundRepositoryImpl
+import com.sujoy.flippy.game_engine.ui.GameScreen
+import com.sujoy.flippy.game_engine.viewmodel.GameViewModel
 import com.sujoy.flippy.vm.ViewModelFactory
 
 class MainActivity : ComponentActivity() {
@@ -24,31 +26,40 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Initialize the SoundRepository
         soundRepository = SoundRepositoryImpl(this)
 
         setContent {
-            FlippyTheme(dynamicColor = false) {
-                GameScreen(viewModel = gameViewModel)
+            FlippyTheme {
+                val tiles by gameViewModel.tiles.collectAsState()
+                val score by gameViewModel.score.collectAsState()
+                val lives by gameViewModel.lives.collectAsState()
+                val status by gameViewModel.status.collectAsState()
+
+                GameScreen(
+                    tiles = tiles,
+                    score = score,
+                    lives = lives,
+                    status = status,
+                    onTileTapped = gameViewModel::onTileTapped,
+                    onPlayClick = gameViewModel::startGame,
+                    onResetGame = gameViewModel::resetGame
+                )
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // Resume background music
         soundRepository.startBackgroundMusic()
     }
 
     override fun onPause() {
         super.onPause()
-        // Pause the background music when the app is not in the foreground
         soundRepository.pauseBackgroundMusic()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Release all sound resources
         soundRepository.release()
     }
 }
