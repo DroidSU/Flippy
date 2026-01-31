@@ -81,10 +81,12 @@ fun GameScreen(
     difficulty: Difficulty,
     gameTime: Long,
     leaderboard: List<MatchHistory>,
+    showRules: Boolean,
     onTileTapped: (Int) -> Unit,
     onPlayClick: () -> Unit,
     onResetGame: () -> Unit,
-    onDifficultyChange: (Difficulty) -> Unit
+    onDifficultyChange: (Difficulty) -> Unit,
+    onRulesDismissed: (Boolean) -> Unit
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
 
@@ -110,7 +112,7 @@ fun GameScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(if (showGameOverOverlay) 16.dp else 0.dp),
+                    .blur(if (showGameOverOverlay || showRules) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 GameHeader(score = score, lives = lives, gameTime = gameTime)
@@ -163,6 +165,10 @@ fun GameScreen(
                         }
                     }
                 )
+            }
+
+            if (showRules) {
+                FlippyRulesDialog(onDismiss = onRulesDismissed)
             }
 
             GameStatusOverlay(
@@ -247,7 +253,7 @@ private fun LeaderboardSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "LEADERBOARD",
+                text = "High Scores",
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.2.sp
@@ -450,11 +456,7 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
 }
 
 @Composable
-private fun GameGrid(
-    tiles: List<Tile>,
-    onTileTapped: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: Modifier = Modifier) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = modifier.padding(horizontal = 24.dp),
@@ -476,24 +478,44 @@ private fun GameGrid(
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    val leaderBoard = listOf(
-        MatchHistory("0", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L),
-        MatchHistory("1", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L),
-        MatchHistory("2", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L)
-    )
+
+    val leaderboard = listOf(MatchHistory(
+        id = "1",
+        playerId = "player1",
+        score = 10,
+        difficulty = Difficulty.NORMAL.toString(),
+        gameDuration = 1000,
+        timestamp = System.currentTimeMillis(),
+    ), MatchHistory(
+        id = "2",
+        playerId = "player1",
+        score = 10,
+        difficulty = Difficulty.NORMAL.toString(),
+        gameDuration = 1000,
+        timestamp = System.currentTimeMillis(),
+    ), MatchHistory(
+        id = "3",
+        playerId = "player1",
+        score = 10,
+        difficulty = Difficulty.NORMAL.toString(),
+        gameDuration = 1000,
+        timestamp = System.currentTimeMillis(),
+    ))
     FlippyTheme {
         GameScreen(
             tiles = List(16) { Tile(it) },
             score = 10,
             lives = 3,
-            status = GameStatus.READY,
+            status = GameStatus.PLAYING,
             difficulty = Difficulty.NORMAL,
             gameTime = 1,
-            leaderboard = leaderBoard,
+            leaderboard = emptyList(),
+            showRules = false,
             onTileTapped = {},
             onPlayClick = {},
             onResetGame = {},
-            onDifficultyChange = {}
+            onDifficultyChange = {},
+            onRulesDismissed = {}
         )
     }
 }

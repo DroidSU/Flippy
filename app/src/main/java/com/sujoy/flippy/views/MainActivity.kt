@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.AppDatabase
+import com.sujoy.flippy.game_engine.repository.GamePreferencesRepositoryImpl
 import com.sujoy.flippy.game_engine.repository.MatchRepositoryImpl
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import com.sujoy.flippy.game_engine.repository.SoundRepositoryImpl
@@ -30,7 +31,8 @@ class MainActivity : ComponentActivity() {
                 val db = AppDatabase.getDatabase(applicationContext)
                 val matchRepository = MatchRepositoryImpl(db.matchDao())
                 val soundRepo = SoundRepositoryImpl(applicationContext)
-                return GameViewModel(auth, soundRepo, matchRepository) as T
+                val preferencesRepo = GamePreferencesRepositoryImpl(applicationContext)
+                return GameViewModel(auth, soundRepo, matchRepository, preferencesRepo) as T
             }
         }
     }
@@ -51,6 +53,7 @@ class MainActivity : ComponentActivity() {
                 val difficulty by gameViewModel.difficulty.collectAsState()
                 val gameTime by gameViewModel.gameTime.collectAsState()
                 val topThreeScores by gameViewModel.topThreeScores.collectAsState()
+                val showRules by gameViewModel.showRules.collectAsState()
 
                 GameScreen(
                     tiles = tiles,
@@ -60,10 +63,12 @@ class MainActivity : ComponentActivity() {
                     difficulty = difficulty,
                     gameTime = gameTime,
                     leaderboard = topThreeScores,
+                    showRules = showRules,
                     onTileTapped = gameViewModel::onTileTapped,
                     onPlayClick = gameViewModel::startGame,
                     onResetGame = gameViewModel::resetGame,
-                    onDifficultyChange = gameViewModel::setDifficulty
+                    onDifficultyChange = gameViewModel::setDifficulty,
+                    onRulesDismissed = gameViewModel::onRulesDismissed
                 )
             }
         }
