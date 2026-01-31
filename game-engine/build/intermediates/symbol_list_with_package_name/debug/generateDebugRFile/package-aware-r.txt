@@ -1,0 +1,6 @@
+com.sujoy.flippy.game_engine
+drawable ic_bomb
+drawable ic_coin
+raw sound_error
+raw sound_game_over
+raw sound_island_clearing

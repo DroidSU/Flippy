@@ -1,0 +1,1 @@
+com.sujoy.flippy.core

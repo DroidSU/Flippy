@@ -1,0 +1,3 @@
+com.sujoy.flippy.auth
+drawable google_logo
+raw anim_welcome

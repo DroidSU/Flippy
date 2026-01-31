@@ -1,0 +1,5 @@
+int drawable ic_bomb 0x0
+int drawable ic_coin 0x0
+int raw sound_error 0x0
+int raw sound_game_over 0x0
+int raw sound_island_clearing 0x0
