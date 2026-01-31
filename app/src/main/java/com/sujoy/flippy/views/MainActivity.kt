@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                 val status by gameViewModel.status.collectAsState()
                 val difficulty by gameViewModel.difficulty.collectAsState()
                 val gameTime by gameViewModel.gameTime.collectAsState()
-                val leaderboard by gameViewModel.leaderBoard.collectAsState()
+                val topThreeScores by gameViewModel.topThreeScores.collectAsState()
 
                 GameScreen(
                     tiles = tiles,
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     status = status,
                     difficulty = difficulty,
                     gameTime = gameTime,
-                    leaderboard = leaderboard,
+                    leaderboard = topThreeScores,
                     onTileTapped = gameViewModel::onTileTapped,
                     onPlayClick = gameViewModel::startGame,
                     onResetGame = gameViewModel::resetGame,

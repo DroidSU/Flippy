@@ -100,7 +100,11 @@ fun GameScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
             MeshBackground()
 
             Column(
@@ -111,7 +115,7 @@ fun GameScreen(
             ) {
                 GameHeader(score = score, lives = lives, gameTime = gameTime)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 DifficultySelector(
                     currentDifficulty = difficulty,
@@ -119,44 +123,46 @@ fun GameScreen(
                     enabled = status == GameStatus.READY
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Box(modifier = Modifier.weight(1f)) {
-                    Column {
-                        GameGrid(
-                            tiles = tiles,
-                            onTileTapped = onTileTapped,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    GameGrid(
+                        tiles = tiles,
+                        onTileTapped = onTileTapped,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    if (status == GameStatus.READY) {
+                        LeaderboardSection(
+                            leaderboard = leaderboard,
+                            modifier = Modifier.weight(1f)
                         )
-                        
-                        if (status == GameStatus.READY) {
-                            LeaderboardSection(
-                                leaderboard = leaderboard,
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
+            }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    PlayButtonComponent(
-                        status = status,
-                        onAction = {
-                            if (status == GameStatus.PLAYING) {
-                                onResetGame()
-                            } else {
-                                onPlayClick()
-                            }
+            // Floating Play Button
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 20.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                PlayButtonComponent(
+                    status = status,
+                    onAction = {
+                        if (status == GameStatus.PLAYING) {
+                            onResetGame()
+                        } else {
+                            onPlayClick()
                         }
-                    )
-                }
+                    }
+                )
             }
 
             GameStatusOverlay(
@@ -192,7 +198,7 @@ fun PlayButtonComponent(
 
     Surface(
         modifier = modifier
-            .size(72.dp)
+            .size(68.dp)
             .scale(scale)
             .shadow(
                 elevation = if (isPressed) 4.dp else 12.dp,
@@ -216,15 +222,18 @@ fun PlayButtonComponent(
     }
 }
 
+/**
+ * This composable is used to display the top three scores of the current player
+ */
 @Composable
-fun LeaderboardSection(
+private fun LeaderboardSection(
     leaderboard: List<MatchHistory>,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 20.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -288,57 +297,6 @@ fun LeaderboardSection(
 }
 
 @Composable
-fun LeaderboardItem(rank: Int, match: MatchHistory) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Rank circle
-        Surface(
-            modifier = Modifier.size(28.dp),
-            shape = CircleShape,
-            color = when (rank) {
-                1 -> Color(0xFFFFD700) // Gold
-                2 -> Color(0xFFC0C0C0) // Silver
-                3 -> Color(0xFFCD7F32) // Bronze
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = "$rank",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black),
-                    color = if (rank <= 3) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Score: ${match.score}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "${match.difficulty} • ${UtilityMethods.formatTime(match.gameDuration)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-
-        Text(
-            text = UtilityMethods.getRelativeTime(match.timestamp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-        )
-    }
-}
-
-@Composable
 fun DifficultySelector(
     currentDifficulty: Difficulty,
     onDifficultyChange: (Difficulty) -> Unit,
@@ -359,8 +317,15 @@ fun DifficultySelector(
                     .height(44.dp)
                     .clickable(enabled = enabled) { onDifficultyChange(diff) },
                 shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                border = BorderStroke(1.dp, if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
+                    alpha = 0.6f
+                ),
+                border = BorderStroke(
+                    1.dp,
+                    if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(
+                        alpha = 0.1f
+                    )
+                ),
                 tonalElevation = if (isSelected) 4.dp else 0.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -370,7 +335,9 @@ fun DifficultySelector(
                             fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
                             letterSpacing = 1.sp
                         ),
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(
+                            alpha = 0.6f
+                        )
                     )
                 }
             }
@@ -388,7 +355,12 @@ fun MeshBackground() {
         label = "x"
     )
 
-    Canvas(modifier = Modifier.fillMaxSize().blur(80.dp).alpha(0.3f)) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .blur(80.dp)
+            .alpha(0.3f)
+    ) {
         drawCircle(
             color = Color(0xFFFFA900).copy(alpha = 0.4f),
             radius = size.width / 1.5f,
@@ -478,7 +450,11 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
 }
 
 @Composable
-private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: Modifier = Modifier) {
+private fun GameGrid(
+    tiles: List<Tile>,
+    onTileTapped: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = modifier.padding(horizontal = 24.dp),
@@ -500,15 +476,20 @@ private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: M
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
+    val leaderBoard = listOf(
+        MatchHistory("0", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L),
+        MatchHistory("1", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L),
+        MatchHistory("2", "00", 10, Difficulty.NORMAL.toString(), 1000L, 1L)
+    )
     FlippyTheme {
         GameScreen(
             tiles = List(16) { Tile(it) },
             score = 10,
             lives = 3,
-            status = GameStatus.PLAYING,
+            status = GameStatus.READY,
             difficulty = Difficulty.NORMAL,
             gameTime = 1,
-            leaderboard = emptyList(),
+            leaderboard = leaderBoard,
             onTileTapped = {},
             onPlayClick = {},
             onResetGame = {},

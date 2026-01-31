@@ -45,11 +45,15 @@ class GameViewModel(
     private val _gameTime = MutableStateFlow(0L)
     val gameTime = _gameTime.asStateFlow()
 
-    private val _leaderBoard = MutableStateFlow<List<MatchHistory>>(emptyList())
-    val leaderBoard = _leaderBoard.asStateFlow()
+    private val _topThreeScores = MutableStateFlow<List<MatchHistory>>(emptyList())
+    val topThreeScores = _topThreeScores.asStateFlow()
 
     private var timerJob: Job? = null
     private var coinsMissedConsecutively = 0
+
+    init {
+        getTopThreeScores()
+    }
 
     fun setDifficulty(difficulty: Difficulty) {
         if (_status.value == GameStatus.READY) {
@@ -64,7 +68,6 @@ class GameViewModel(
         _tiles.value = List(16) { Tile(it) }
         _status.value = GameStatus.PLAYING
         coinsMissedConsecutively = 0
-        soundRepository.startBackgroundMusic()
         
         startTimer()
         
@@ -81,7 +84,6 @@ class GameViewModel(
         _tiles.value = List(16) { Tile(it) }
         _status.value = GameStatus.READY
         coinsMissedConsecutively = 0
-        soundRepository.startBackgroundMusic()
     }
 
     private fun startTimer() {
@@ -172,7 +174,7 @@ class GameViewModel(
         
         viewModelScope.launch(Dispatchers.IO) {
             val match = MatchHistory(
-                id = $$"$${playerId}_${timestamp}",
+                id = $$"$${playerId}_$${timestamp}",
                 playerId = playerId,
                 score = currentScore,
                 difficulty = currentDifficulty,
@@ -208,6 +210,14 @@ class GameViewModel(
                 }
             }
             else -> {}
+        }
+    }
+
+    fun getTopThreeScores(){
+        viewModelScope.launch(Dispatchers.IO) {
+            matchRepository.getTopThreeScores(playerId).collect{
+                _topThreeScores.value = it
+            }
         }
     }
 }

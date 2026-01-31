@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface MatchRepository {
     suspend fun saveMatch(match: MatchHistory)
-    fun getLeaderboard(playerId: String): Flow<List<MatchHistory>>
+    fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
 }

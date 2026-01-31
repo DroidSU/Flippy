@@ -9,7 +9,7 @@ class MatchRepositoryImpl(private val matchDAO: MatchDAO) : MatchRepository {
         matchDAO.insertMatch(match)
     }
 
-    override fun getLeaderboard(playerId: String): Flow<List<MatchHistory>> {
-        return matchDAO.getTopScores(playerId)
+    override fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>> {
+        return matchDAO.getTopThreeScores(playerId)
     }
 }
