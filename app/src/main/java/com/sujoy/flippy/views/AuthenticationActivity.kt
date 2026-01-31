@@ -19,7 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
-import com.sujoy.flippy.R
+import com.sujoy.flippy.BuildConfig
 import com.sujoy.flippy.auth.repository.AuthRepositoryImpl
 import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
@@ -30,8 +30,9 @@ private const val TAG = "AuthenticationActivity"
 class AuthenticationActivity : ComponentActivity() {
 
     private val googleSignInClient: GoogleSignInClient by lazy {
+        val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(clientId)
             .requestEmail()
             .build()
         GoogleSignIn.getClient(this, gso)
@@ -84,7 +85,7 @@ class AuthenticationActivity : ComponentActivity() {
                 viewModel.signInWithCredential(credential)
             } catch (e: ApiException) {
                 Log.w(TAG, "Google Sign-In failed.", e)
-                Toast.makeText(this, "Google Sign-In failed: \${e.message}", Toast.LENGTH_LONG)
+                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
                     .show()
             }
         } else {

@@ -70,6 +70,10 @@ class GameViewModel(
         }
     }
 
+    fun showRulesDialog() {
+        _showRules.value = true
+    }
+
     fun onRulesDismissed(showOnStartup: Boolean) {
         _showRules.value = false
         preferencesRepository.setShowRulesOnStartup(showOnStartup)
@@ -240,5 +244,9 @@ class GameViewModel(
                 _topThreeScores.value = it
             }
         }
+    }
+
+    fun signOut() {
+        auth.signOut()
     }
 }

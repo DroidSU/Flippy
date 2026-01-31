@@ -1,5 +1,6 @@
 package com.sujoy.flippy.game_engine.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -10,6 +11,10 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,8 +43,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.HorizontalDivider
@@ -61,10 +72,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.MatchHistory
@@ -86,9 +99,12 @@ fun GameScreen(
     onPlayClick: () -> Unit,
     onResetGame: () -> Unit,
     onDifficultyChange: (Difficulty) -> Unit,
-    onRulesDismissed: (Boolean) -> Unit
+    onRulesDismissed: (Boolean) -> Unit,
+    onHelpClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
+    var isMenuVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(status) {
         if (status == GameStatus.GAME_OVER) {
@@ -112,9 +128,42 @@ fun GameScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(if (showGameOverOverlay || showRules) 16.dp else 0.dp),
+                    .blur(if (showGameOverOverlay || showRules || isMenuVisible) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Custom Top Bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        onClick = { isMenuVisible = true },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        modifier = Modifier.size(48.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    }
+
+                    Surface(
+                        onClick = onHelpClick,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                        modifier = Modifier.size(48.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.HelpOutline, contentDescription = "Help")
+                        }
+                    }
+                }
+
                 GameHeader(score = score, lives = lives, gameTime = gameTime)
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -167,6 +216,16 @@ fun GameScreen(
                 )
             }
 
+            // Creative Side Menu Overlay
+            SideNavigationMenu(
+                isVisible = isMenuVisible,
+                onDismiss = { isMenuVisible = false },
+                onSignOutClick = {
+                    isMenuVisible = false
+                    onSignOutClick()
+                }
+            )
+
             if (showRules) {
                 FlippyRulesDialog(onDismiss = onRulesDismissed)
             }
@@ -178,6 +237,138 @@ fun GameScreen(
                     showGameOverOverlay = false
                     onResetGame()
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun SideNavigationMenu(
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    onSignOutClick: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .clickable(onClick = onDismiss)
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInHorizontally(initialOffsetX = { -it }),
+            exit = slideOutHorizontally(targetOffsetX = { -it }),
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.75f),
+                shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(48.dp))
+                    
+                    Text(
+                        text = "FLIPPY",
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 4.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Master your reflexes",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    NavigationMenuItem(
+                        icon = Icons.Default.Person,
+                        label = "Profile",
+                        onClick = {}
+                    )
+                    
+                    NavigationMenuItem(
+                        icon = Icons.Default.Leaderboard,
+                        label = "Leaderboard",
+                        onClick = {}
+                    )
+                    
+                    NavigationMenuItem(
+                        icon = Icons.Default.Settings,
+                        label = "Preferences",
+                        onClick = {}
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 16.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    )
+
+                    NavigationMenuItem(
+                        icon = Icons.Default.Logout,
+                        label = "Sign Out",
+                        onClick = onSignOutClick,
+                        color = Color(0xFFFF4B4B)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NavigationMenuItem(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    color: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = color.copy(alpha = 0.8f),
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = color
             )
         }
     }
@@ -478,29 +669,6 @@ private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: M
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-
-    val leaderboard = listOf(MatchHistory(
-        id = "1",
-        playerId = "player1",
-        score = 10,
-        difficulty = Difficulty.NORMAL.toString(),
-        gameDuration = 1000,
-        timestamp = System.currentTimeMillis(),
-    ), MatchHistory(
-        id = "2",
-        playerId = "player1",
-        score = 10,
-        difficulty = Difficulty.NORMAL.toString(),
-        gameDuration = 1000,
-        timestamp = System.currentTimeMillis(),
-    ), MatchHistory(
-        id = "3",
-        playerId = "player1",
-        score = 10,
-        difficulty = Difficulty.NORMAL.toString(),
-        gameDuration = 1000,
-        timestamp = System.currentTimeMillis(),
-    ))
     FlippyTheme {
         GameScreen(
             tiles = List(16) { Tile(it) },
@@ -515,7 +683,9 @@ fun GameScreenPreview() {
             onPlayClick = {},
             onResetGame = {},
             onDifficultyChange = {},
-            onRulesDismissed = {}
+            onRulesDismissed = {},
+            onHelpClick = {},
+            onSignOutClick = {}
         )
     }
 }

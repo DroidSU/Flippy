@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val googleWebClientId: String = localProperties.getProperty("google.web.client.id") ?: ""
 
 android {
     namespace = "com.sujoy.flippy"
@@ -17,6 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
     buildTypes {
@@ -37,6 +49,10 @@ android {
         compilerOptions {
              jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     android.sourceSets.named("main") {
