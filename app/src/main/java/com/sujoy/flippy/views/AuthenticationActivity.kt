@@ -12,17 +12,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.sujoy.flippy.R
+import com.sujoy.flippy.auth.repository.AuthRepositoryImpl
+import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
 import com.sujoy.flippy.core.theme.FlippyTheme
-import com.sujoy.flippy.game_engine.repository.SoundRepository
-import com.sujoy.flippy.game_engine.repository.SoundRepositoryImpl
-import com.sujoy.flippy.vm.ViewModelFactory
 
 private const val TAG = "AuthenticationActivity"
 
@@ -36,13 +37,16 @@ class AuthenticationActivity : ComponentActivity() {
         GoogleSignIn.getClient(this, gso)
     }
 
-    private lateinit var soundRepository: SoundRepository
-    private val viewModel: AuthViewModel by viewModels { ViewModelFactory(soundRepository) }
+    private val viewModel: AuthViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return AuthViewModel(AuthRepositoryImpl()) as T
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        soundRepository = SoundRepositoryImpl(this)
 
         enableEdgeToEdge()
         setContent {
@@ -52,9 +56,7 @@ class AuthenticationActivity : ComponentActivity() {
                 AuthenticationScreen(
                     uiState = uiState,
                     onAuthSuccess = {
-                        Toast.makeText(this, "Welcome to Flippy!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
+                        startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     },
                     onGoogleSignIn = {
@@ -63,15 +65,9 @@ class AuthenticationActivity : ComponentActivity() {
                             googleSignInLauncher.launch(signInIntent)
                         }
                     },
-                    onPhoneSignIn = { phoneNumber -> viewModel.sendOtp(this, phoneNumber) },
-                    onGuestSignIn = {
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    },
-                    onVerifyOtp = viewModel::verifyOtp,
-                    onResetAuthFlow = viewModel::resetAuthFlow,
-                    onErrorShown = viewModel::errorShown
+                    onErrorShown = { message ->
+                        viewModel.errorShown(message)
+                    }
                 )
             }
         }
@@ -84,12 +80,11 @@ class AuthenticationActivity : ComponentActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
-                Log.d(TAG, "Google Sign-In successful, getting credential.")
                 val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
                 viewModel.signInWithCredential(credential)
             } catch (e: ApiException) {
                 Log.w(TAG, "Google Sign-In failed.", e)
-                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
+                Toast.makeText(this, "Google Sign-In failed: \${e.message}", Toast.LENGTH_LONG)
                     .show()
             }
         } else {

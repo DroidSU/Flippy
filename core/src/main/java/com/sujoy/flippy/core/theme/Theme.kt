@@ -15,38 +15,38 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Playful color scheme for the Dark Theme
+// Modern 3D color scheme for the Dark Theme
 private val DarkColorScheme = darkColorScheme(
-    primary = FlippyOrange,
-    onPrimary = DarkText,
-    secondary = FlippyBlue,
-    onSecondary = BrightText,
-    background = NightSky,
-    onBackground = BrightText,
-    surface = MoonRock,
-    onSurface = BrightText,
-    surfaceVariant = MoonRock,
-    onSurfaceVariant = BrightText,
-    outline = FlippyBlue,
-    error = PlayfulPink,
-    onError = BrightText
+    primary = PrismIndigo,
+    onPrimary = GhostSlate,
+    secondary = PrismAmber,
+    onSecondary = DeepSpace,
+    background = DeepSpace,
+    onBackground = GhostSlate,
+    surface = DeepSlate,
+    onSurface = GhostSlate,
+    surfaceVariant = DeepSlate,
+    onSurfaceVariant = SlateLight,
+    outline = PrismIndigoDeep,
+    error = PrismRose,
+    onError = GhostSlate
 )
 
-// Playful color scheme for the Light Theme
+// Modern 3D color scheme for the Light Theme
 private val LightColorScheme = lightColorScheme(
-    primary = FlippyOrange,
-    onPrimary = LightCloud,
-    secondary = FlippyBlue,
-    onSecondary = LightCloud,
-    background = SunnyDay,
-    onBackground = DarkText,
-    surface = LightCloud,
-    onSurface = DarkText,
-    surfaceVariant = SunnyDay,
-    onSurfaceVariant = DarkText,
-    outline = FlippyBlue,
-    error = PlayfulPink,
-    onError = LightCloud
+    primary = PrismIndigo,
+    onPrimary = PureWhite,
+    secondary = PrismAmber,
+    onSecondary = SlateDark,
+    background = GhostWhite,
+    onBackground = SlateDark,
+    surface = PureWhite,
+    onSurface = SlateDark,
+    surfaceVariant = GhostWhite,
+    onSurfaceVariant = SlateMedium,
+    outline = PrismIndigoLight,
+    error = PrismRose,
+    onError = PureWhite
 )
 
 @Composable

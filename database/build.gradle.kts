@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
-    // alias(libs.plugins.ksp) // Uncomment when ksp is configured in root
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -36,7 +36,7 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    // ksp(libs.room.compiler)
+    api(libs.room.runtime)
+    api(libs.room.ktx)
+    ksp(libs.room.compiler)
 }
