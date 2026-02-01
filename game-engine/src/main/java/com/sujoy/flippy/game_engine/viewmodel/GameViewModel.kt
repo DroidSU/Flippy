@@ -53,8 +53,13 @@ class GameViewModel(
     private val _showRules = MutableStateFlow(false)
     val showRules = _showRules.asStateFlow()
 
+    private val _isGamePaused = MutableStateFlow(false)
+    val isGamePaused = _isGamePaused.asStateFlow()
+
     private var timerJob: Job? = null
     private var coinsMissedConsecutively = 0
+    private var lastStartTime = 0L
+    private var accumulatedTime = 0L
 
     init {
         getTopThreeScores()
@@ -90,9 +95,11 @@ class GameViewModel(
         _score.value = 0
         _lives.value = 3
         _gameTime.value = 0L
+        accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
         _status.value = GameStatus.PLAYING
         coinsMissedConsecutively = 0
+        _isGamePaused.value = false
         
         startTimer()
         
@@ -106,17 +113,21 @@ class GameViewModel(
         _score.value = 0
         _lives.value = 3
         _gameTime.value = 0L
+        accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
         _status.value = GameStatus.READY
         coinsMissedConsecutively = 0
+        _isGamePaused.value = false
     }
 
     private fun startTimer() {
         timerJob?.cancel()
+        lastStartTime = System.currentTimeMillis()
         timerJob = viewModelScope.launch {
-            val startTime = System.currentTimeMillis()
             while (_status.value == GameStatus.PLAYING) {
-                _gameTime.value = System.currentTimeMillis() - startTime
+                if (!_isGamePaused.value) {
+                    _gameTime.value = accumulatedTime + (System.currentTimeMillis() - lastStartTime)
+                }
                 delay(100L)
             }
         }
@@ -127,13 +138,40 @@ class GameViewModel(
         timerJob = null
     }
 
+    fun pauseGameTemporarily() {
+        if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
+        
+        viewModelScope.launch {
+            _isGamePaused.value = true
+            accumulatedTime += System.currentTimeMillis() - lastStartTime
+
+            if(_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL)
+                soundRepository.pauseBackgroundMusicTemp(1000L)
+            else
+                soundRepository.pauseBackgroundMusicTemp(500L)
+            
+            _isGamePaused.value = false
+            lastStartTime = System.currentTimeMillis()
+        }
+    }
+
     private suspend fun gameLoop() {
         while (_status.value == GameStatus.PLAYING) {
+            if (_isGamePaused.value) {
+                if(_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL){
+                    delay(300L)
+                }
+                else{
+                    delay(800L)
+                }
+                continue
+            }
+            
             val currentDiff = _difficulty.value
             val randomInterval = Random.nextLong(currentDiff.minInterval, currentDiff.maxInterval)
             delay(randomInterval)
             
-            if (_status.value != GameStatus.PLAYING) break
+            if (_status.value != GameStatus.PLAYING || _isGamePaused.value) continue
             
             val hiddenTiles = _tiles.value.filter { !it.isRevealed }
             if (hiddenTiles.isNotEmpty()) {
@@ -156,7 +194,14 @@ class GameViewModel(
                 Difficulty.HARD -> 800L
             }
             
-            delay(visibleDuration)
+            var elapsed = 0L
+            while (elapsed < visibleDuration) {
+                if (!_isGamePaused.value) {
+                    elapsed += 50L
+                }
+                delay(50L)
+                if (_status.value != GameStatus.PLAYING) return@launch
+            }
             
             val tile = _tiles.value.find { it.id == tileId }
             if (tile?.isRevealed == true) {
@@ -172,14 +217,24 @@ class GameViewModel(
     }
 
     private fun handleMissedCoin() {
+        val threshold = when(_difficulty.value) {
+            Difficulty.EASY -> 2
+            Difficulty.NORMAL -> 2
+            Difficulty.HARD -> 3
+        }
+
         if (_status.value != GameStatus.PLAYING) return
+
         coinsMissedConsecutively++
-        if (coinsMissedConsecutively >= 2) {
+        if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0
             
             if (_lives.value <= 0) {
                 endGame()
+            } else {
+                soundRepository.playBombSound()
+                pauseGameTemporarily()
             }
         }
     }
@@ -218,7 +273,7 @@ class GameViewModel(
 
     fun onTileTapped(tileId: Int) {
         val tile = _tiles.value.find { it.id == tileId } ?: return
-        if (!tile.isRevealed || _status.value != GameStatus.PLAYING) return
+        if (!tile.isRevealed || _status.value != GameStatus.PLAYING || _isGamePaused.value) return
 
         updateTile(tileId) { it.copy(isRevealed = false) }
 
@@ -228,10 +283,12 @@ class GameViewModel(
                 coinsMissedConsecutively = 0
             }
             CardType.BOMB -> {
-                soundRepository.playBombSound()
                 _lives.update { (it - 1).coerceAtLeast(0) }
                 if (_lives.value <= 0) {
                     endGame()
+                } else {
+                    soundRepository.playBombSound()
+                    pauseGameTemporarily()
                 }
             }
             else -> {}

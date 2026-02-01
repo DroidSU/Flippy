@@ -1,5 +1,6 @@
 package com.sujoy.flippy.views
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -54,6 +55,7 @@ class MainActivity : ComponentActivity() {
                 val gameTime by gameViewModel.gameTime.collectAsState()
                 val topThreeScores by gameViewModel.topThreeScores.collectAsState()
                 val showRules by gameViewModel.showRules.collectAsState()
+                val isPaused by gameViewModel.isGamePaused.collectAsState()
 
                 GameScreen(
                     tiles = tiles,
@@ -72,7 +74,10 @@ class MainActivity : ComponentActivity() {
                     onHelpClick = gameViewModel::showRulesDialog,
                     onSignOutClick = {
                         gameViewModel.signOut()
-                    }
+                        startActivity(Intent(this, AuthenticationActivity::class.java))
+                        finish()
+                    },
+                    isPaused = isPaused
                 )
             }
         }
@@ -81,6 +86,9 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         soundRepository.startBackgroundMusic()
+//        if (gameViewModel.status.value == GameStatus.PLAYING) {
+//            gameViewModel.pauseGameTemporarily()
+//        }
     }
 
     override fun onPause() {

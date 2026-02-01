@@ -51,7 +51,6 @@ class SoundPlayer(context: Context) {
     fun playBombSound() {
         if (isEffectsLoaded) {
             soundPool.play(bombSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
-            duckBackgroundMusic()
         }
     }
 
@@ -70,19 +69,21 @@ class SoundPlayer(context: Context) {
     fun pauseBackgroundMusic() {
         backgroundMusicPlayer?.pause()
     }
+    
+    suspend fun pauseBackgroundMusicTemp(milliseconds: Long) {
+        backgroundMusicPlayer?.pause()
+        delay(milliseconds)
+        backgroundMusicPlayer?.start()
+    }
+
+    fun resumeBackgroundMusic() {
+        backgroundMusicPlayer?.start()
+    }
 
     fun stopBackgroundMusic() {
         if (backgroundMusicPlayer?.isPlaying == true) {
             backgroundMusicPlayer?.pause()
             backgroundMusicPlayer?.seekTo(0)
-        }
-    }
-
-    private fun duckBackgroundMusic() {
-        scope.launch {
-            backgroundMusicPlayer?.setVolume(0.05f, 0.05f)
-            delay(1000L)
-            backgroundMusicPlayer?.setVolume(0.3f, 0.3f)
         }
     }
 

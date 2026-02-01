@@ -34,18 +34,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Leaderboard
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
@@ -95,6 +92,7 @@ fun GameScreen(
     gameTime: Long,
     leaderboard: List<MatchHistory>,
     showRules: Boolean,
+    isPaused: Boolean,
     onTileTapped: (Int) -> Unit,
     onPlayClick: () -> Unit,
     onResetGame: () -> Unit,
@@ -105,6 +103,7 @@ fun GameScreen(
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
     var isMenuVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(status) {
         if (status == GameStatus.GAME_OVER) {
@@ -128,7 +127,8 @@ fun GameScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(if (showGameOverOverlay || showRules || isMenuVisible) 16.dp else 0.dp),
+                    .verticalScroll(scrollState)
+                    .blur(if (showGameOverOverlay || showRules || isMenuVisible || isPaused) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Custom Top Bar
@@ -159,7 +159,7 @@ fun GameScreen(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.HelpOutline, contentDescription = "Help")
+                            Icon(Icons.AutoMirrored.Default.HelpOutline, contentDescription = "Help")
                         }
                     }
                 }
@@ -176,24 +176,19 @@ fun GameScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    GameGrid(
-                        tiles = tiles,
-                        onTileTapped = onTileTapped,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                GameGrid(
+                    tiles = tiles,
+                    onTileTapped = onTileTapped,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                    if (status == GameStatus.READY) {
-                        LeaderboardSection(
-                            leaderboard = leaderboard,
-                            modifier = Modifier.weight(1f)
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+                if (status == GameStatus.READY) {
+                    LeaderboardSection(
+                        leaderboard = leaderboard,
+                        modifier = Modifier.padding(bottom = 100.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
 
@@ -328,7 +323,7 @@ fun SideNavigationMenu(
                     )
 
                     NavigationMenuItem(
-                        icon = Icons.Default.Logout,
+                        icon = Icons.AutoMirrored.Filled.Logout,
                         label = "Sign Out",
                         onClick = onSignOutClick,
                         color = Color(0xFFFF4B4B)
@@ -473,11 +468,11 @@ private fun LeaderboardSection(
                     )
                 }
             } else {
-                LazyColumn(
+                Column(
                     modifier = Modifier.padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    itemsIndexed(leaderboard.take(10)) { index, match ->
+                    leaderboard.forEachIndexed { index, match ->
                         LeaderboardItem(index + 1, match)
                         if (index < leaderboard.size - 1 && index < 9) {
                             HorizontalDivider(
@@ -648,20 +643,35 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
 
 @Composable
 private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: Modifier = Modifier) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
+    val columns = 4
+    val rows = (tiles.size + columns - 1) / columns
+
+    Column(
         modifier = modifier.padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        userScrollEnabled = false
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(tiles, key = { it.id }) { tile ->
-            GameCard(
-                isRevealed = tile.isRevealed,
-                type = tile.type,
-                onClick = { onTileTapped(tile.id) },
-                modifier = Modifier.aspectRatio(1f)
-            )
+        for (i in 0 until rows) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                for (j in 0 until columns) {
+                    val index = i * columns + j
+                    if (index < tiles.size) {
+                        val tile = tiles[index]
+                        GameCard(
+                            isRevealed = tile.isRevealed,
+                            type = tile.type,
+                            onClick = { onTileTapped(tile.id) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
         }
     }
 }
@@ -679,6 +689,7 @@ fun GameScreenPreview() {
             gameTime = 1,
             leaderboard = emptyList(),
             showRules = false,
+            isPaused = false,
             onTileTapped = {},
             onPlayClick = {},
             onResetGame = {},

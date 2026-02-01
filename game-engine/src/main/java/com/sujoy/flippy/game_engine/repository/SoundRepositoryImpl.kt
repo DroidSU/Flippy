@@ -8,6 +8,7 @@ class SoundRepositoryImpl(context: Context) : SoundRepository {
 
     override fun startBackgroundMusic() = soundPlayer.startBackgroundMusic()
     override fun pauseBackgroundMusic() = soundPlayer.pauseBackgroundMusic()
+    override suspend fun pauseBackgroundMusicTemp(seconds: Long) = soundPlayer.pauseBackgroundMusicTemp(seconds)
     override fun playBombSound() = soundPlayer.playBombSound()
     override fun playGameOverSound() = soundPlayer.playGameOverSound()
     override fun release() = soundPlayer.release()
