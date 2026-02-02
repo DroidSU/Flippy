@@ -31,6 +31,9 @@ class ProfileViewModel(
     private val _matchHistory = MutableStateFlow<List<MatchHistory>>(emptyList())
     val matchHistory: StateFlow<List<MatchHistory>> = _matchHistory.asStateFlow()
 
+    private val _isEditing = MutableStateFlow(false)
+    val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
+
     init {
         loadProfile()
     }
@@ -61,10 +64,17 @@ class ProfileViewModel(
     }
 
     fun saveProfile(username: String, avatarId: Int) {
-        _uiState.value = AppUIState.Loading
         repository.saveProfile(username, avatarId)
         _username.value = username
         _avatarId.value = avatarId
         _uiState.value = AppUIState.Success
+    }
+
+    fun onEdit() {
+        _isEditing.value = true
+    }
+
+    fun onCancelEdit() {
+        _isEditing.value = false
     }
 }

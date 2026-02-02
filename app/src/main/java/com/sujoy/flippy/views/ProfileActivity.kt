@@ -40,6 +40,7 @@ class ProfileActivity : ComponentActivity() {
                 val highestScoreMatch by viewModel.highestScoreMatch.collectAsState()
                 val matchHistory by viewModel.matchHistory.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
+                val isEditing by viewModel.isEditing.collectAsState()
 
                 ProfileScreen(
                     username = username,
@@ -47,10 +48,16 @@ class ProfileActivity : ComponentActivity() {
                     highestScoreMatch = highestScoreMatch,
                     matchHistory = matchHistory,
                     uiState = uiState,
+                    isEditing = isEditing,
                     onSaveProfile = { u, a ->
                         viewModel.saveProfile(u, a)
+                        viewModel.onCancelEdit()
                     },
-                    onBackClick = { finish() }
+                    onBackClick = { finish() },
+                    onEdit = { viewModel.onEdit() },
+                    onDismissEdit = {
+                        viewModel.onCancelEdit()
+                    }
                 )
             }
         }

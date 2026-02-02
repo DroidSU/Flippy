@@ -79,25 +79,29 @@ fun ProfileScreen(
     matchHistory: List<MatchHistory>,
     uiState: AppUIState,
     onSaveProfile: (String, Int) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isEditing: Boolean,
+    onEdit: () -> Unit,
+    onDismissEdit: () -> Unit
 ) {
-    var isEditing by remember { mutableStateOf(false) }
-    val isFirstTime = username.isEmpty()
 
-    // Handle dismissal of dialog on success
+    var isFirstTime = username.isEmpty()
+
     LaunchedEffect(uiState) {
-        if (uiState is AppUIState.Success && !isFirstTime) {
-            isEditing = false
+        if (uiState is AppUIState.Success) {
+            isFirstTime = false
         }
     }
 
     if (isFirstTime || isEditing) {
-        OnboardingOrEditDialog(
+        EditDialog(
             currentUsername = username,
             currentAvatarId = avatarId,
             isLoading = uiState is AppUIState.Loading,
             onSave = onSaveProfile,
-            onDismiss = { if (!isFirstTime) isEditing = false }
+            onDismiss = {
+                onDismissEdit()
+            },
         )
     }
 
@@ -112,7 +116,7 @@ fun ProfileScreen(
                 },
                 actions = {
                     if (!isFirstTime) {
-                        IconButton(onClick = { isEditing = true }) {
+                        IconButton(onClick = { onEdit() }) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
                         }
                     }
@@ -124,7 +128,11 @@ fun ProfileScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(24.dp),
@@ -156,10 +164,12 @@ fun ProfileScreen(
                     }
                 }
             }
-            
+
             if (uiState is AppUIState.Loading && !isEditing && !isFirstTime) {
                 Box(
-                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f)),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -205,7 +215,7 @@ private fun ProfileHeader(username: String, avatarId: Int) {
 @Composable
 private fun ScoreStatsSection(highestScoreMatch: MatchHistory?) {
     val highScore = highestScoreMatch?.score ?: 0
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
@@ -223,8 +233,8 @@ private fun ScoreStatsSection(highestScoreMatch: MatchHistory?) {
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            Icons.Default.EmojiEvents, 
-                            contentDescription = null, 
+                            Icons.Default.EmojiEvents,
+                            contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(18.dp)
                         )
@@ -232,8 +242,8 @@ private fun ScoreStatsSection(highestScoreMatch: MatchHistory?) {
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    "Personal Best", 
-                    style = MaterialTheme.typography.titleMedium, 
+                    "Personal Best",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -247,13 +257,13 @@ private fun ScoreStatsSection(highestScoreMatch: MatchHistory?) {
                 ),
                 color = MaterialTheme.colorScheme.primary
             )
-            
+
             if (highestScoreMatch != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Timer, 
-                        contentDescription = null, 
+                        Icons.Default.Timer,
+                        contentDescription = null,
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                     )
@@ -276,15 +286,15 @@ private fun RecentMatchesHeader() {
         modifier = Modifier.padding(bottom = 4.dp)
     ) {
         Icon(
-            Icons.Default.History, 
-            contentDescription = null, 
+            Icons.Default.History,
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            "Match Activity", 
-            style = MaterialTheme.typography.titleLarge, 
+            "Match Activity",
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -340,15 +350,15 @@ private fun MatchHistoryItem(match: MatchHistory) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = match.difficulty, 
-                        style = MaterialTheme.typography.labelLarge, 
+                        text = match.difficulty,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.CalendarToday, 
-                            contentDescription = null, 
+                            Icons.Default.CalendarToday,
+                            contentDescription = null,
                             modifier = Modifier.size(10.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         )
@@ -361,7 +371,7 @@ private fun MatchHistoryItem(match: MatchHistory) {
                     }
                 }
             }
-            
+
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = match.score.toString(),
@@ -382,12 +392,12 @@ private fun MatchHistoryItem(match: MatchHistory) {
 }
 
 @Composable
-private fun OnboardingOrEditDialog(
+private fun EditDialog(
     currentUsername: String,
     currentAvatarId: Int,
     isLoading: Boolean,
     onSave: (String, Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var username by remember { mutableStateOf(currentUsername) }
     var selectedAvatarId by remember { mutableIntStateOf(if (currentAvatarId == 0) 1 else currentAvatarId) }
@@ -426,7 +436,7 @@ private fun OnboardingOrEditDialog(
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        "Pick an Avatar", 
+                        "Pick an Avatar",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 12.dp)
@@ -438,7 +448,7 @@ private fun OnboardingOrEditDialog(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(avatarList.size) { index ->
+                        items(count = avatarList.size) { index ->
                             val avatarId = avatarList[index]
                             Box(
                                 modifier = Modifier
@@ -450,11 +460,13 @@ private fun OnboardingOrEditDialog(
                                         color = if (selectedAvatarId == avatarId) MaterialTheme.colorScheme.primary else Color.Transparent,
                                         shape = CircleShape
                                     )
-                                    .clickable(enabled = !isLoading) { selectedAvatarId = avatarId },
+                                    .clickable(enabled = !isLoading) {
+                                        selectedAvatarId = avatarId
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    Icons.Default.Person, 
+                                    Icons.Default.Person,
                                     contentDescription = null,
                                     tint = Color.White,
                                     modifier = Modifier.size(24.dp)
@@ -465,13 +477,23 @@ private fun OnboardingOrEditDialog(
                 }
 
                 Button(
-                    onClick = { if (username.isNotBlank()) onSave(username, selectedAvatarId) },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    onClick = {
+                        if (username.isNotBlank()) {
+                            onSave(username, selectedAvatarId)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     enabled = username.isNotBlank() && !isLoading
                 ) {
                     if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 3.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 3.dp
+                        )
                     } else {
                         Text(
                             if (currentUsername.isEmpty()) "Get Started" else "Save Changes",
@@ -517,8 +539,18 @@ internal fun ProfileScreenPreview() {
     )
     val sampleHistory = listOf(
         sampleMatch,
-        sampleMatch.copy(id = "2", score = 1200, difficulty = "NORMAL", timestamp = System.currentTimeMillis() - 86400000),
-        sampleMatch.copy(id = "3", score = 800, difficulty = "EASY", timestamp = System.currentTimeMillis() - 172800000)
+        sampleMatch.copy(
+            id = "2",
+            score = 1200,
+            difficulty = "NORMAL",
+            timestamp = System.currentTimeMillis() - 86400000
+        ),
+        sampleMatch.copy(
+            id = "3",
+            score = 800,
+            difficulty = "EASY",
+            timestamp = System.currentTimeMillis() - 172800000
+        )
     )
 
     FlippyTheme {
@@ -529,7 +561,10 @@ internal fun ProfileScreenPreview() {
             matchHistory = sampleHistory,
             uiState = AppUIState.Idle,
             onSaveProfile = { _, _ -> },
-            onBackClick = {}
+            onBackClick = {},
+            isEditing = false,
+            onEdit = {},
+            onDismissEdit = {}
         )
     }
 }
