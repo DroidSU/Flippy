@@ -9,7 +9,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.AppDatabase
 import com.sujoy.flippy.profile.repository.ProfileRepositoryImpl
@@ -22,10 +21,9 @@ class ProfileActivity : ComponentActivity() {
     private val viewModel: ProfileViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val auth = FirebaseAuth.getInstance()
                 val database = AppDatabase.getDatabase(applicationContext)
                 val repository = ProfileRepositoryImpl(applicationContext, database.matchDao())
-                return ProfileViewModel(auth.currentUser?.uid ?: "anonymous", repository) as T
+                return ProfileViewModel(repository) as T
             }
         }
     }
@@ -37,16 +35,15 @@ class ProfileActivity : ComponentActivity() {
             FlippyTheme {
                 val username by viewModel.username.collectAsState()
                 val avatarId by viewModel.avatarId.collectAsState()
-                val highestScoreMatch by viewModel.highestScoreMatch.collectAsState()
-                val matchHistory by viewModel.matchHistory.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
                 val isEditing by viewModel.isEditing.collectAsState()
+                val totalMatches by viewModel.totalMatchesPlayed.collectAsState()
+                val highestScore by viewModel.highestScore.collectAsState()
+                val longestRound by viewModel.longestRound.collectAsState()
 
                 ProfileScreen(
                     username = username,
                     avatarId = avatarId,
-                    highestScoreMatch = highestScoreMatch,
-                    matchHistory = matchHistory,
                     uiState = uiState,
                     isEditing = isEditing,
                     onSaveProfile = { u, a ->
@@ -57,7 +54,10 @@ class ProfileActivity : ComponentActivity() {
                     onEdit = { viewModel.onEdit() },
                     onDismissEdit = {
                         viewModel.onCancelEdit()
-                    }
+                    },
+                    totalMatches = totalMatches,
+                    highestScore = highestScore,
+                    longestRound = longestRound
                 )
             }
         }

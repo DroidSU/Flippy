@@ -56,12 +56,26 @@ class GameViewModel(
     private val _isGamePaused = MutableStateFlow(false)
     val isGamePaused = _isGamePaused.asStateFlow()
 
+    private val _totalTaps = MutableStateFlow(0)
+    private val _correctTaps = MutableStateFlow(0)
+
     private var timerJob: Job? = null
     private var coinsMissedConsecutively = 0
     private var lastStartTime = 0L
     private var accumulatedTime = 0L
+    private var tileRevealTime = 0L
+    private var totalReflexTime = 0L
+    private var streak = 0
+    private var perfectStreak = 0
+    private var visibleDuration = 1200L
 
     init {
+        visibleDuration = when(_difficulty.value) {
+            Difficulty.EASY -> 1200L
+            Difficulty.NORMAL -> 1000L
+            Difficulty.HARD -> 800L
+        }
+
         getTopThreeScores()
         checkRulesVisibility()
     }
@@ -88,6 +102,12 @@ class GameViewModel(
     fun setDifficulty(difficulty: Difficulty) {
         if (_status.value == GameStatus.READY) {
             _difficulty.value = difficulty
+
+            visibleDuration = when(_difficulty.value) {
+                Difficulty.EASY -> 1200L
+                Difficulty.NORMAL -> 1000L
+                Difficulty.HARD -> 800L
+            }
         }
     }
 
@@ -184,14 +204,9 @@ class GameViewModel(
     private fun revealAndHideTile(tileId: Int) {
         viewModelScope.launch {
             val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
+            tileRevealTime = System.currentTimeMillis()
             updateTile(tileId) {
                 it.copy(isRevealed = true, type = newType)
-            }
-            
-            val visibleDuration = when(_difficulty.value) {
-                Difficulty.EASY -> 1200L
-                Difficulty.NORMAL -> 1000L
-                Difficulty.HARD -> 800L
             }
             
             var elapsed = 0L
@@ -259,7 +274,11 @@ class GameViewModel(
                 score = currentScore,
                 difficulty = currentDifficulty,
                 gameDuration = currentTime,
-                timestamp = timestamp
+                timestamp = timestamp,
+                correctTaps = _correctTaps.value,
+                totalTaps = _totalTaps.value,
+                totalReflexTime = totalReflexTime,
+                perfectStreak = streak
             )
             matchRepository.saveMatch(match)
         }
@@ -281,6 +300,11 @@ class GameViewModel(
             CardType.COIN -> {
                 _score.update { it + 1 }
                 coinsMissedConsecutively = 0
+                _correctTaps.update { it + 1 }
+                _totalTaps.update { it + 1 }
+                streak += 1
+                val reactionTime = System.currentTimeMillis() - tileRevealTime
+                totalReflexTime += reactionTime
             }
             CardType.BOMB -> {
                 _lives.update { (it - 1).coerceAtLeast(0) }
@@ -290,8 +314,16 @@ class GameViewModel(
                     soundRepository.playBombSound()
                     pauseGameTemporarily()
                 }
+                _totalTaps.update { it + 1 }
+
+                if(perfectStreak < streak)
+                    perfectStreak = streak
+
+                streak = 0
             }
-            else -> {}
+            else -> {
+                _totalTaps.update { it + 1 }
+            }
         }
     }
 

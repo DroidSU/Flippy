@@ -1,6 +1,7 @@
 package com.sujoy.flippy.profile.repository
 
 import android.content.Context
+import androidx.core.content.edit
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
 import kotlinx.coroutines.flow.Flow
@@ -21,17 +22,13 @@ class ProfileRepositoryImpl(
     }
 
     override fun saveProfile(username: String, avatarId: Int) {
-        prefs.edit()
-            .putString("username", username)
-            .putInt("avatar_id", avatarId)
-            .apply()
+        prefs.edit {
+            putString("username", username)
+                .putInt("avatar_id", avatarId)
+        }
     }
 
-    override fun getTopScores(playerId: String): Flow<List<MatchHistory>> {
-        return matchDao.getTopThreeScores(playerId)
-    }
-
-    override suspend fun getMatchHistory(playerId: String): List<MatchHistory> {
-        return matchDao.getMatchHistoryForId(playerId)
+    override fun getMatchHistory(): Flow<List<MatchHistory>> {
+        return matchDao.getMatchHistory()
     }
 }

@@ -3,16 +3,14 @@ package com.sujoy.flippy.profile.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sujoy.flippy.common.AppUIState
-import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.profile.repository.ProfileRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
-    private val playerId: String,
     private val repository: ProfileRepository
 ) : ViewModel() {
 
@@ -22,17 +20,27 @@ class ProfileViewModel(
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> = _username.asStateFlow()
 
-    private val _avatarId = MutableStateFlow(0)
+    private val _avatarId = MutableStateFlow(1)
     val avatarId: StateFlow<Int> = _avatarId.asStateFlow()
-
-    private val _highestScoreMatch = MutableStateFlow<MatchHistory?>(null)
-    val highestScoreMatch: StateFlow<MatchHistory?> = _highestScoreMatch.asStateFlow()
-
-    private val _matchHistory = MutableStateFlow<List<MatchHistory>>(emptyList())
-    val matchHistory: StateFlow<List<MatchHistory>> = _matchHistory.asStateFlow()
 
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
+
+    private val _totalMatchesPlayed = MutableStateFlow(0)
+    val totalMatchesPlayed: StateFlow<Int> = _totalMatchesPlayed.asStateFlow()
+
+    private val _highestScore = MutableStateFlow(0)
+    val highestScore: StateFlow<Int> = _highestScore.asStateFlow()
+
+    private val _longestRound = MutableStateFlow(0L)
+    val longestRound: StateFlow<Long> = _longestRound.asStateFlow()
+
+    private val _accuracyRate = MutableStateFlow(0.0)
+    val accuracyRate: StateFlow<Double> = _accuracyRate.asStateFlow()
+
+    private val _reflexAverage = MutableStateFlow(0L)
+    val reflexAverage: StateFlow<Long> = _reflexAverage.asStateFlow()
+
 
     init {
         loadProfile()
@@ -45,21 +53,39 @@ class ProfileViewModel(
         _username.value = savedUsername
         _avatarId.value = savedAvatarId
 
-        if (savedUsername.isNotEmpty()) {
-            loadMatchData(playerId)
-        }
+        loadMatchData()
     }
 
-    private fun loadMatchData(playerId: String) {
-        viewModelScope.launch {
-            repository.getTopScores(playerId).collectLatest { scores ->
-                _highestScoreMatch.value = scores.firstOrNull()
-            }
-        }
+    private fun loadMatchData() {
+        _uiState.value = AppUIState.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.getMatchHistory().collect { matchHistories ->
 
-        viewModelScope.launch {
-            val history = repository.getMatchHistory(playerId)
-            _matchHistory.value = history
+                    if(matchHistories.isNotEmpty()){
+                        _totalMatchesPlayed.value = matchHistories.size
+                        _highestScore.value = matchHistories.maxByOrNull { it.score }?.score ?: 0
+                        _longestRound.value = matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
+
+                        val sumOfCorrectTaps = matchHistories.sumOf { it.correctTaps }
+                        val sumOfTotalTaps = matchHistories.sumOf { it.totalTaps }
+
+                        if(sumOfTotalTaps > 0) {
+                            _accuracyRate.value = (sumOfCorrectTaps.toDouble() / sumOfTotalTaps.toDouble()) * 100
+                        }
+
+                        val sumOfReflexTimes = matchHistories.sumOf { it.totalReflexTime }
+                        if(sumOfCorrectTaps > 0){
+                            _reflexAverage.value = sumOfReflexTimes / sumOfCorrectTaps
+                        }
+                    }
+
+                    _uiState.value = AppUIState.Success
+                }
+            }
+            catch (ex : Exception) {
+                _uiState.value = AppUIState.Error(ex.message ?: "Unknown Error")
+            }
         }
     }
 

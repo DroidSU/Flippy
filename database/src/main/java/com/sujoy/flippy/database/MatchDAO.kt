@@ -14,6 +14,6 @@ interface MatchDAO {
     @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` WHERE playerId = :playerId ORDER BY score DESC, gameDuration ASC LIMIT 3")
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
 
-    @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` WHERE playerId = :playerId ORDER BY timestamp DESC")
-    suspend fun getMatchHistoryForId(playerId: String): List<MatchHistory>
+    @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}`")
+    fun getMatchHistory(): Flow<List<MatchHistory>>
 }

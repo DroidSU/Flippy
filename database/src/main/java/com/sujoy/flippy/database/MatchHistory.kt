@@ -12,4 +12,9 @@ data class MatchHistory(
     val difficulty: String,
     val gameDuration: Long,
     val timestamp: Long,
+    // new fields
+    val correctTaps: Int,
+    val totalTaps: Int,
+    val totalReflexTime: Long,
+    val perfectStreak: Int
 )
