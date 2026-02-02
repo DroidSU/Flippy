@@ -12,9 +12,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -27,7 +24,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,13 +36,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.HorizontalDivider
@@ -69,12 +62,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.sujoy.flippy.common.SideNavigationMenu
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.MatchHistory
@@ -144,7 +137,10 @@ fun GameScreen(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                         modifier = Modifier.size(48.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        )
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
@@ -156,10 +152,16 @@ fun GameScreen(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                         modifier = Modifier.size(48.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        )
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.AutoMirrored.Default.HelpOutline, contentDescription = "Help")
+                            Icon(
+                                Icons.AutoMirrored.Default.HelpOutline,
+                                contentDescription = "Help"
+                            )
                         }
                     }
                 }
@@ -642,7 +644,11 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
 }
 
 @Composable
-private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int) -> Unit, modifier: Modifier = Modifier) {
+private fun GameGrid(
+    tiles: List<Tile>,
+    onTileTapped: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val columns = 4
     val rows = (tiles.size + columns - 1) / columns
 

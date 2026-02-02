@@ -3,11 +3,14 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.flippy.common"
-    compileSdk = 36
+    namespace = "com.sujoy.settings"
+    compileSdk {
+        version = release(36)
+    }
 
     defaultConfig {
-        minSdk = 28
+        minSdk = 27
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -25,17 +28,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        }
-    }
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.foundation.layout)
-    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

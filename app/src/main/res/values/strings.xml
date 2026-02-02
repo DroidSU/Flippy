@@ -8,4 +8,6 @@
     <string name="continue_with_phone">Continue With Phone</string>
     <string name="terms_and_conditions"><![CDATA[Terms & Conditions]]></string>
     <string name="title_activity_splash">SplashActivity</string>
+    <string name="title_activity_profile">ProfileActivity</string>
+    <string name="title_activity_leaderboard">LeaderboardActivity</string>
 </resources>
