@@ -77,7 +77,16 @@ class MainActivity : ComponentActivity() {
                         startActivity(Intent(this, AuthenticationActivity::class.java))
                         finish()
                     },
-                    isPaused = isPaused
+                    isPaused = isPaused,
+                    onProfileIntentClicked = {
+                        startActivity(Intent(this, ProfileActivity::class.java))
+                    },
+                    onLeaderboardIntentClicked = {
+                        startActivity(Intent(this, LeaderboardActivity::class.java))
+                    },
+                    onPreferencesIntentClicked = {
+
+                    }
                 )
             }
         }

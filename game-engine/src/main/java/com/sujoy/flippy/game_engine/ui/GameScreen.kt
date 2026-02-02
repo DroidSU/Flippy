@@ -12,6 +12,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,10 +40,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.HorizontalDivider
@@ -62,12 +69,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.sujoy.flippy.common.SideNavigationMenu
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.MatchHistory
@@ -92,7 +99,10 @@ fun GameScreen(
     onDifficultyChange: (Difficulty) -> Unit,
     onRulesDismissed: (Boolean) -> Unit,
     onHelpClick: () -> Unit,
-    onSignOutClick: () -> Unit
+    onSignOutClick: () -> Unit,
+    onProfileIntentClicked: () -> Unit,
+    onLeaderboardIntentClicked: () -> Unit,
+    onPreferencesIntentClicked: () -> Unit
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
     var isMenuVisible by remember { mutableStateOf(false) }
@@ -194,7 +204,6 @@ fun GameScreen(
                 }
             }
 
-            // Floating Play Button
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -213,14 +222,16 @@ fun GameScreen(
                 )
             }
 
-            // Creative Side Menu Overlay
             SideNavigationMenu(
                 isVisible = isMenuVisible,
                 onDismiss = { isMenuVisible = false },
                 onSignOutClick = {
                     isMenuVisible = false
                     onSignOutClick()
-                }
+                },
+                onProfileIntentClicked = onProfileIntentClicked,
+                onLeaderboardIntentClicked = onLeaderboardIntentClicked,
+                onPreferencesIntentClicked = onPreferencesIntentClicked
             )
 
             if (showRules) {
@@ -240,10 +251,13 @@ fun GameScreen(
 }
 
 @Composable
-fun SideNavigationMenu(
+private fun SideNavigationMenu(
     isVisible: Boolean,
     onDismiss: () -> Unit,
-    onSignOutClick: () -> Unit
+    onSignOutClick: () -> Unit,
+    onProfileIntentClicked: () -> Unit,
+    onLeaderboardIntentClicked: () -> Unit,
+    onPreferencesIntentClicked: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
         AnimatedVisibility(
@@ -302,19 +316,25 @@ fun SideNavigationMenu(
                     NavigationMenuItem(
                         icon = Icons.Default.Person,
                         label = "Profile",
-                        onClick = {}
+                        onClick = {
+                            onProfileIntentClicked()
+                        }
                     )
                     
                     NavigationMenuItem(
                         icon = Icons.Default.Leaderboard,
                         label = "Leaderboard",
-                        onClick = {}
+                        onClick = {
+                            onLeaderboardIntentClicked()
+                        }
                     )
                     
                     NavigationMenuItem(
                         icon = Icons.Default.Settings,
                         label = "Preferences",
-                        onClick = {}
+                        onClick = {
+                            onPreferencesIntentClicked()
+                        }
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -702,7 +722,10 @@ fun GameScreenPreview() {
             onDifficultyChange = {},
             onRulesDismissed = {},
             onHelpClick = {},
-            onSignOutClick = {}
+            onSignOutClick = {},
+            onProfileIntentClicked = {},
+            onLeaderboardIntentClicked = {},
+            onPreferencesIntentClicked = {}
         )
     }
 }

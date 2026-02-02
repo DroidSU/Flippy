@@ -11,9 +11,6 @@ interface MatchDAO {
     @Insert
     suspend fun insertMatch(match: MatchHistory)
 
-    /**
-     * This function is used to get the top three scores of the given [playerId] displayed in descending order of score, and ascending order of gameDuration
-     */
     @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` WHERE playerId = :playerId ORDER BY score DESC, gameDuration ASC LIMIT 3")
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
 
