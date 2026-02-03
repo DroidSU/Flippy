@@ -20,12 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.core.R
 
 @Composable
@@ -40,56 +39,42 @@ fun LeaderboardItem(
     val avatarRes = getAvatarResource(avatarId)
     
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = if (isCurrentUser) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) 
-                else MaterialTheme.colorScheme.surface,
-        tonalElevation = if (isCurrentUser) 2.dp else 0.dp
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = if (isCurrentUser) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        tonalElevation = if (isCurrentUser) 4.dp else 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Rank
+            // Rank Display
             Box(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (rank <= 3) {
-                    val color = when (rank) {
-                        1 -> Color(0xFFFFD700) // Gold
-                        2 -> Color(0xFFC0C0C0) // Silver
-                        else -> Color(0xFFCD7F32) // Bronze
-                    }
-                    Surface(
-                        modifier = Modifier.size(28.dp),
-                        shape = CircleShape,
-                        color = color
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = rank.toString(),
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
-                                color = Color.White
-                            )
-                        }
-                    }
-                } else {
-                    Text(
-                        text = rank.toString(),
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                Text(
+                    text = "#$rank",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = if (isCurrentUser) MaterialTheme.colorScheme.primary 
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
-                }
+                )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-            // Avatar
+            // Avatar with a border if current user
             Surface(
-                modifier = Modifier.size(40.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape),
+                color = MaterialTheme.colorScheme.surface,
+                border = if (isCurrentUser) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
             ) {
                 if (avatarRes != null) {
                     Image(
@@ -112,23 +97,30 @@ fun LeaderboardItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Name
+            // Username and Label
             Text(
                 text = username,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                color = if (isCurrentUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
                 modifier = Modifier.weight(1f)
             )
 
-            // Score
-            Text(
-                text = score.toString(),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.5.sp
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
+
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = score.toString(),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            }
         }
     }
 }

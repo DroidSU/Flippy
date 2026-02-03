@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.common.NetworkRepositoryImpl
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.AppDatabase
 import com.sujoy.flippy.game_engine.repository.GamePreferencesRepositoryImpl
@@ -33,14 +34,21 @@ class MainActivity : ComponentActivity() {
                 val matchRepository = MatchRepositoryImpl(db.matchDao())
                 val soundRepo = SoundRepositoryImpl(applicationContext)
                 val preferencesRepo = GamePreferencesRepositoryImpl(applicationContext)
-                return GameViewModel(auth, soundRepo, matchRepository, preferencesRepo) as T
+                val networkRepository = NetworkRepositoryImpl()
+                return GameViewModel(
+                    auth,
+                    soundRepo,
+                    matchRepository,
+                    networkRepository,
+                    preferencesRepo
+                ) as T
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         soundRepository = SoundRepositoryImpl(applicationContext)
 
         enableEdgeToEdge()

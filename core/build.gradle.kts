@@ -1,3 +1,9 @@
+import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
+import org.gradle.kotlin.dsl.android
+import org.gradle.kotlin.dsl.kotlin
+import org.gradle.kotlin.dsl.libs
+import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
@@ -45,4 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
+    
+    // Room
+    implementation(libs.room.runtime)
 }

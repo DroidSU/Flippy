@@ -3,7 +3,8 @@ package com.sujoy.flippy.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.sujoy.flippy.common.ConstantsManager
+import com.sujoy.flippy.core.ConstantsManager
+import com.sujoy.flippy.core.models.MatchHistory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,4 +17,7 @@ interface MatchDAO {
 
     @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}`")
     fun getMatchHistory(): Flow<List<MatchHistory>>
+    
+    @Query("UPDATE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` SET isBackedUp = 1 WHERE id IN (:matchIds)")
+    suspend fun markMatchesAsBackedUp(matchIds: List<String>)
 }

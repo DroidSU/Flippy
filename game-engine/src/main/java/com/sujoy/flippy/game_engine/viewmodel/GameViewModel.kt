@@ -3,6 +3,7 @@ package com.sujoy.flippy.game_engine.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.game_engine.models.CardType
 import com.sujoy.flippy.game_engine.models.Difficulty
@@ -24,6 +25,7 @@ class GameViewModel(
     private val auth: FirebaseAuth,
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,
+    private val networkRepository: NetworkRepository,
     private val preferencesRepository: GamePreferencesRepository
 ) : ViewModel() {
 
@@ -70,7 +72,7 @@ class GameViewModel(
     private var visibleDuration = 1200L
 
     init {
-        visibleDuration = when(_difficulty.value) {
+        visibleDuration = when (_difficulty.value) {
             Difficulty.EASY -> 1200L
             Difficulty.NORMAL -> 1000L
             Difficulty.HARD -> 800L
@@ -103,7 +105,7 @@ class GameViewModel(
         if (_status.value == GameStatus.READY) {
             _difficulty.value = difficulty
 
-            visibleDuration = when(_difficulty.value) {
+            visibleDuration = when (_difficulty.value) {
                 Difficulty.EASY -> 1200L
                 Difficulty.NORMAL -> 1000L
                 Difficulty.HARD -> 800L
@@ -120,9 +122,9 @@ class GameViewModel(
         _status.value = GameStatus.PLAYING
         coinsMissedConsecutively = 0
         _isGamePaused.value = false
-        
+
         startTimer()
-        
+
         viewModelScope.launch {
             gameLoop()
         }
@@ -160,16 +162,16 @@ class GameViewModel(
 
     fun pauseGameTemporarily() {
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
-        
+
         viewModelScope.launch {
             _isGamePaused.value = true
             accumulatedTime += System.currentTimeMillis() - lastStartTime
 
-            if(_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL)
+            if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL)
                 soundRepository.pauseBackgroundMusicTemp(1000L)
             else
                 soundRepository.pauseBackgroundMusicTemp(500L)
-            
+
             _isGamePaused.value = false
             lastStartTime = System.currentTimeMillis()
         }
@@ -178,21 +180,20 @@ class GameViewModel(
     private suspend fun gameLoop() {
         while (_status.value == GameStatus.PLAYING) {
             if (_isGamePaused.value) {
-                if(_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL){
+                if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) {
                     delay(300L)
-                }
-                else{
+                } else {
                     delay(800L)
                 }
                 continue
             }
-            
+
             val currentDiff = _difficulty.value
             val randomInterval = Random.nextLong(currentDiff.minInterval, currentDiff.maxInterval)
             delay(randomInterval)
-            
+
             if (_status.value != GameStatus.PLAYING || _isGamePaused.value) continue
-            
+
             val hiddenTiles = _tiles.value.filter { !it.isRevealed }
             if (hiddenTiles.isNotEmpty()) {
                 val tileToReveal = hiddenTiles.random()
@@ -208,7 +209,7 @@ class GameViewModel(
             updateTile(tileId) {
                 it.copy(isRevealed = true, type = newType)
             }
-            
+
             var elapsed = 0L
             while (elapsed < visibleDuration) {
                 if (!_isGamePaused.value) {
@@ -217,13 +218,13 @@ class GameViewModel(
                 delay(50L)
                 if (_status.value != GameStatus.PLAYING) return@launch
             }
-            
+
             val tile = _tiles.value.find { it.id == tileId }
             if (tile?.isRevealed == true) {
                 if (tile.type == CardType.COIN) {
                     handleMissedCoin()
                 }
-                
+
                 updateTile(tileId) {
                     it.copy(isRevealed = false)
                 }
@@ -232,7 +233,7 @@ class GameViewModel(
     }
 
     private fun handleMissedCoin() {
-        val threshold = when(_difficulty.value) {
+        val threshold = when (_difficulty.value) {
             Difficulty.EASY -> 2
             Difficulty.NORMAL -> 2
             Difficulty.HARD -> 3
@@ -244,7 +245,7 @@ class GameViewModel(
         if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0
-            
+
             if (_lives.value <= 0) {
                 endGame()
             } else {
@@ -266,7 +267,7 @@ class GameViewModel(
         val currentTime = _gameTime.value
         val currentDifficulty = _difficulty.value.label
         val timestamp = System.currentTimeMillis()
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             val match = MatchHistory(
                 id = "${playerId}_$timestamp",
@@ -278,9 +279,13 @@ class GameViewModel(
                 correctTaps = _correctTaps.value,
                 totalTaps = _totalTaps.value,
                 totalReflexTime = totalReflexTime,
-                perfectStreak = streak
+                perfectStreak = streak,
+                isBackedUp = false
             )
             matchRepository.saveMatch(match)
+            if (networkRepository.isInternetAvailable()) {
+                networkRepository.storeMatchData(listOf(match))
+            }
         }
     }
 
@@ -306,6 +311,7 @@ class GameViewModel(
                 val reactionTime = System.currentTimeMillis() - tileRevealTime
                 totalReflexTime += reactionTime
             }
+
             CardType.BOMB -> {
                 _lives.update { (it - 1).coerceAtLeast(0) }
                 if (_lives.value <= 0) {
@@ -316,20 +322,21 @@ class GameViewModel(
                 }
                 _totalTaps.update { it + 1 }
 
-                if(perfectStreak < streak)
+                if (perfectStreak < streak)
                     perfectStreak = streak
 
                 streak = 0
             }
+
             else -> {
                 _totalTaps.update { it + 1 }
             }
         }
     }
 
-    fun getTopThreeScores(){
+    fun getTopThreeScores() {
         viewModelScope.launch(Dispatchers.IO) {
-            matchRepository.getTopThreeScores(playerId).collect{
+            matchRepository.getTopThreeScores(playerId).collect {
                 _topThreeScores.value = it
             }
         }

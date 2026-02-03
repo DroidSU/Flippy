@@ -1,6 +1,7 @@
-package com.sujoy.flippy.common
+package com.sujoy.flippy.core
 
 object ConstantsManager {
+    const val APP_TAG = "Flippy"
     const val RESEND_TIMEOUT = 60
     const val TAG_AUTH = "AuthViewModel"
     const val TAG_GAME = "GameViewModel"
