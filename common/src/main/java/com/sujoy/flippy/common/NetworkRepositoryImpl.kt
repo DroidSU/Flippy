@@ -52,11 +52,11 @@ class NetworkRepositoryImpl @Inject constructor(
     }
 
     override fun storeUserData(userName: String, avatarResourceId: Int) {
-//        val userId = auth.currentUser?.uid ?: return
-//        val userMap = mapOf(
-//            "username" to userName,
-//            "avatarId" to avatarResourceId
-//        )
-//        database.child("users").child(userId).setValue(userMap)
+        val userId = auth.currentUser?.uid ?: return
+        val userMap = mapOf(
+            "username" to userName,
+            "avatarId" to avatarResourceId
+        )
+        database.child("users").child(userId).setValue(userMap)
     }
 }

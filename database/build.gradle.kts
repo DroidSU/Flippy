@@ -1,10 +1,3 @@
-import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
-import org.gradle.kotlin.dsl.android
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.ksp
-import org.gradle.kotlin.dsl.libs
-import org.jetbrains.kotlin.gradle.idea.proto.com.google.protobuf.api
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)

@@ -7,5 +7,5 @@ object ConstantsManager {
     const val TAG_GAME = "GameViewModel"
 
     const val DATABASE_NAME = "flippy_database"
-    const val TABLE_NAME_MATCH_HISTORY = "Match History"
+    const val TABLE_NAME_MATCH_HISTORY = "match_history"
 }
