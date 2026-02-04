@@ -1,6 +1,6 @@
 package com.sujoy.flippy.common
 
-import com.sujoy.flippy.core.models.MatchHistory
+import com.sujoy.flippy.database.MatchHistory
 
 interface NetworkRepository {
     fun isInternetAvailable(): Boolean

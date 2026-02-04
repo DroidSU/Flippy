@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sujoy.flippy.core.models.MatchHistory
+import com.sujoy.flippy.database.MatchHistory
 
 @Composable
 fun MyScoresSection() {

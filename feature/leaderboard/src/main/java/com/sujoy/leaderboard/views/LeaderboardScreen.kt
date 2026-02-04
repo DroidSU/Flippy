@@ -77,7 +77,7 @@ fun LeaderboardScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Creative Pill-Style Tab Switcher
+            
             LeaderboardTabSwitcher(
                 tabs = tabs,
                 selectedTabIndex = selectedTabIndex,

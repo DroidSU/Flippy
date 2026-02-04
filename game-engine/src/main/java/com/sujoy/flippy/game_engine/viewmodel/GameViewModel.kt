@@ -12,6 +12,7 @@ import com.sujoy.flippy.game_engine.models.Tile
 import com.sujoy.flippy.game_engine.repository.GamePreferencesRepository
 import com.sujoy.flippy.game_engine.repository.MatchRepository
 import com.sujoy.flippy.game_engine.repository.SoundRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,9 +20,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.random.Random
 
-class GameViewModel(
+@HiltViewModel
+class GameViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,

@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.gradle.idea.proto.com.google.protobuf.api
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -42,8 +43,13 @@ android {
 
 dependencies {
     implementation(project(":core"))
+
     implementation(libs.androidx.core.ktx)
     api(libs.room.runtime)
     api(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }

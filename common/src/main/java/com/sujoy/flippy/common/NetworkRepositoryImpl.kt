@@ -7,20 +7,22 @@ import androidx.annotation.RequiresPermission
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.sujoy.flippy.core.ConstantsManager
-import com.sujoy.flippy.core.models.MatchHistory
 import com.sujoy.flippy.database.MatchDAO
+import com.sujoy.flippy.database.MatchHistory
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class NetworkRepositoryImpl(
-    private val context: Context,
-    private val matchDAO: MatchDAO
+class NetworkRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val matchDAO: MatchDAO,
+    private val auth: FirebaseAuth
 ) : NetworkRepository {
 
     private val database = FirebaseDatabase.getInstance().reference
-    private val auth = FirebaseAuth.getInstance()
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun isInternetAvailable(): Boolean {

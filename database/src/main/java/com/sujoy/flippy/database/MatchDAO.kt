@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.sujoy.flippy.core.ConstantsManager
-import com.sujoy.flippy.core.models.MatchHistory
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.leaderboard.views.LeaderboardScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class LeaderboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

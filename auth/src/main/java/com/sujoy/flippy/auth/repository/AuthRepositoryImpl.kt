@@ -8,10 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthRepositoryImpl : AuthRepository {
-
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+class AuthRepositoryImpl @Inject constructor(
+    private val auth: FirebaseAuth
+) : AuthRepository {
 
     override fun signInWithCredentials(credential: AuthCredential): Flow<Result<Unit>> = flow {
         try {

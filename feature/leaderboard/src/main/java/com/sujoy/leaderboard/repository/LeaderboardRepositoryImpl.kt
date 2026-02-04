@@ -1,4 +1,6 @@
 package com.sujoy.leaderboard.repository
 
-class LeaderboardRepositoryImpl : LeaderboardRepository {
+import javax.inject.Inject
+
+class LeaderboardRepositoryImpl @Inject constructor() : LeaderboardRepository {
 }

@@ -8,48 +8,23 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.google.firebase.auth.FirebaseAuth
-import com.sujoy.flippy.common.NetworkRepositoryImpl
 import com.sujoy.flippy.core.theme.FlippyTheme
-import com.sujoy.flippy.database.AppDatabase
-import com.sujoy.flippy.game_engine.repository.GamePreferencesRepositoryImpl
-import com.sujoy.flippy.game_engine.repository.MatchRepositoryImpl
 import com.sujoy.flippy.game_engine.repository.SoundRepository
-import com.sujoy.flippy.game_engine.repository.SoundRepositoryImpl
 import com.sujoy.flippy.game_engine.ui.GameScreen
 import com.sujoy.flippy.game_engine.viewmodel.GameViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private lateinit var soundRepository: SoundRepository
+    @Inject
+    lateinit var soundRepository: SoundRepository
 
-    private val gameViewModel: GameViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val auth = FirebaseAuth.getInstance()
-                val db = AppDatabase.getDatabase(applicationContext)
-                val matchRepository = MatchRepositoryImpl(db.matchDao())
-                val soundRepo = SoundRepositoryImpl(applicationContext)
-                val preferencesRepo = GamePreferencesRepositoryImpl(applicationContext)
-                val networkRepository = NetworkRepositoryImpl()
-                return GameViewModel(
-                    auth,
-                    soundRepo,
-                    matchRepository,
-                    networkRepository,
-                    preferencesRepo
-                ) as T
-            }
-        }
-    }
+    private val gameViewModel: GameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        soundRepository = SoundRepositoryImpl(applicationContext)
 
         enableEdgeToEdge()
 

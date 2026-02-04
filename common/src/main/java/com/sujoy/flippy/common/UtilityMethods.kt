@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.text.format.DateUtils
 import androidx.annotation.RequiresPermission
+import com.sujoy.flippy.core.R
 import java.util.Locale
 
 class UtilityMethods {
@@ -37,6 +38,20 @@ class UtilityMethods {
                 activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
                 else -> false
             } && activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        }
+
+        fun getAvatarResource(id: Int): Int? {
+            return when (id) {
+                1 -> R.drawable.user_avatar_1
+                2 -> R.drawable.user_avatar_2
+                3 -> R.drawable.user_avatar_3
+                4 -> R.drawable.user_avatar_4
+                5 -> R.drawable.user_avatar_5
+                6 -> R.drawable.user_avatar_6
+                7 -> R.drawable.user_avatar_7
+                8 -> R.drawable.user_avatar_8
+                else -> null
+            }
         }
     }
 }

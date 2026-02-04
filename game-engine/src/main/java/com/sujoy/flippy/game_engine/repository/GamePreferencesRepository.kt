@@ -2,6 +2,8 @@ package com.sujoy.flippy.game_engine.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
 interface GamePreferencesRepository {
     fun shouldShowRulesOnStartup(): Boolean
@@ -10,7 +12,9 @@ interface GamePreferencesRepository {
     fun setRulesShownOnce(shown: Boolean)
 }
 
-class GamePreferencesRepositoryImpl(context: Context) : GamePreferencesRepository {
+class GamePreferencesRepositoryImpl @Inject constructor(
+    @ApplicationContext context: Context
+) : GamePreferencesRepository {
     private val prefs: SharedPreferences = context.getSharedPreferences("flippy_settings", Context.MODE_PRIVATE)
 
     companion object {

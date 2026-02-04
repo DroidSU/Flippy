@@ -6,12 +6,15 @@ import com.google.firebase.auth.AuthCredential
 import com.sujoy.flippy.auth.repository.AuthRepository
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.Result
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
 

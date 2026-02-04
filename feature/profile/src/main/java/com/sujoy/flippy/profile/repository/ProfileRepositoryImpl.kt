@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.core.content.edit
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class ProfileRepositoryImpl(
-    private val context: Context,
+class ProfileRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val matchDao: MatchDAO
 ) : ProfileRepository {
     private val prefs = context.getSharedPreferences("flippy_profile", Context.MODE_PRIVATE)

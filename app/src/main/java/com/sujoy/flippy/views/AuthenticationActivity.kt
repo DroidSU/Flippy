@@ -12,21 +12,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.sujoy.flippy.BuildConfig
-import com.sujoy.flippy.auth.repository.AuthRepositoryImpl
 import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
 import com.sujoy.flippy.core.theme.FlippyTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "AuthenticationActivity"
 
+@AndroidEntryPoint
 class AuthenticationActivity : ComponentActivity() {
 
     private val googleSignInClient: GoogleSignInClient by lazy {
@@ -38,13 +37,7 @@ class AuthenticationActivity : ComponentActivity() {
         GoogleSignIn.getClient(this, gso)
     }
 
-    private val viewModel: AuthViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return AuthViewModel(AuthRepositoryImpl()) as T
-            }
-        }
-    }
+    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
