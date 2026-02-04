@@ -5,13 +5,19 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.sujoy.flippy.core.ConstantsManager
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -41,7 +47,7 @@ class NetworkRepositoryImpl @Inject constructor(
                     matchMap[match.id] = match
                 }
 
-                // matches/userId/matchId
+                // flippy_db/matches/userId/matchId
                 database.child("matches").child(userId).updateChildren(matchMap).await()
                 matchDAO.markMatchesAsBackedUp(matchIds)
             } catch (e: Exception) {
@@ -58,5 +64,27 @@ class NetworkRepositoryImpl @Inject constructor(
             "avatarId" to avatarResourceId
         )
         database.child("users").child(userId).setValue(userMap)
+    }
+
+    override fun getLeaderBoard(): Flow<List<LeaderboardModel>> = callbackFlow {
+        val leaderboardRef = database.child("leaderboard")
+            .orderByChild("score")
+            .limitToLast(10)
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val items = snapshot.children.mapNotNull { child ->
+                    child.getValue(LeaderboardModel::class.java)
+                }.reversed() // limitToLast gives ascending, so we reverse for descending scores
+                trySend(items)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+
+        leaderboardRef.addValueEventListener(listener)
+        awaitClose { leaderboardRef.removeEventListener(listener) }
     }
 }

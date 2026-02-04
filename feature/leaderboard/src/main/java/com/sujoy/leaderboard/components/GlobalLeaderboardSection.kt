@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,40 +40,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.LeaderboardModel
 import com.sujoy.flippy.core.R
-import com.sujoy.flippy.database.MatchHistory
 
 @Composable
-fun GlobalLeaderboardSection() {
+fun GlobalLeaderboardSection(
+    uiState: AppUIState,
+    leaderboard: List<LeaderboardModel>
+) {
     var selectedDifficultyIndex by remember { mutableIntStateOf(1) }
     val difficulties = listOf("EASY", "NORMAL", "HARD")
-
-    val globalScores = when (selectedDifficultyIndex) {
-        0 -> listOf(
-            MatchHistory(id = "1", playerId = "QuickTap", score = 3200, difficulty = "EASY", gameDuration = 60000),
-            MatchHistory(id = "2", playerId = "EasyWin", score = 3150, difficulty = "EASY", gameDuration = 60000),
-            MatchHistory(id = "3", playerId = "ChillPlayer", score = 3000, difficulty = "EASY", gameDuration = 60000),
-            MatchHistory(id = "4", playerId = "NoobMaster", score = 2800, difficulty = "EASY", gameDuration = 60000),
-            MatchHistory(id = "5", playerId = "Casual", score = 2500, difficulty = "EASY", gameDuration = 60000)
-        )
-        1 -> listOf(
-            MatchHistory(id = "1", playerId = "ProFlippy", score = 5400, difficulty = "NORMAL", gameDuration = 60000),
-            MatchHistory(id = "2", playerId = "MasterMind", score = 5200, difficulty = "NORMAL", gameDuration = 60000),
-            MatchHistory(id = "3", playerId = "ReflexKing", score = 5100, difficulty = "NORMAL", gameDuration = 60000),
-            MatchHistory(id = "4", playerId = "Speedy", score = 4800, difficulty = "NORMAL", gameDuration = 60000),
-            MatchHistory(id = "5", playerId = "Gamer77", score = 4500, difficulty = "NORMAL", gameDuration = 60000),
-            MatchHistory(id = "6", playerId = "FlippyFan", score = 4200, difficulty = "NORMAL", gameDuration = 60000)
-        )
-        else -> listOf(
-            MatchHistory(id = "1", playerId = "GodMode", score = 9800, difficulty = "HARD", gameDuration = 60000),
-            MatchHistory(id = "2", playerId = "Legend", score = 9500, difficulty = "HARD", gameDuration = 60000),
-            MatchHistory(id = "3", playerId = "InsaneTaps", score = 9200, difficulty = "HARD", gameDuration = 60000),
-            MatchHistory(id = "4", playerId = "Beast", score = 8800, difficulty = "HARD", gameDuration = 60000),
-            MatchHistory(id = "5", playerId = "Titan", score = 8500, difficulty = "HARD", gameDuration = 60000)
-        )
-    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         DifficultySelector(
@@ -81,25 +62,64 @@ fun GlobalLeaderboardSection() {
             onDifficultySelected = { selectedDifficultyIndex = it }
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                PodiumSection(scores = globalScores.take(3))
+        when (uiState) {
+            is AppUIState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
             }
+            is AppUIState.Success -> {
+                if (leaderboard.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No one has played in this category yet. Be the first to top the charts!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        item {
+                            PodiumSection(scores = leaderboard.take(3))
+                        }
 
-            if (globalScores.size > 3) {
-                itemsIndexed(globalScores.drop(3)) { index, data ->
-                    LeaderboardItem(
-                        rank = index + 4,
-                        username = data.playerId,
-                        score = data.score,
-                        avatarId = (index % 8) + 1
+                        if (leaderboard.size > 3) {
+                            itemsIndexed(leaderboard.drop(3)) { index, data ->
+                                LeaderboardItem(
+                                    rank = index + 4,
+                                    username = data.username.ifEmpty { data.playerId },
+                                    score = data.score,
+                                    avatarId = (index % 8) + 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            is AppUIState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Failed to load leaderboard: ${uiState.message}",
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
+            else -> {}
         }
     }
 }
@@ -155,7 +175,7 @@ fun DifficultySelector(
 }
 
 @Composable
-fun PodiumSection(scores: List<MatchHistory>) {
+fun PodiumSection(scores: List<LeaderboardModel>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,7 +224,7 @@ fun PodiumSection(scores: List<MatchHistory>) {
 
 @Composable
 fun PodiumItem(
-    data: MatchHistory,
+    data: LeaderboardModel,
     rank: Int,
     height: Dp,
     color: Color,
@@ -264,9 +284,10 @@ fun PodiumItem(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = data.playerId,
+            text = data.username.ifEmpty { data.playerId },
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-            maxLines = 1
+            maxLines = 1,
+            textAlign = TextAlign.Center
         )
         Text(
             text = data.score.toString(),

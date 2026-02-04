@@ -25,7 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.sujoy.flippy.core.R
+import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
 
 @Composable
 fun LeaderboardItem(
@@ -122,19 +122,5 @@ fun LeaderboardItem(
                 )
             }
         }
-    }
-}
-
-private fun getAvatarResource(id: Int): Int? {
-    return when (id) {
-        1 -> R.drawable.user_avatar_1
-        2 -> R.drawable.user_avatar_2
-        3 -> R.drawable.user_avatar_3
-        4 -> R.drawable.user_avatar_4
-        5 -> R.drawable.user_avatar_5
-        6 -> R.drawable.user_avatar_6
-        7 -> R.drawable.user_avatar_7
-        8 -> R.drawable.user_avatar_8
-        else -> null
     }
 }

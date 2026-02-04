@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                         startActivity(Intent(this, ProfileActivity::class.java))
                     },
                     onLeaderboardIntentClicked = {
-                        startActivity(Intent(this, LeaderboardActivity::class.java))
+//                        startActivity(Intent(this, LeaderboardActivity::class.java))
                     },
                     onPreferencesIntentClicked = {
 

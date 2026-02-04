@@ -39,6 +39,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.LeaderboardModel
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.leaderboard.components.GlobalLeaderboardSection
 import com.sujoy.leaderboard.components.MyScoresSection
@@ -46,6 +48,8 @@ import com.sujoy.leaderboard.components.MyScoresSection
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
+    uiState: AppUIState,
+    leaderboardList: List<LeaderboardModel> = emptyList(),
     onBackClick: () -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(1) } // Default to Global
@@ -91,7 +95,10 @@ fun LeaderboardScreen(
             ) { index ->
                 when (index) {
                     0 -> MyScoresSection()
-                    1 -> GlobalLeaderboardSection()
+                    1 -> GlobalLeaderboardSection(
+                        uiState = uiState,
+                        leaderboard = leaderboardList
+                    )
                 }
             }
         }
@@ -168,6 +175,6 @@ fun LeaderboardTabSwitcher(
 @Composable
 private fun LeaderboardScreenPreview() {
     FlippyTheme {
-        LeaderboardScreen(onBackClick = {})
+        LeaderboardScreen(uiState = AppUIState.Idle, leaderboardList = emptyList(), onBackClick = {})
     }
 }

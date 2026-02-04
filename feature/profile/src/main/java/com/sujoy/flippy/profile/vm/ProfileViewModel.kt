@@ -3,6 +3,7 @@ package com.sujoy.flippy.profile.vm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.profile.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val repository: ProfileRepository
+    private val repository: ProfileRepository,
+    private val networkRepository: NetworkRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
@@ -96,6 +98,11 @@ class ProfileViewModel @Inject constructor(
         repository.saveProfile(username, avatarId)
         _username.value = username
         _avatarId.value = avatarId
+        viewModelScope.launch(Dispatchers.IO) {
+            if(networkRepository.isInternetAvailable()) {
+                networkRepository.storeUserData(username, avatarId)
+            }
+        }
         _uiState.value = AppUIState.Success
     }
 
