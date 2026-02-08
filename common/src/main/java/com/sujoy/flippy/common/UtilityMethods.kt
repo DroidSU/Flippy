@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.text.format.DateUtils
 import androidx.annotation.RequiresPermission
 import com.sujoy.flippy.core.R
+import com.sujoy.flippy.core.models.UserData
 import java.util.Locale
 
 class UtilityMethods {
@@ -52,6 +53,14 @@ class UtilityMethods {
                 8 -> R.drawable.user_avatar_8
                 else -> null
             }
+        }
+
+        fun UserData.toMap(): Map<String, Any?> {
+            return mapOf(
+                "userId" to userId,
+                "username" to username,
+                "avatarId" to avatarId
+            )
         }
     }
 }

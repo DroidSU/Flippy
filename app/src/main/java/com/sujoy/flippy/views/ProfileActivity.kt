@@ -29,12 +29,16 @@ class ProfileActivity : ComponentActivity() {
                 val totalMatches by viewModel.totalMatchesPlayed.collectAsState()
                 val highestScore by viewModel.highestScore.collectAsState()
                 val longestRound by viewModel.longestRound.collectAsState()
+                val reflexAverage by viewModel.reflexAverage.collectAsState()
+                val accuracyRate by viewModel.accuracyRate.collectAsState()
 
                 ProfileScreen(
                     username = username,
                     avatarId = avatarId,
                     uiState = uiState,
                     isEditing = isEditing,
+                    onUsernameChanged = { viewModel.onUsernameChanged(it) },
+                    onAvatarIdChanged = { viewModel.onAvatarIdChanged(it) },
                     onSaveProfile = { u, a ->
                         viewModel.saveProfile(u, a)
                         viewModel.onCancelEdit()
@@ -46,7 +50,9 @@ class ProfileActivity : ComponentActivity() {
                     },
                     totalMatches = totalMatches,
                     highestScore = highestScore,
-                    longestRound = longestRound
+                    longestRound = longestRound,
+                    accuracyRate = accuracyRate,
+                    reflexAverage = reflexAverage
                 )
             }
         }

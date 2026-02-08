@@ -2,8 +2,10 @@ package com.sujoy.flippy.profile.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.NetworkRepository
+import com.sujoy.flippy.common.Result
 import com.sujoy.flippy.profile.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repository: ProfileRepository,
-    private val networkRepository: NetworkRepository
+    private val networkRepository: NetworkRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
@@ -57,53 +60,91 @@ class ProfileViewModel @Inject constructor(
 
         _username.value = savedUsername
         _avatarId.value = savedAvatarId
+        
+        // If local data is missing, we don't force edit dialog here yet, 
+        // the UI (ProfileScreen) handles it based on username being empty.
+
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            viewModelScope.launch {
+                networkRepository.fetchUserData(userId).collect { result ->
+                    if (result is Result.Success) {
+                        val userData = result.data
+                        if (userData != null) {
+                            // Sync remote to local if they differ
+                            if (userData.username != savedUsername || userData.avatarId != savedAvatarId) {
+                                _username.value = userData.username
+                                _avatarId.value = userData.avatarId
+                                repository.saveProfile(userData.username, userData.avatarId)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         loadMatchData()
     }
 
     private fun loadMatchData() {
-        _uiState.value = AppUIState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.getMatchHistory().collect { matchHistories ->
 
-                    if(matchHistories.isNotEmpty()){
+                    if (matchHistories.isNotEmpty()) {
                         _totalMatchesPlayed.value = matchHistories.size
                         _highestScore.value = matchHistories.maxByOrNull { it.score }?.score ?: 0
-                        _longestRound.value = matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
+                        _longestRound.value =
+                            matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
 
                         val sumOfCorrectTaps = matchHistories.sumOf { it.correctTaps }
                         val sumOfTotalTaps = matchHistories.sumOf { it.totalTaps }
 
-                        if(sumOfTotalTaps > 0) {
-                            _accuracyRate.value = (sumOfCorrectTaps.toDouble() / sumOfTotalTaps.toDouble()) * 100
+                        if (sumOfTotalTaps > 0) {
+                            _accuracyRate.value =
+                                (sumOfCorrectTaps.toDouble() / sumOfTotalTaps.toDouble()) * 100
                         }
 
                         val sumOfReflexTimes = matchHistories.sumOf { it.totalReflexTime }
-                        if(sumOfCorrectTaps > 0){
+                        if (sumOfCorrectTaps > 0) {
                             _reflexAverage.value = sumOfReflexTimes / sumOfCorrectTaps
                         }
                     }
-
-                    _uiState.value = AppUIState.Success
                 }
-            }
-            catch (ex : Exception) {
-                _uiState.value = AppUIState.Error(ex.message ?: "Unknown Error")
+            } catch (ex: Exception) {
+                // Handle match history load error
             }
         }
     }
 
-    fun saveProfile(username: String, avatarId: Int) {
-        repository.saveProfile(username, avatarId)
+    fun onUsernameChanged(username: String) {
         _username.value = username
+    }
+
+    fun onAvatarIdChanged(avatarId: Int) {
         _avatarId.value = avatarId
-        viewModelScope.launch(Dispatchers.IO) {
-            if(networkRepository.isInternetAvailable()) {
-                networkRepository.storeUserData(username, avatarId)
+    }
+
+    fun saveProfile(username: String, avatarId: Int) {
+        _uiState.value = AppUIState.Loading
+        viewModelScope.launch {
+            // 1. Save to Remote (Firebase)
+            val result = networkRepository.saveUserData(username, avatarId)
+            
+            when (result) {
+                is Result.Success -> {
+                    // 2. Save to Local (SharedPreferences)
+                    repository.saveProfile(username, avatarId)
+                    _username.value = username
+                    _avatarId.value = avatarId
+                    _isEditing.value = false // Close dialog
+                    _uiState.value = AppUIState.Success
+                }
+                is Result.Failure -> {
+                    _uiState.value = AppUIState.Error(result.message)
+                }
             }
         }
-        _uiState.value = AppUIState.Success
     }
 
     fun onEdit() {

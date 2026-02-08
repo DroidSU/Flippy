@@ -27,11 +27,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,14 +42,14 @@ import com.sujoy.flippy.core.theme.FlippyTheme
 
 @Composable
 fun EditDialog(
-    currentUsername: String,
-    currentAvatarId: Int,
+    username: String,
+    avatarId: Int,
     isLoading: Boolean,
+    onUserNameChanged: (String) -> Unit,
+    onAvatarChanged: (Int) -> Unit,
     onSave: (String, Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var username by remember { mutableStateOf(currentUsername) }
-    var selectedAvatarId by remember { mutableIntStateOf(if (currentAvatarId == 0) 1 else currentAvatarId) }
 
     val avatarList = listOf(1, 2, 3, 4, 5, 6, 7, 8)
 
@@ -71,7 +66,7 @@ fun EditDialog(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 Text(
-                    text = if (currentUsername.isEmpty()) "Create Profile" else "Update Profile",
+                    text = if (username.isEmpty()) "Create Profile" else "Update Profile",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -79,7 +74,7 @@ fun EditDialog(
 
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { if (it.length <= 15) username = it },
+                    onValueChange = { if (it.length <= 15) onUserNameChanged(it) },
                     label = { Text("How should we call you?") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -103,20 +98,19 @@ fun EditDialog(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(count = avatarList.size) { index ->
-                            val avatarId = avatarList[index]
-                            val avatarRes = getAvatarResource(avatarId)
+                            val avatarRes = getAvatarResource(index + 1)
                             Box(
                                 modifier = Modifier
                                     .aspectRatio(1f)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .border(
-                                        width = if (selectedAvatarId == avatarId) 4.dp else 0.dp,
-                                        color = if (selectedAvatarId == avatarId) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        width = if (avatarId == index + 1) 4.dp else 0.dp,
+                                        color = if (avatarId == index + 1) MaterialTheme.colorScheme.primary else Color.Transparent,
                                         shape = CircleShape
                                     )
                                     .clickable(enabled = !isLoading) {
-                                        selectedAvatarId = avatarId
+                                        onAvatarChanged(index + 1)
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -143,7 +137,7 @@ fun EditDialog(
                 Button(
                     onClick = {
                         if (username.isNotBlank()) {
-                            onSave(username, selectedAvatarId)
+                            onSave(username, avatarId)
                         }
                     },
                     modifier = Modifier
@@ -160,7 +154,7 @@ fun EditDialog(
                         )
                     } else {
                         Text(
-                            if (currentUsername.isEmpty()) "Get Started" else "Save Changes",
+                            if (username.isEmpty()) "Get Started" else "Save Changes",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -176,11 +170,13 @@ fun EditDialog(
 private fun EditDialogPreview() {
     FlippyTheme {
         EditDialog(
-            currentUsername = "",
-            currentAvatarId = 0,
             isLoading = false,
             onSave = { _, _ -> },
-            onDismiss = {}
+            onDismiss = {},
+            username = "",
+            avatarId = 0,
+            onUserNameChanged = {},
+            onAvatarChanged = {},
         )
     }
 }

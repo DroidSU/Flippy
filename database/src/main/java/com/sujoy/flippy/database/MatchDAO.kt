@@ -2,14 +2,18 @@ package com.sujoy.flippy.database
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.sujoy.flippy.core.ConstantsManager
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MatchDAO {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMatch(match: MatchHistory)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMatches(matches: List<MatchHistory>)
 
     @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` WHERE playerId = :playerId ORDER BY score DESC, gameDuration ASC LIMIT 3")
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>

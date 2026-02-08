@@ -9,7 +9,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.sujoy.flippy.common.UtilityMethods.Companion.toMap
 import com.sujoy.flippy.core.ConstantsManager
+import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,8 +20,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class NetworkRepositoryImpl @Inject constructor(
@@ -37,7 +41,7 @@ class NetworkRepositoryImpl @Inject constructor(
 
     override fun storeMatchData(matchList: List<MatchHistory>) {
         val userId = auth.currentUser?.uid ?: return
-        
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val matchMap = mutableMapOf<String, Any>()
@@ -47,7 +51,6 @@ class NetworkRepositoryImpl @Inject constructor(
                     matchMap[match.id] = match
                 }
 
-                // flippy_db/matches/userId/matchId
                 database.child("matches").child(userId).updateChildren(matchMap).await()
                 matchDAO.markMatchesAsBackedUp(matchIds)
             } catch (e: Exception) {
@@ -55,15 +58,6 @@ class NetworkRepositoryImpl @Inject constructor(
                 e.printStackTrace()
             }
         }
-    }
-
-    override fun storeUserData(userName: String, avatarResourceId: Int) {
-        val userId = auth.currentUser?.uid ?: return
-        val userMap = mapOf(
-            "username" to userName,
-            "avatarId" to avatarResourceId
-        )
-        database.child("users").child(userId).setValue(userMap)
     }
 
     override fun getLeaderBoard(): Flow<List<LeaderboardModel>> = callbackFlow {
@@ -75,7 +69,7 @@ class NetworkRepositoryImpl @Inject constructor(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val items = snapshot.children.mapNotNull { child ->
                     child.getValue(LeaderboardModel::class.java)
-                }.reversed() // limitToLast gives ascending, so we reverse for descending scores
+                }.reversed()
                 trySend(items)
             }
 
@@ -86,5 +80,43 @@ class NetworkRepositoryImpl @Inject constructor(
 
         leaderboardRef.addValueEventListener(listener)
         awaitClose { leaderboardRef.removeEventListener(listener) }
+    }
+
+    override fun fetchUserData(userId: String): Flow<Result<UserData?>> = flow {
+        try {
+            val snapshot = database.child("users").child(userId).get().await()
+            if (snapshot.exists()) {
+                val userData = snapshot.getValue(UserData::class.java)
+                emit(Result.Success(userData))
+            } else {
+                emit(Result.Success(null))
+            }
+        } catch (e: Exception) {
+            emit(Result.Failure(e.message ?: "Failed to fetch user data"))
+        }
+    }
+
+    override suspend fun saveUserData(username: String, avatarId: Int): Result<Unit> = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid
+        val userdata = UserData(userId = userId ?: "", username = username, avatarId = avatarId)
+
+        try {
+            database.child("users").child(userdata.userId).setValue(userdata.toMap()).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to save user data")
+        }
+    }
+
+    override fun fetchMatchHistory(userId: String): Flow<Result<List<MatchHistory>>> = flow {
+        try {
+            val snapshot = database.child("matches").child(userId).get().await()
+            val matchHistory = snapshot.children.mapNotNull { child ->
+                child.getValue(MatchHistory::class.java)
+            }
+            emit(Result.Success(matchHistory))
+        } catch (e: Exception) {
+            emit(Result.Failure(e.message ?: "Failed to fetch match history"))
+        }
     }
 }

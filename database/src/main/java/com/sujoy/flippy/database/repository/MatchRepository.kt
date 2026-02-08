@@ -1,4 +1,4 @@
-package com.sujoy.flippy.game_engine.repository
+package com.sujoy.flippy.database.repository
 
 import com.sujoy.flippy.database.MatchHistory
 import kotlinx.coroutines.flow.Flow

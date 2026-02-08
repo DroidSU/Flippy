@@ -3,6 +3,7 @@ package com.sujoy.flippy.auth
 import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.auth.repository.AuthRepository
 import com.sujoy.flippy.auth.repository.AuthRepositoryImpl
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,17 +12,17 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AuthModule {
+abstract class AuthModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
-    }
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
-    @Provides
-    @Singleton
-    fun provideAuthRepository(impl: AuthRepositoryImpl): AuthRepository {
-        return impl
+    companion object {
+        @Provides
+        @Singleton
+        fun provideFirebaseAuth(): FirebaseAuth {
+            return FirebaseAuth.getInstance()
+        }
     }
 }

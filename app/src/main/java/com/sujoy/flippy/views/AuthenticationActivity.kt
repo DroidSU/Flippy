@@ -20,6 +20,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.sujoy.flippy.BuildConfig
 import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
+import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.core.theme.FlippyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,10 +46,12 @@ class AuthenticationActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FlippyTheme {
-                val uiState by viewModel.uiState.collectAsState()
+                val uiState by viewModel.uiState.collectAsState(AppUIState.Idle)
+                val userData by viewModel.userData.collectAsState()
 
                 AuthenticationScreen(
                     uiState = uiState,
+                    userData = userData,
                     onAuthSuccess = {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
@@ -61,7 +64,16 @@ class AuthenticationActivity : ComponentActivity() {
                     },
                     onErrorShown = { message ->
                         viewModel.errorShown(message)
-                    }
+                    },
+                    onSaveUser = { username, avatarId ->
+                        viewModel.saveUserProfile(username, avatarId)
+                    },
+                    onUsernameChanged = {
+                        viewModel.onUsernameChanged(it)
+                    },
+                    onAvatarChanged = {
+                        viewModel.onAvatarIdChanged(it)
+                    },
                 )
             }
         }

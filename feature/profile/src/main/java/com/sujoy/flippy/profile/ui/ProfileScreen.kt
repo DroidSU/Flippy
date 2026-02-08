@@ -38,7 +38,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,6 +61,8 @@ fun ProfileScreen(
     avatarId: Int,
     uiState: AppUIState,
     onSaveProfile: (String, Int) -> Unit,
+    onUsernameChanged: (String) -> Unit,
+    onAvatarIdChanged: (Int) -> Unit,
     onBackClick: () -> Unit,
     isEditing: Boolean,
     onEdit: () -> Unit,
@@ -73,23 +74,15 @@ fun ProfileScreen(
     reflexAverage: Long = 0L
 ) {
 
-    var isFirstTime = username.isEmpty()
-
-    LaunchedEffect(uiState) {
-        if (uiState is AppUIState.Success) {
-            isFirstTime = false
-        }
-    }
-
-    if (isFirstTime || isEditing) {
+    if (username.isBlank() || isEditing) {
         EditDialog(
-            currentUsername = username,
-            currentAvatarId = avatarId,
+            username = username,
+            avatarId = avatarId,
             isLoading = uiState is AppUIState.Loading,
+            onUserNameChanged = onUsernameChanged,
+            onAvatarChanged = onAvatarIdChanged,
             onSave = onSaveProfile,
-            onDismiss = {
-                onDismissEdit()
-            },
+            onDismiss = onDismissEdit,
         )
     }
 
@@ -103,8 +96,8 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    if (!isFirstTime) {
-                        IconButton(onClick = { onEdit() }) {
+                    if (username.isNotBlank()) {
+                        IconButton(onClick = onEdit) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
                         }
                     }
@@ -143,7 +136,7 @@ fun ProfileScreen(
                 }
             }
 
-            if (uiState is AppUIState.Loading && !isEditing && !isFirstTime) {
+            if (uiState is AppUIState.Loading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -289,6 +282,8 @@ internal fun ProfileScreenPreview() {
             avatarId = 1,
             uiState = AppUIState.Idle,
             onSaveProfile = { _, _ -> },
+            onUsernameChanged = {},
+            onAvatarIdChanged = {},
             onBackClick = {},
             isEditing = false,
             onEdit = {},

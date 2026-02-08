@@ -6,11 +6,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.database.MatchHistory
+import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.game_engine.models.CardType
 import com.sujoy.flippy.game_engine.models.GameStatus
 import com.sujoy.flippy.game_engine.models.Tile
 import com.sujoy.flippy.game_engine.repository.GamePreferencesRepository
-import com.sujoy.flippy.game_engine.repository.MatchRepository
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
