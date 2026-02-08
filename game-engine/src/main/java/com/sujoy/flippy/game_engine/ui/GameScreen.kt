@@ -75,10 +75,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.database.MatchHistory
-import com.sujoy.flippy.game_engine.models.Difficulty
 import com.sujoy.flippy.game_engine.models.GameStatus
 import com.sujoy.flippy.game_engine.models.Tile
 

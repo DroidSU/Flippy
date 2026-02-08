@@ -41,25 +41,33 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.LeaderboardModel
 import com.sujoy.flippy.core.R
+import com.sujoy.flippy.core.theme.FlippyTheme
 
 @Composable
 fun GlobalLeaderboardSection(
     uiState: AppUIState,
-    leaderboard: List<LeaderboardModel>
+    leaderboard: List<LeaderboardModel>,
+    onSwitchDifficulty: (String) -> Unit,
 ) {
     var selectedDifficultyIndex by remember { mutableIntStateOf(1) }
-    val difficulties = listOf("EASY", "NORMAL", "HARD")
+    val difficulties = listOf(Difficulty.EASY.label, Difficulty.NORMAL.label, Difficulty.HARD.label)
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         DifficultySelector(
             difficulties = difficulties,
             selectedIndex = selectedDifficultyIndex,
-            onDifficultySelected = { selectedDifficultyIndex = it }
+            onDifficultySelected = {
+                selectedDifficultyIndex = it
+                onSwitchDifficulty(difficulties[it])
+            }
         )
 
         when (uiState) {
@@ -71,10 +79,13 @@ fun GlobalLeaderboardSection(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
+
             is AppUIState.Success -> {
                 if (leaderboard.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize().padding(32.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -99,7 +110,7 @@ fun GlobalLeaderboardSection(
                                 LeaderboardItem(
                                     rank = index + 4,
                                     username = data.username.ifEmpty { data.playerId },
-                                    score = data.score,
+                                    score = data.totalScore,
                                     avatarId = (index % 8) + 1
                                 )
                             }
@@ -107,9 +118,12 @@ fun GlobalLeaderboardSection(
                     }
                 }
             }
+
             is AppUIState.Error -> {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -119,6 +133,7 @@ fun GlobalLeaderboardSection(
                     )
                 }
             }
+
             else -> {}
         }
     }
@@ -234,13 +249,13 @@ fun PodiumItem(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val avatarId = when(rank) {
+        val avatarId = when (rank) {
             1 -> 1
             2 -> 2
             else -> 3
         }
         val avatarRes = getAvatarResource(avatarId)
-        
+
         Box(contentAlignment = Alignment.TopCenter) {
             Surface(
                 modifier = Modifier
@@ -263,7 +278,7 @@ fun PodiumItem(
                     }
                 }
             }
-            
+
             Surface(
                 modifier = Modifier
                     .size(24.dp)
@@ -290,7 +305,7 @@ fun PodiumItem(
             textAlign = TextAlign.Center
         )
         Text(
-            text = data.score.toString(),
+            text = data.totalScore.toString(),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary
@@ -320,6 +335,17 @@ fun PodiumItem(
                     )
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun GlobalLeaderboardPreview() {
+    FlippyTheme {
+        GlobalLeaderboardSection(
+            uiState = AppUIState.Idle,
+            leaderboard = emptyList(),
+            onSwitchDifficulty = {})
     }
 }
 

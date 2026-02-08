@@ -1,4 +1,4 @@
-package com.sujoy.flippy.game_engine.models
+package com.sujoy.flippy.common
 
 enum class Difficulty(val label: String, val minInterval: Long, val maxInterval: Long) {
     EASY("EASY", 600L, 1200L),

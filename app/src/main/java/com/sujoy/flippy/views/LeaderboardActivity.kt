@@ -21,12 +21,15 @@ class LeaderboardActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FlippyTheme {
-                val leaderboardList by viewModel.leaderboardState.collectAsState()
+                val leaderboardList by viewModel.filteredLeaderboard.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
 
                 LeaderboardScreen(
                     uiState = uiState,
                     leaderboardList = leaderboardList,
+                    onSwitchDifficulty = {
+                        viewModel.filterWithDifficulty(it)
+                    },
                     onBackClick = { finish() }
                 )
             }

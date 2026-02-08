@@ -50,6 +50,7 @@ import com.sujoy.leaderboard.components.MyScoresSection
 fun LeaderboardScreen(
     uiState: AppUIState,
     leaderboardList: List<LeaderboardModel> = emptyList(),
+    onSwitchDifficulty: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(1) } // Default to Global
@@ -58,11 +59,11 @@ fun LeaderboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Leaderboard", 
+                        "Leaderboard",
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -81,7 +82,7 @@ fun LeaderboardScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            
+
             LeaderboardTabSwitcher(
                 tabs = tabs,
                 selectedTabIndex = selectedTabIndex,
@@ -89,7 +90,7 @@ fun LeaderboardScreen(
             )
 
             Crossfade(
-                targetState = selectedTabIndex, 
+                targetState = selectedTabIndex,
                 label = "tab_transition",
                 modifier = Modifier.weight(1f)
             ) { index ->
@@ -97,7 +98,8 @@ fun LeaderboardScreen(
                     0 -> MyScoresSection()
                     1 -> GlobalLeaderboardSection(
                         uiState = uiState,
-                        leaderboard = leaderboardList
+                        leaderboard = leaderboardList,
+                        onSwitchDifficulty = { onSwitchDifficulty(it) }
                     )
                 }
             }
@@ -175,6 +177,10 @@ fun LeaderboardTabSwitcher(
 @Composable
 private fun LeaderboardScreenPreview() {
     FlippyTheme {
-        LeaderboardScreen(uiState = AppUIState.Idle, leaderboardList = emptyList(), onBackClick = {})
+        LeaderboardScreen(
+            uiState = AppUIState.Idle,
+            leaderboardList = emptyList(),
+            onSwitchDifficulty = {},
+            onBackClick = {})
     }
 }
