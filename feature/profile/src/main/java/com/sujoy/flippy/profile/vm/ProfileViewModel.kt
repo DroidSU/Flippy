@@ -60,9 +60,6 @@ class ProfileViewModel @Inject constructor(
 
         _username.value = savedUsername
         _avatarId.value = savedAvatarId
-        
-        // If local data is missing, we don't force edit dialog here yet, 
-        // the UI (ProfileScreen) handles it based on username being empty.
 
         val userId = auth.currentUser?.uid
         if (userId != null) {
@@ -95,7 +92,7 @@ class ProfileViewModel @Inject constructor(
                         _totalMatchesPlayed.value = matchHistories.size
                         _highestScore.value = matchHistories.maxByOrNull { it.score }?.score ?: 0
                         _longestRound.value =
-                            matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
+                            matchHistories.maxByOrNull { it.gameDuration }?.gameDuration ?: 0L
 
                         val sumOfCorrectTaps = matchHistories.sumOf { it.correctTaps }
                         val sumOfTotalTaps = matchHistories.sumOf { it.totalTaps }
@@ -128,21 +125,36 @@ class ProfileViewModel @Inject constructor(
     fun saveProfile(username: String, avatarId: Int) {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch {
-            // 1. Save to Remote (Firebase)
-            val result = networkRepository.saveUserData(username, avatarId)
-            
-            when (result) {
-                is Result.Success -> {
-                    // 2. Save to Local (SharedPreferences)
-                    repository.saveProfile(username, avatarId)
-                    _username.value = username
-                    _avatarId.value = avatarId
-                    _isEditing.value = false // Close dialog
-                    _uiState.value = AppUIState.Success
+            val currentSavedUsername = repository.getUsername()
+
+            // Only check for uniqueness if the username has actually changed
+            if (username.lowercase() != currentSavedUsername.lowercase()) {
+                if (networkRepository.isUsernameExisting(username)) {
+                    _uiState.value = AppUIState.Error("Username already exists. Please choose another one.")
+                    return@launch
                 }
-                is Result.Failure -> {
-                    _uiState.value = AppUIState.Error(result.message)
+                else{
+                    // Save to Remote, including the old username to be cleared
+                    val result = networkRepository.saveUserData(username, avatarId, currentSavedUsername)
+
+                    when (result) {
+                        is Result.Success -> {
+                            // Save to Local
+                            repository.saveProfile(username, avatarId)
+                            _username.value = username
+                            _avatarId.value = avatarId
+                            _isEditing.value = false
+                            _uiState.value = AppUIState.Success
+                        }
+                        is Result.Failure -> {
+                            _uiState.value = AppUIState.Error(result.message)
+                        }
+                    }
                 }
+            }
+            else{
+                _uiState.value = AppUIState.Error("Choose a different username.")
+                return@launch
             }
         }
     }
@@ -153,5 +165,9 @@ class ProfileViewModel @Inject constructor(
 
     fun onCancelEdit() {
         _isEditing.value = false
+    }
+
+    fun resetState() {
+        _uiState.value = AppUIState.Idle
     }
 }

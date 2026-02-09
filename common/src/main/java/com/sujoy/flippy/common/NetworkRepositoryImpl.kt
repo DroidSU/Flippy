@@ -96,12 +96,25 @@ class NetworkRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveUserData(username: String, avatarId: Int): Result<Unit> = withContext(Dispatchers.IO) {
-        val userId = auth.currentUser?.uid
-        val userdata = UserData(userId = userId ?: "", username = username, avatarId = avatarId)
+    override suspend fun saveUserData(username: String, avatarId: Int, oldUsername: String?): Result<Unit> = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: return@withContext Result.Failure("User not logged in")
+        val userdata = UserData(userId = userId, username = username, avatarId = avatarId)
 
         try {
-            database.child("users").child(userdata.userId).setValue(userdata.toMap()).await()
+            val updates = mutableMapOf<String, Any?>()
+            
+            // Update user profile
+            updates["users/$userId"] = userdata.toMap()
+            
+            // Remove old username claim if it changed
+            if (oldUsername != null && oldUsername.lowercase() != username.lowercase()) {
+                updates["usernames/${oldUsername.lowercase()}"] = null
+            }
+            
+            // Add new username claim
+            updates["usernames/${username.lowercase()}"] = userId
+
+            database.updateChildren(updates).await()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(e.message ?: "Failed to save user data")
@@ -117,6 +130,15 @@ class NetworkRepositoryImpl @Inject constructor(
             emit(Result.Success(matchHistory))
         } catch (e: Exception) {
             emit(Result.Failure(e.message ?: "Failed to fetch match history"))
+        }
+    }
+
+    override suspend fun isUsernameExisting(username: String): Boolean{
+        return try {
+            val snapshot = database.child("usernames").child(username.lowercase()).get().await()
+            snapshot.exists() && snapshot.value != auth.currentUser?.uid
+        } catch (e: Exception) {
+            false
         }
     }
 }

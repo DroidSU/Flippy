@@ -9,6 +9,7 @@ interface NetworkRepository {
     fun storeMatchData(matchList: List<MatchHistory>)
     fun getLeaderBoard() : Flow<List<LeaderboardModel>>
     fun fetchUserData(userId: String): Flow<Result<UserData?>>
-    suspend fun saveUserData(username: String, avatarId: Int): Result<Unit>
+    suspend fun saveUserData(username: String, avatarId: Int, oldUsername: String? = null): Result<Unit>
     fun fetchMatchHistory(userId: String): Flow<Result<List<MatchHistory>>>
+    suspend fun isUsernameExisting(username: String) : Boolean
 }

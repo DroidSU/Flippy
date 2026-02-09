@@ -9,6 +9,7 @@ import androidx.annotation.RequiresPermission
 import com.sujoy.flippy.core.R
 import com.sujoy.flippy.core.models.UserData
 import java.util.Locale
+import kotlin.random.Random
 
 class UtilityMethods {
     companion object {
@@ -61,6 +62,46 @@ class UtilityMethods {
                 "username" to username,
                 "avatarId" to avatarId
             )
+        }
+
+        fun generateUniqueUsername(): String {
+            val adjectives = listOf(
+                "Swift", "Flippy", "Mega", "Cool", "Epic", "Turbo", "Ghost", "Neon",
+                "Fire", "Shadow", "Elite", "Hyper", "Frost", "Mystic", "Iron", "Storm",
+                "Wild", "Silent", "Rapid", "Gilded", "Crimson", "Azure", "Sonic", "Zen",
+                "Vortex", "Cosmic", "Solar", "Lunar", "Radiant", "Lucky", "Vivid", "Noble",
+                "Primal", "Ancient", "Clever", "Quick", "Zesty", "Flashy", "Dynamic", "Aura",
+                "Blazing", "Freezing", "Nimble", "Volcanic", "Celestial", "Galactic", "Stellar", "Snappy"
+            )
+            val nouns = listOf(
+                "Player", "Gamer", "Wizard", "Knight", "Ninja", "Falcon", "Ghost", "Racer",
+                "Titan", "Wolf", "Dragon", "Phoenix", "Legend", "Hunter", "Warrior", "Cyborg",
+                "Rogue", "Paladin", "Archer", "Bard", "Monk", "Druid", "Master", "Beast",
+                "Spirit", "Soul", "Heart", "Mind", "Pulse", "Echo", "Wave", "Spark",
+                "Blaze", "Frost", "Reflex", "Wind", "Rain", "Thunder", "Cloud", "Sky",
+                "Bolt", "Moon", "Sun", "Star", "Nova", "Comet", "Orbit", "Astro", "Mech"
+            )
+
+            val random = Random.Default
+            val adjective = adjectives[random.nextInt(adjectives.size)]
+            val noun = nouns[random.nextInt(nouns.size)]
+            val number = random.nextInt(100, 999)
+
+            // Randomly decide format
+            return when (random.nextInt(3)) {
+                0 -> "$adjective$noun$number"
+                1 -> "${adjective}_$noun"
+                else -> {
+                    // Leet-like transformation
+                    val leetUsername = "$adjective$noun"
+                        .replace("a", "4")
+                        .replace("e", "3")
+                        .replace("i", "1")
+                        .replace("o", "0")
+                        .replace("s", "5")
+                    "$leetUsername$number"
+                }
+            }
         }
     }
 }

@@ -19,9 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -37,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
 import com.sujoy.flippy.core.theme.FlippyTheme
 
@@ -80,7 +83,21 @@ fun EditDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     enabled = !isLoading,
-                    placeholder = { Text("e.g. Speedster") }
+                    placeholder = { Text("e.g. Speedster") },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                onUserNameChanged(UtilityMethods.generateUniqueUsername())
+                            },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Generate Username",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 )
 
                 Column(modifier = Modifier.fillMaxWidth()) {

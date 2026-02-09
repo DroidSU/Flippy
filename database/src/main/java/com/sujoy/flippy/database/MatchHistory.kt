@@ -22,5 +22,7 @@ data class MatchHistory(
     @ColumnInfo(defaultValue = "0")
     val perfectStreak: Int = 0,
     @ColumnInfo(defaultValue = "0")
-    val isBackedUp: Boolean = false
+    val isBackedUp: Boolean = false,
+    @ColumnInfo(defaultValue = "Anonymous")
+    val username: String = ""
 )

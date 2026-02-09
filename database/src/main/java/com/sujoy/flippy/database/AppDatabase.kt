@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.sujoy.flippy.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class], version = 4)
+@Database(entities = [MatchHistory::class], version = 5)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun matchDao(): MatchDAO
@@ -31,6 +31,12 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Since we changed the constant value, we must use the old literal name here to find the table
                 db.execSQL("ALTER TABLE `Match History` RENAME TO `match_history`")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` ADD COLUMN `username` TEXT NOT NULL DEFAULT 'Anonymous'")
             }
         }
     }
