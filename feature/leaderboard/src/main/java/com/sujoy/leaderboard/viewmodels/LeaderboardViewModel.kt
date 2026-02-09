@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.LeaderboardModel
+import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.leaderboard.repository.LeaderboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,34 +22,66 @@ class LeaderboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    private var _leaderboard: List<LeaderboardModel> = emptyList()
+    private val _leaderboard = MutableStateFlow<List<LeaderboardModel>>(emptyList())
+    val leaderboard = _leaderboard.asStateFlow()
 
-    private val _filteredLeaderboard = MutableStateFlow<List<LeaderboardModel>>(emptyList())
-    val filteredLeaderboard = _filteredLeaderboard.asStateFlow()
+    private val _myScores = MutableStateFlow<List<MatchHistory>>(emptyList())
+    val myScores = _myScores.asStateFlow()
 
+    private val _selectedTabIndex = MutableStateFlow(1)
+    val selectedTabIndex = _selectedTabIndex.asStateFlow()
 
     private val _selectedDifficulty: MutableStateFlow<String> =
         MutableStateFlow(Difficulty.NORMAL.label)
     val selectedDifficulty = _selectedDifficulty.asStateFlow()
 
     init {
-        getLeaderboardData()
+        if(_selectedTabIndex.value == 1){
+            getLeaderboardData()
+        }
+        else {
+            getMyScores()
+        }
     }
 
     private fun getLeaderboardData() {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            leaderboardRepository.getLeaderBoard().collect {
-                _leaderboard = it
-                _filteredLeaderboard.value =
-                    _leaderboard.filter { leaderboardModel -> leaderboardModel.difficulty == selectedDifficulty.value }
+            leaderboardRepository.getLeaderBoard(selectedDifficulty.value).collect {
+                _leaderboard.value = it
                 _uiState.value = AppUIState.Success
             }
         }
     }
 
     fun filterWithDifficulty(difficulty: String) {
-        _filteredLeaderboard.value = _leaderboard.filter { it.difficulty == difficulty }
+        _selectedDifficulty.value = difficulty
+        getLeaderboardData()
     }
 
+    fun getMyScores() {
+        _uiState.value = AppUIState.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                leaderboardRepository.getMyScores().collect {
+                    _myScores.value = it
+                    _uiState.value = AppUIState.Success
+                }
+            }
+            catch(ex : Exception) {
+                _uiState.value = AppUIState.Error(ex.message ?: "Something went wrong")
+            }
+        }
+    }
+
+    fun onSwitchTab(index: Int) {
+        _selectedTabIndex.value = index
+
+        if(index == 0) {
+            getMyScores()
+        }
+        else {
+            getLeaderboardData()
+        }
+    }
 }

@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.sujoy.flippy.core.ConstantsManager
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -15,12 +14,15 @@ interface MatchDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMatches(matches: List<MatchHistory>)
 
-    @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` WHERE playerId = :playerId ORDER BY score DESC, gameDuration ASC LIMIT 3")
+    @Query("SELECT * FROM match_history ORDER BY timestamp DESC")
+    fun getMatchHistory(): Flow<List<MatchHistory>>
+
+    @Query("UPDATE match_history SET isBackedUp = 1 WHERE id IN (:matchIds)")
+    suspend fun markMatchesAsBackedUp(matchIds: List<String>)
+
+    @Query("SELECT * FROM match_history WHERE playerId = :playerId ORDER BY score DESC LIMIT 3")
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
 
-    @Query("SELECT * FROM `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}`")
-    fun getMatchHistory(): Flow<List<MatchHistory>>
-    
-    @Query("UPDATE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` SET isBackedUp = 1 WHERE id IN (:matchIds)")
-    suspend fun markMatchesAsBackedUp(matchIds: List<String>)
+    @Query("DELETE FROM match_history")
+    suspend fun clearAll()
 }

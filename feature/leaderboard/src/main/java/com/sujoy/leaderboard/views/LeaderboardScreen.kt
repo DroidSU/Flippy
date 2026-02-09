@@ -29,9 +29,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.LeaderboardModel
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.leaderboard.components.GlobalLeaderboardSection
 import com.sujoy.leaderboard.components.MyScoresSection
 
@@ -50,10 +48,13 @@ import com.sujoy.leaderboard.components.MyScoresSection
 fun LeaderboardScreen(
     uiState: AppUIState,
     leaderboardList: List<LeaderboardModel> = emptyList(),
+    myScores: List<MatchHistory>,
     onSwitchDifficulty: (String) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    selectedTabIndex: Int,
+    onSwitchTab: (Int) -> Unit,
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(1) } // Default to Global
+
     val tabs = listOf("My Scores", "Global")
 
     Scaffold(
@@ -86,7 +87,7 @@ fun LeaderboardScreen(
             LeaderboardTabSwitcher(
                 tabs = tabs,
                 selectedTabIndex = selectedTabIndex,
-                onTabSelected = { selectedTabIndex = it }
+                onTabSelected = { onSwitchTab(it) }
             )
 
             Crossfade(
@@ -95,7 +96,7 @@ fun LeaderboardScreen(
                 modifier = Modifier.weight(1f)
             ) { index ->
                 when (index) {
-                    0 -> MyScoresSection()
+                    0 -> MyScoresSection(myScores)
                     1 -> GlobalLeaderboardSection(
                         uiState = uiState,
                         leaderboard = leaderboardList,
@@ -180,7 +181,11 @@ private fun LeaderboardScreenPreview() {
         LeaderboardScreen(
             uiState = AppUIState.Idle,
             leaderboardList = emptyList(),
+            myScores = emptyList(),
             onSwitchDifficulty = {},
-            onBackClick = {})
+            onBackClick = {},
+            selectedTabIndex = 1,
+            onSwitchTab = {}
+        )
     }
 }

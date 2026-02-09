@@ -19,4 +19,8 @@ class MatchRepositoryImpl @Inject constructor(
     override fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>> {
         return matchDAO.getTopThreeScores(playerId)
     }
+
+    override fun getMatchHistory(): Flow<List<MatchHistory>> {
+        return matchDAO.getMatchHistory()
+    }
 }

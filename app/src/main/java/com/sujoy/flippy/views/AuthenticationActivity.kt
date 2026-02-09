@@ -48,6 +48,7 @@ class AuthenticationActivity : ComponentActivity() {
             FlippyTheme {
                 val uiState by viewModel.uiState.collectAsState(AppUIState.Idle)
                 val userData by viewModel.userData.collectAsState()
+                val showEditDialog by viewModel.showEditDialog.collectAsState()
 
                 AuthenticationScreen(
                     uiState = uiState,
@@ -63,7 +64,7 @@ class AuthenticationActivity : ComponentActivity() {
                         }
                     },
                     onErrorShown = { message ->
-                        viewModel.errorShown(message)
+                        Toast.makeText(this, "Authentication Failed", Toast.LENGTH_LONG).show()
                     },
                     onSaveUser = { username, avatarId ->
                         viewModel.saveUserProfile(username, avatarId)
@@ -74,6 +75,7 @@ class AuthenticationActivity : ComponentActivity() {
                     onAvatarChanged = {
                         viewModel.onAvatarIdChanged(it)
                     },
+                    showProfileDialog = showEditDialog
                 )
             }
         }

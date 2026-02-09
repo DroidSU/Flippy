@@ -164,6 +164,8 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onCancelEdit() {
+        _username.value = repository.getUsername()
+        _avatarId.value = repository.getAvatarId()
         _isEditing.value = false
     }
 

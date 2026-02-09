@@ -8,6 +8,7 @@ import com.sujoy.flippy.auth.repository.AuthRepository
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
+import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.repository.MatchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +31,9 @@ class AuthViewModel @Inject constructor(
 
     private val _userData = MutableStateFlow<UserData?>(null)
     val userData = _userData.asStateFlow()
+
+    private val _showEditDialog = MutableStateFlow(false)
+    val showEditDialog = _showEditDialog.asStateFlow()
 
     fun signInWithCredential(credential: AuthCredential) {
         viewModelScope.launch {
@@ -58,13 +62,25 @@ class AuthViewModel @Inject constructor(
             networkRepository.fetchUserData(userId).collect { result ->
                 when (result) {
                     is Result.Success -> {
-                        _userData.value = result.data
-                        fetchMatchHistorySync(userId)
+                        val fetchedData = result.data
+                        if (fetchedData != null && fetchedData.username.isNotBlank()) {
+                            // Existing user with data
+                            _userData.value = fetchedData
+                            _showEditDialog.value = false
+                            fetchMatchHistorySync(userId)
+                            _uiState.update { AppUIState.Success }
+                        } else {
+                            // New user or user with missing username
+                            val generatedUsername = UtilityMethods.generateUniqueUsername()
+                            val defaultAvatarId = 1
+                            _userData.value = UserData(userId, generatedUsername, defaultAvatarId)
+                            _showEditDialog.value = true
+                            _uiState.update { AppUIState.Idle }
+                        }
                     }
 
                     is Result.Failure -> {
-                        // Proceed to success so user can set profile if fetch fails
-                        _uiState.update { AppUIState.Success }
+                        _uiState.update { AppUIState.Error(result.message) }
                     }
                 }
             }
@@ -83,6 +99,7 @@ class AuthViewModel @Inject constructor(
                         }
                         _uiState.update { AppUIState.Success }
                     }
+
                     is Result.Failure -> {
                         // Even if match history fails, we allow user to proceed
                         _uiState.update { AppUIState.Success }
@@ -105,11 +122,21 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { AppUIState.Loading }
+            val oldUsername = _userData.value?.username
             val userDataToSave = UserData(userId = userId, username = username, avatarId = avatarId)
-            when (val result =
-                networkRepository.saveUserData(userDataToSave.username, userDataToSave.avatarId)) {
+            
+            // Check uniqueness if username changed
+            if (oldUsername != username) {
+                if (networkRepository.isUsernameExisting(username)) {
+                    _uiState.update { AppUIState.Error("Username already exists") }
+                    return@launch
+                }
+            }
+
+            when (val result = networkRepository.saveUserData(username, avatarId, oldUsername)) {
                 is Result.Success -> {
                     _userData.value = userDataToSave
+                    _showEditDialog.value = false
                     _uiState.update { AppUIState.Success }
                 }
 

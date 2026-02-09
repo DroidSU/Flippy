@@ -5,110 +5,151 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.database.MatchHistory
 
 @Composable
-fun MyScoresSection() {
-    // Using MatchHistory as dummy data
-    val myScores = listOf(
-        MatchHistory(id = "1", playerId = "player1", score = 2450, difficulty = "NORMAL", gameDuration = 60000, timestamp = System.currentTimeMillis(), correctTaps = 100, totalTaps = 110, totalReflexTime = 500, perfectStreak = 20),
-        MatchHistory(id = "2", playerId = "player1", score = 2100, difficulty = "NORMAL", gameDuration = 60000, timestamp = System.currentTimeMillis(), correctTaps = 90, totalTaps = 100, totalReflexTime = 550, perfectStreak = 15),
-        MatchHistory(id = "3", playerId = "player1", score = 1850, difficulty = "NORMAL", gameDuration = 60000, timestamp = System.currentTimeMillis(), correctTaps = 80, totalTaps = 95, totalReflexTime = 600, perfectStreak = 10),
-        MatchHistory(id = "4", playerId = "player1", score = 1500, difficulty = "NORMAL", gameDuration = 60000, timestamp = System.currentTimeMillis(), correctTaps = 70, totalTaps = 90, totalReflexTime = 650, perfectStreak = 5),
-        MatchHistory(id = "5", playerId = "player1", score = 1200, difficulty = "NORMAL", gameDuration = 60000, timestamp = System.currentTimeMillis(), correctTaps = 60, totalTaps = 85, totalReflexTime = 700, perfectStreak = 3)
-    )
+fun MyScoresSection(
+    myScores: List<MatchHistory>
+) {
+    val bestScore = myScores.maxByOrNull { it.score }?.score ?: 0
+    val totalGames = myScores.size
+    val averageScore = if (totalGames > 0) myScores.sumOf { it.score } / totalGames else 0
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.padding(16.dp),
         contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            MyScoreHeader(bestScore = myScores.firstOrNull()?.score ?: 0)
+            MyScoreHeader(bestScore, totalGames, averageScore)
         }
 
         item {
             Text(
-                text = "History",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                text = "Recent Matches",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(vertical = 8.dp)
             )
         }
 
-        itemsIndexed(myScores) { index, data ->
-            LeaderboardItem(
-                rank = index + 1,
-                username = "You",
-                score = data.score,
-                avatarId = 1,
-                isCurrentUser = true
-            )
+        items(myScores) { match ->
+            MyScoreItem(match = match)
+            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
         }
     }
 }
 
 @Composable
-fun MyScoreHeader(bestScore: Int) {
+fun MyScoreHeader(
+    bestScore: Int,
+    totalGames: Int,
+    averageScore: Int
+) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
-        tonalElevation = 8.dp
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 4.dp,
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Personal Best",
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                )
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
             )
-            
             Spacer(modifier = Modifier.height(8.dp))
-            
             Text(
                 text = bestScore.toString(),
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    letterSpacing = 2.sp
-                )
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            
             Spacer(modifier = Modifier.height(16.dp))
-            
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                StatItem(label = "Games", value = "12")
-                StatItem(label = "Avg Score", value = "1850")
-                StatItem(label = "Rank", value = "#42")
+                StatItem("Total Games", totalGames.toString())
+                StatItem("Average Score", averageScore.toString())
             }
+        }
+    }
+}
+
+@Composable
+fun MyScoreItem(match: MatchHistory) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.EmojiEvents,
+            contentDescription = "Score",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(40.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = "Score: ${match.score}",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Star, contentDescription = "Difficulty", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Text(
+                    text = match.difficulty,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(Icons.Default.Timer, contentDescription = "Duration", modifier = Modifier.size(16.dp), tint = Color.Gray)
+                Text(
+                    text = UtilityMethods.formatTime(match.gameDuration),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.End) {
+            Icon(Icons.Default.Schedule, contentDescription = "Time", modifier = Modifier.size(16.dp), tint = Color.Gray)
+            Text(
+                text = UtilityMethods.getRelativeTime(match.timestamp),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -118,16 +159,13 @@ fun StatItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onPrimaryContainer
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-            )
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
         )
     }
 }

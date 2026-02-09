@@ -74,7 +74,7 @@ fun ProfileScreen(
     reflexAverage: Long = 0L
 ) {
 
-    if (username.isBlank() || isEditing) {
+    if (isEditing) {
         EditDialog(
             username = username,
             avatarId = avatarId,

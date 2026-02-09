@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.NetworkRepository
+import com.sujoy.flippy.common.repository.ProfileRepository
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.game_engine.models.CardType
@@ -29,7 +30,8 @@ class GameViewModel @Inject constructor(
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,
     private val networkRepository: NetworkRepository,
-    private val preferencesRepository: GamePreferencesRepository
+    private val preferencesRepository: GamePreferencesRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val playerId: String get() = auth.currentUser?.uid ?: "anonymous"
@@ -270,6 +272,7 @@ class GameViewModel @Inject constructor(
         val currentTime = _gameTime.value
         val currentDifficulty = _difficulty.value.label
         val timestamp = System.currentTimeMillis()
+        val currentUsername = profileRepository.getUsername()
 
         viewModelScope.launch(Dispatchers.IO) {
             val match = MatchHistory(
@@ -283,7 +286,8 @@ class GameViewModel @Inject constructor(
                 totalTaps = _totalTaps.value,
                 totalReflexTime = totalReflexTime,
                 perfectStreak = streak,
-                isBackedUp = false
+                isBackedUp = false,
+                username = currentUsername
             )
             matchRepository.saveMatch(match)
             if (networkRepository.isInternetAvailable()) {
@@ -346,6 +350,13 @@ class GameViewModel @Inject constructor(
     }
 
     fun signOut() {
-        auth.signOut()
+        viewModelScope.launch {
+            profileRepository.clearLocalData()
+            auth.signOut()
+        }
+    }
+
+    fun getUsername() : String {
+        return profileRepository.getUsername()
     }
 }

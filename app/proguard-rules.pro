@@ -1,21 +1,35 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Firebase and Play Services rules
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep data models used by Firebase and Room
+-keepclassmembers class com.sujoy.flippy.core.models.** { *; }
+-keepclassmembers class com.sujoy.flippy.database.** { *; }
+-keep class com.sujoy.flippy.core.models.** { *; }
+-keep class com.sujoy.flippy.database.** { *; }
+-keep class com.sujoy.flippy.common.LeaderboardModel { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Room specific rules
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Lottie rules
+-keep class com.airbnb.lottie.** { *; }
+
+# Hilt rules
+-keep class dagger.hilt.** { *; }
+-keep class com.sujoy.flippy.**_HiltComponents* { *; }
+-keep class com.sujoy.flippy.Hilt_* { *; }
+
+# Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
+-keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
+-keepclassmembernames class kotlinx.coroutines.android.HandlerContext {}
+
+# Preserve line numbers for better crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

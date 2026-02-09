@@ -1,4 +1,4 @@
-package com.sujoy.flippy.profile.repository
+package com.sujoy.flippy.common.repository
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -26,8 +26,7 @@ class ProfileRepositoryImpl @Inject constructor(
     }
 
     override fun getAvatarId(): Int {
-        // Return 0 as default if no avatar selected
-        return prefs.getInt(KEY_AVATAR_ID, 0)
+        return prefs.getInt(KEY_AVATAR_ID, 1)
     }
 
     override fun saveProfile(username: String, avatarId: Int) {
@@ -39,5 +38,12 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override fun getMatchHistory(): Flow<List<MatchHistory>> {
         return matchDao.getMatchHistory()
+    }
+
+    override suspend fun clearLocalData() {
+        // Clear SharedPreferences
+        prefs.edit { clear() }
+        // Clear Room database
+        matchDao.clearAll()
     }
 }

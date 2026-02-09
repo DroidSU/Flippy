@@ -60,10 +60,10 @@ class NetworkRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getLeaderBoard(): Flow<List<LeaderboardModel>> = callbackFlow {
-        val leaderboardRef = database.child("leaderboard")
+    override fun getLeaderBoard(difficulty: String): Flow<List<LeaderboardModel>> = callbackFlow {
+        val leaderboardRef = database.child("leaderboard").child(difficulty)
             .orderByChild("totalScore")
-            .limitToLast(10)
+            .limitToLast(13)
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

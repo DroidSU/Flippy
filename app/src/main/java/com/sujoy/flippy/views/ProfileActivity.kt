@@ -25,7 +25,7 @@ class ProfileActivity : ComponentActivity() {
                 val username by viewModel.username.collectAsState()
                 val avatarId by viewModel.avatarId.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
-                val isEditing by viewModel.isEditing.collectAsState()
+                val isEditing by viewModel.isEditing.collectAsState(false)
                 val totalMatches by viewModel.totalMatchesPlayed.collectAsState()
                 val highestScore by viewModel.highestScore.collectAsState()
                 val longestRound by viewModel.longestRound.collectAsState()

@@ -4,10 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.sujoy.flippy.common.AppUIState
@@ -24,18 +20,16 @@ fun AuthenticationScreen(
     onSaveUser: (String, Int) -> Unit,
     onUsernameChanged: (String) -> Unit,
     onAvatarChanged: (Int) -> Unit,
+    showProfileDialog: Boolean,
 ) {
-
-    var showProfileDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState is AppUIState.Success) {
-            val username = userData?.username
-            if (userData == null || username.isNullOrBlank() || username.equals("anonymous", ignoreCase = true)) {
-                showProfileDialog = true
-            } else {
-                showProfileDialog = false
-                onAuthSuccess()
+            onAuthSuccess()
+        }
+        else{
+            if (uiState is AppUIState.Error) {
+                onErrorShown(uiState.message)
             }
         }
     }
