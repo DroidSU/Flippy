@@ -6,7 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
-import com.sujoy.flippy.profile.repository.ProfileRepository
+import com.sujoy.flippy.common.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val repository: ProfileRepository,
+    private val profileRepository: ProfileRepository,
     private val networkRepository: NetworkRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
@@ -55,8 +55,8 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun loadProfile() {
-        val savedUsername = repository.getUsername()
-        val savedAvatarId = repository.getAvatarId()
+        val savedUsername = profileRepository.getUsername()
+        val savedAvatarId = profileRepository.getAvatarId()
 
         _username.value = savedUsername
         _avatarId.value = savedAvatarId
@@ -72,7 +72,7 @@ class ProfileViewModel @Inject constructor(
                             if (userData.username != savedUsername || userData.avatarId != savedAvatarId) {
                                 _username.value = userData.username
                                 _avatarId.value = userData.avatarId
-                                repository.saveProfile(userData.username, userData.avatarId)
+                                profileRepository.saveProfile(userData.username, userData.avatarId)
                             }
                         }
                     }
@@ -86,13 +86,13 @@ class ProfileViewModel @Inject constructor(
     private fun loadMatchData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                repository.getMatchHistory().collect { matchHistories ->
+                profileRepository.getMatchHistory().collect { matchHistories ->
 
                     if (matchHistories.isNotEmpty()) {
                         _totalMatchesPlayed.value = matchHistories.size
                         _highestScore.value = matchHistories.maxByOrNull { it.score }?.score ?: 0
                         _longestRound.value =
-                            matchHistories.maxByOrNull { it.gameDuration }?.gameDuration ?: 0L
+                            matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
 
                         val sumOfCorrectTaps = matchHistories.sumOf { it.correctTaps }
                         val sumOfTotalTaps = matchHistories.sumOf { it.totalTaps }
@@ -125,7 +125,7 @@ class ProfileViewModel @Inject constructor(
     fun saveProfile(username: String, avatarId: Int) {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch {
-            val currentSavedUsername = repository.getUsername()
+            val currentSavedUsername = profileRepository.getUsername()
 
             // Only check for uniqueness if the username has actually changed
             if (username.lowercase() != currentSavedUsername.lowercase()) {
@@ -133,28 +133,23 @@ class ProfileViewModel @Inject constructor(
                     _uiState.value = AppUIState.Error("Username already exists. Please choose another one.")
                     return@launch
                 }
-                else{
-                    // Save to Remote, including the old username to be cleared
-                    val result = networkRepository.saveUserData(username, avatarId, currentSavedUsername)
-
-                    when (result) {
-                        is Result.Success -> {
-                            // Save to Local
-                            repository.saveProfile(username, avatarId)
-                            _username.value = username
-                            _avatarId.value = avatarId
-                            _isEditing.value = false
-                            _uiState.value = AppUIState.Success
-                        }
-                        is Result.Failure -> {
-                            _uiState.value = AppUIState.Error(result.message)
-                        }
-                    }
-                }
             }
-            else{
-                _uiState.value = AppUIState.Error("Choose a different username.")
-                return@launch
+
+            // Save to Remote, including the old username to be cleared
+            val result = networkRepository.saveUserData(username, avatarId, currentSavedUsername)
+
+            when (result) {
+                is Result.Success -> {
+                    // Save to Local
+                    profileRepository.saveProfile(username, avatarId)
+                    _username.value = username
+                    _avatarId.value = avatarId
+                    _isEditing.value = false
+                    _uiState.value = AppUIState.Success
+                }
+                is Result.Failure -> {
+                    _uiState.value = AppUIState.Error(result.message)
+                }
             }
         }
     }
@@ -164,8 +159,8 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onCancelEdit() {
-        _username.value = repository.getUsername()
-        _avatarId.value = repository.getAvatarId()
+        _username.value = profileRepository.getUsername()
+        _avatarId.value = profileRepository.getAvatarId()
         _isEditing.value = false
     }
 

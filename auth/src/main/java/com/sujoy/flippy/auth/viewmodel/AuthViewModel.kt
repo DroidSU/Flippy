@@ -9,6 +9,7 @@ import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
 import com.sujoy.flippy.common.UtilityMethods
+import com.sujoy.flippy.common.repository.ProfileRepository
 import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.repository.MatchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,9 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val networkRepository: NetworkRepository,
     private val auth: FirebaseAuth,
-    private val matchRepository: MatchRepository
+    private val matchRepository: MatchRepository,
+    private val profileRepository: ProfileRepository
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
@@ -67,6 +70,7 @@ class AuthViewModel @Inject constructor(
                             // Existing user with data
                             _userData.value = fetchedData
                             _showEditDialog.value = false
+
                             fetchMatchHistorySync(userId)
                             _uiState.update { AppUIState.Success }
                         } else {
@@ -137,6 +141,7 @@ class AuthViewModel @Inject constructor(
                 is Result.Success -> {
                     _userData.value = userDataToSave
                     _showEditDialog.value = false
+                    profileRepository.saveProfile(username, avatarId)
                     _uiState.update { AppUIState.Success }
                 }
 

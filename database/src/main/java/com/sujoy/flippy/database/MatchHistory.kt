@@ -24,5 +24,7 @@ data class MatchHistory(
     @ColumnInfo(defaultValue = "0")
     val isBackedUp: Boolean = false,
     @ColumnInfo(defaultValue = "Anonymous")
-    val username: String = ""
+    val username: String = "",
+    @ColumnInfo(defaultValue = "1")
+    val avatarId : Int
 )

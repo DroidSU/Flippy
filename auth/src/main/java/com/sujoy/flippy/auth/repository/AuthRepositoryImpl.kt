@@ -5,7 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
-import com.sujoy.flippy.profile.repository.ProfileRepository
+import com.sujoy.flippy.common.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow

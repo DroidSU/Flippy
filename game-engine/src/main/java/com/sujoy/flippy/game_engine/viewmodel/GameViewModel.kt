@@ -63,6 +63,9 @@ class GameViewModel @Inject constructor(
     private val _isGamePaused = MutableStateFlow(false)
     val isGamePaused = _isGamePaused.asStateFlow()
 
+    private var _currentUsername = ""
+    private var _currentAvatarId = 1
+
     private val _totalTaps = MutableStateFlow(0)
     private val _correctTaps = MutableStateFlow(0)
 
@@ -83,6 +86,7 @@ class GameViewModel @Inject constructor(
             Difficulty.HARD -> 800L
         }
 
+        getUserData()
         getTopThreeScores()
         checkRulesVisibility()
     }
@@ -272,7 +276,6 @@ class GameViewModel @Inject constructor(
         val currentTime = _gameTime.value
         val currentDifficulty = _difficulty.value.label
         val timestamp = System.currentTimeMillis()
-        val currentUsername = profileRepository.getUsername()
 
         viewModelScope.launch(Dispatchers.IO) {
             val match = MatchHistory(
@@ -287,7 +290,8 @@ class GameViewModel @Inject constructor(
                 totalReflexTime = totalReflexTime,
                 perfectStreak = streak,
                 isBackedUp = false,
-                username = currentUsername
+                username = _currentUsername,
+                avatarId = _currentAvatarId
             )
             matchRepository.saveMatch(match)
             if (networkRepository.isInternetAvailable()) {
@@ -356,7 +360,8 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun getUsername() : String {
-        return profileRepository.getUsername()
+    private fun getUserData() {
+        _currentUsername = profileRepository.getUsername()
+        _currentAvatarId = profileRepository.getAvatarId()
     }
 }

@@ -1,6 +1,7 @@
 package com.sujoy.leaderboard.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,7 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.LeaderboardModel
-import com.sujoy.flippy.core.R
+import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
 import com.sujoy.flippy.core.theme.FlippyTheme
 
 @Composable
@@ -111,7 +112,7 @@ fun GlobalLeaderboardSection(
                                     rank = index + 4,
                                     username = data.username.ifEmpty { data.playerId },
                                     score = data.totalScore,
-                                    avatarId = (index % 8) + 1
+                                    avatarId = data.avatarId
                                 )
                             }
                         }
@@ -249,20 +250,15 @@ fun PodiumItem(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val avatarId = when (rank) {
-            1 -> 1
-            2 -> 2
-            else -> 3
-        }
-        val avatarRes = getAvatarResource(avatarId)
+        val avatarRes = getAvatarResource(data.avatarId)
 
         Box(contentAlignment = Alignment.TopCenter) {
             Surface(
                 modifier = Modifier
-                    .size(if (rank == 1) 72.dp else 60.dp)
+                    .size(if (rank == 1) 84.dp else 72.dp)
                     .padding(4.dp),
                 shape = CircleShape,
-                border = androidx.compose.foundation.BorderStroke(2.dp, color),
+                border = BorderStroke(2.dp, color),
                 color = MaterialTheme.colorScheme.surface
             ) {
                 if (avatarRes != null) {
@@ -343,22 +339,61 @@ fun PodiumItem(
 private fun GlobalLeaderboardPreview() {
     FlippyTheme {
         GlobalLeaderboardSection(
-            uiState = AppUIState.Idle,
-            leaderboard = emptyList(),
-            onSwitchDifficulty = {})
-    }
-}
+            uiState = AppUIState.Success,
+            leaderboard = listOf(
+                LeaderboardModel(
+                    playerId = "player1",
+                    username = "Player One",
+                    totalScore = 100,
+                    avatarId = 1,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
+                LeaderboardModel(
+                    playerId = "player2",
+                    username = "Player Two",
+                    totalScore = 90,
+                    avatarId = 2,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
+                LeaderboardModel(
+                    playerId = "player3",
+                    username = "Player Three",
+                    totalScore = 80,
+                    avatarId = 3,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
 
-private fun getAvatarResource(id: Int): Int? {
-    return when (id) {
-        1 -> R.drawable.user_avatar_1
-        2 -> R.drawable.user_avatar_2
-        3 -> R.drawable.user_avatar_3
-        4 -> R.drawable.user_avatar_4
-        5 -> R.drawable.user_avatar_5
-        6 -> R.drawable.user_avatar_6
-        7 -> R.drawable.user_avatar_7
-        8 -> R.drawable.user_avatar_8
-        else -> null
+                LeaderboardModel(
+                    playerId = "player4",
+                    username = "Player Four",
+                    totalScore = 75,
+                    avatarId = 4,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
+
+                LeaderboardModel(
+                    playerId = "player5",
+                    username = "Player Five",
+                    totalScore = 60,
+                    avatarId = 5,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
+
+                LeaderboardModel(
+                    playerId = "player3",
+                    username = "Player Three",
+                    totalScore = 80,
+                    avatarId = 3,
+                    lastUpdated = 0,
+                    difficulty = Difficulty.NORMAL.label
+                ),
+
+            ),
+            onSwitchDifficulty = {})
     }
 }
