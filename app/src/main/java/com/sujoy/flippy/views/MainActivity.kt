@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import com.sujoy.flippy.game_engine.ui.GameScreen
@@ -20,6 +21,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var soundRepository: SoundRepository
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private val gameViewModel: GameViewModel by viewModels()
 
@@ -29,7 +32,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            FlippyTheme {
+            FlippyTheme(settingsRepository) {
                 val tiles by gameViewModel.tiles.collectAsState()
                 val score by gameViewModel.score.collectAsState()
                 val lives by gameViewModel.lives.collectAsState()
@@ -68,7 +71,7 @@ class MainActivity : ComponentActivity() {
                         startActivity(Intent(this, LeaderboardActivity::class.java))
                     },
                     onPreferencesIntentClicked = {
-
+                        startActivity(Intent(this, SettingsActivity::class.java))
                     }
                 )
             }

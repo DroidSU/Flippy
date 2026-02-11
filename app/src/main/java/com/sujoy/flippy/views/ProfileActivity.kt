@@ -7,13 +7,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.profile.ui.ProfileScreen
 import com.sujoy.flippy.profile.vm.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ProfileActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private val viewModel: ProfileViewModel by viewModels()
 
@@ -21,7 +26,7 @@ class ProfileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FlippyTheme {
+            FlippyTheme(settingsRepository = settingsRepository) {
                 val username by viewModel.username.collectAsState()
                 val avatarId by viewModel.avatarId.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()

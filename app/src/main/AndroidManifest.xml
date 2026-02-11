@@ -14,6 +14,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Flippy">
         <activity
+            android:name=".views.SettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.Flippy" />
+        <activity
             android:name=".views.LeaderboardActivity"
             android:exported="false"
             android:label="@string/title_activity_leaderboard"

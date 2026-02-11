@@ -6,17 +6,24 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FlippyTheme {
+            FlippyTheme(settingsRepository = settingsRepository) {
                 SplashScreen {
                     val auth = FirebaseAuth.getInstance()
-                    // Check if user is actually signed in via Firebase
                     val targetActivity = if (auth.currentUser != null) {
                         MainActivity::class.java
                     } else {

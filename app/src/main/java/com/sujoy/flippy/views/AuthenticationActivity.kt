@@ -21,13 +21,18 @@ import com.sujoy.flippy.BuildConfig
 import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
 import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 private const val TAG = "AuthenticationActivity"
 
 @AndroidEntryPoint
 class AuthenticationActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private val googleSignInClient: GoogleSignInClient by lazy {
         val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
@@ -45,7 +50,7 @@ class AuthenticationActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            FlippyTheme {
+            FlippyTheme(settingsRepository = settingsRepository) {
                 val uiState by viewModel.uiState.collectAsState(AppUIState.Idle)
                 val userData by viewModel.userData.collectAsState()
                 val showEditDialog by viewModel.showEditDialog.collectAsState()

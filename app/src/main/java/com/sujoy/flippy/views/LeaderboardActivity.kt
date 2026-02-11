@@ -7,20 +7,25 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.leaderboard.viewmodels.LeaderboardViewModel
 import com.sujoy.leaderboard.views.LeaderboardScreen
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LeaderboardActivity : ComponentActivity() {
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     private val viewModel: LeaderboardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FlippyTheme {
+            FlippyTheme(settingsRepository = settingsRepository) {
                 val leaderboardList by viewModel.leaderboard.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
                 val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()

@@ -1,0 +1,397 @@
+package com.sujoy.flippy.settings
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.sujoy.flippy.core.settings.AppTheme
+import com.sujoy.flippy.core.theme.FlippyTheme
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    selectedTheme: AppTheme,
+    notificationsEnabled: Boolean,
+    gameSoundEnabled: Boolean,
+    hapticFeedbackEnabled: Boolean,
+    onThemeChange: (AppTheme) -> Unit = {},
+    onNotificationsChange: (Boolean) -> Unit = {},
+    onGameSoundChange: (Boolean) -> Unit = {},
+    onHapticFeedbackChange: (Boolean) -> Unit = {},
+    onBackClick: () -> Unit = {}
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Settings",
+                        fontWeight = FontWeight.Black,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                SettingsSectionHeader(title = "Appearance")
+            }
+
+            item {
+                ThemeSettingItem(
+                    currentTheme = selectedTheme,
+                    onThemeChange = { onThemeChange(it) }
+                )
+            }
+
+            item {
+                SettingsSectionHeader(title = "Notifications & Sound")
+            }
+
+            item {
+                SettingsToggleItem(
+                    title = "Notifications",
+                    subtitle = "Get alerts for events and updates",
+                    icon = Icons.Default.Notifications,
+                    checked = notificationsEnabled,
+                    onCheckedChange = { onNotificationsChange(it) }
+                )
+            }
+
+            item {
+                SettingsToggleItem(
+                    title = "Game Sound",
+                    subtitle = "Enable in-game sound effects",
+                    icon = Icons.Default.VolumeUp,
+                    checked = gameSoundEnabled,
+                    onCheckedChange = { onGameSoundChange(it) }
+                )
+            }
+
+            item {
+                SettingsToggleItem(
+                    title = "Haptic Feedback",
+                    subtitle = "Vibrations during gameplay",
+                    icon = Icons.Default.Vibration,
+                    checked = hapticFeedbackEnabled,
+                    onCheckedChange = { onHapticFeedbackChange(it) }
+                )
+            }
+
+            item {
+                SettingsSectionHeader(title = "Support & About")
+            }
+
+            item {
+                SettingsClickableItem(
+                    title = "App Version",
+                    subtitle = "v1.0.0-beta",
+                    icon = Icons.Default.Info,
+                    onClick = { /* Show version info */ }
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelMedium.copy(
+            letterSpacing = 1.2.sp,
+            fontWeight = FontWeight.Bold
+        ),
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun SettingsToggleItem(
+    title: String,
+    subtitle: String? = null,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) },
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeSettingItem(
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(40.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "App Theme",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ThemeOption(
+                    title = "Light",
+                    selected = currentTheme == AppTheme.LIGHT,
+                    onClick = { onThemeChange(AppTheme.LIGHT) }
+                )
+                ThemeOption(
+                    title = "Dark",
+                    selected = currentTheme == AppTheme.DARK,
+                    onClick = { onThemeChange(AppTheme.DARK) }
+                )
+                ThemeOption(
+                    title = "System",
+                    selected = currentTheme == AppTheme.SYSTEM,
+                    onClick = { onThemeChange(AppTheme.SYSTEM) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RowScope.ThemeOption(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                title,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        },
+        modifier = Modifier.weight(1f),
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = Color.Transparent,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        border = if (selected) null else FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = false,
+            borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        )
+    )
+}
+
+@Composable
+private fun SettingsClickableItem(
+    title: String,
+    subtitle: String? = null,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsScreenPreview() {
+    FlippyTheme {
+        SettingsScreen(
+            selectedTheme = AppTheme.SYSTEM,
+            notificationsEnabled = true,
+            gameSoundEnabled = true,
+            hapticFeedbackEnabled = true
+        )
+    }
+}
