@@ -2,8 +2,10 @@ package com.sujoy.flippy.common
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.text.format.DateUtils
 import androidx.annotation.RequiresPermission
 import com.sujoy.flippy.core.R
@@ -101,6 +103,20 @@ class UtilityMethods {
                         .replace("s", "5")
                     "$leetUsername$number"
                 }
+            }
+        }
+
+        fun getAppVersionName(context: Context): String {
+            return try {
+                val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.getPackageInfo(context.packageName, 0)
+                }
+                packageInfo.versionName ?: "Unknown"
+            } catch (e: Exception) {
+                "Unknown"
             }
         }
     }

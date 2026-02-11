@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -55,6 +54,7 @@ fun SettingsScreen(
     notificationsEnabled: Boolean,
     gameSoundEnabled: Boolean,
     hapticFeedbackEnabled: Boolean,
+    versionName: String,
     onThemeChange: (AppTheme) -> Unit = {},
     onNotificationsChange: (Boolean) -> Unit = {},
     onGameSoundChange: (Boolean) -> Unit = {},
@@ -142,7 +142,7 @@ fun SettingsScreen(
             item {
                 SettingsClickableItem(
                     title = "App Version",
-                    subtitle = "v1.0.0-beta",
+                    subtitle = "v$versionName",
                     icon = Icons.Default.Info,
                     onClick = { /* Show version info */ }
                 )
@@ -373,12 +373,12 @@ private fun SettingsClickableItem(
                 }
             }
 
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
+//            Icon(
+//                imageVector = Icons.Default.ChevronRight,
+//                contentDescription = null,
+//                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                modifier = Modifier.size(20.dp)
+//            )
         }
     }
 }
@@ -391,7 +391,8 @@ fun SettingsScreenPreview() {
             selectedTheme = AppTheme.SYSTEM,
             notificationsEnabled = true,
             gameSoundEnabled = true,
-            hapticFeedbackEnabled = true
+            hapticFeedbackEnabled = true,
+            versionName = "1.0.0"
         )
     }
 }
