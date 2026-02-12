@@ -21,6 +21,9 @@ class SettingsRepositoryImpl @Inject constructor(
     private val _themeFlow = MutableStateFlow(getAppTheme())
     override val themeFlow: StateFlow<AppTheme> = _themeFlow.asStateFlow()
 
+    private val _gameSoundFlow = MutableStateFlow(getGameSoundEnabled())
+    override val gameSoundFlow: StateFlow<Boolean> = _gameSoundFlow.asStateFlow()
+
     init {
         applyTheme(getAppTheme())
     }
@@ -66,6 +69,7 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun setGameSoundEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_GAME_SOUND, enabled) }
+        _gameSoundFlow.value = enabled
     }
 
     override fun getGameSoundEnabled(): Boolean {

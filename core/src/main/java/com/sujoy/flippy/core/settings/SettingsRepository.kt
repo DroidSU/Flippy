@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SettingsRepository {
     val themeFlow: StateFlow<AppTheme>
+    val gameSoundFlow: StateFlow<Boolean>
 
     fun setAppTheme(theme: AppTheme)
     fun getAppTheme(): AppTheme
