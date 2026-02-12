@@ -172,15 +172,21 @@ class GameViewModel @Inject constructor(
     fun pauseGameTemporarily() {
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
 
+        val pauseDuration = if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) 1000L else 500L
+
+        _isGamePaused.value = true
+        soundRepository.playBombSound()
+        accumulatedTime += System.currentTimeMillis() - lastStartTime
+
         viewModelScope.launch {
-            _isGamePaused.value = true
-            accumulatedTime += System.currentTimeMillis() - lastStartTime
+            soundRepository.pauseBackgroundMusic()
+            // Explicit delay ensures the pause lasts the intended duration even if sound is disabled
+            delay(pauseDuration)
 
-            if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL)
-                soundRepository.pauseBackgroundMusicTemp(1000L)
-            else
-                soundRepository.pauseBackgroundMusicTemp(500L)
-
+            if (_status.value == GameStatus.PLAYING) {
+                soundRepository.startBackgroundMusic()
+            }
+            
             _isGamePaused.value = false
             lastStartTime = System.currentTimeMillis()
         }
@@ -258,7 +264,6 @@ class GameViewModel @Inject constructor(
             if (_lives.value <= 0) {
                 endGame()
             } else {
-                soundRepository.playBombSound()
                 pauseGameTemporarily()
             }
         }
@@ -328,7 +333,6 @@ class GameViewModel @Inject constructor(
                 if (_lives.value <= 0) {
                     endGame()
                 } else {
-                    soundRepository.playBombSound()
                     pauseGameTemporarily()
                 }
                 _totalTaps.update { it + 1 }
