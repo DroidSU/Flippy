@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.google.firebase.auth.FirebaseAuth
+import com.flippy.game2.ui.NewGameActivity
 import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,13 +23,14 @@ class SplashActivity : ComponentActivity() {
         setContent {
             FlippyTheme(settingsRepository = settingsRepository) {
                 SplashScreen {
-                    val auth = FirebaseAuth.getInstance()
-                    val targetActivity = if (auth.currentUser != null) {
-                        MainActivity::class.java
-                    } else {
-                        AuthenticationActivity::class.java
-                    }
-                    startActivity(Intent(this, targetActivity))
+//                    val auth = FirebaseAuth.getInstance()
+//                    val targetActivity = if (auth.currentUser != null) {
+//                        MainActivity::class.java
+//                    } else {
+//                        AuthenticationActivity::class.java
+//                    }
+//                    startActivity(Intent(this, targetActivity))
+                    startActivity(Intent(this, NewGameActivity::class.java))
                     finish()
                 }
             }

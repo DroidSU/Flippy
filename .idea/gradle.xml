@@ -20,6 +20,7 @@
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/game-engine" />
+            <option value="$PROJECT_DIR$/game2" />
           </set>
         </option>
       </GradleProjectSettings>
