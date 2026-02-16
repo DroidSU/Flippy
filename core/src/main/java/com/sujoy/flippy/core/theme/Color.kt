@@ -3,29 +3,28 @@ package com.sujoy.flippy.core.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Flippy Modern 3D Palette
- * A high-contrast, vibrant palette designed for depth and materialistic UI.
+ * Flippy Cyber-Gamer 2026 Palette
+ * High-vibrancy, futuristic colors for a high-performance reflex game.
  */
 
-// --- Primary Brand Colors ---
-val PrismIndigo = Color(0xFF6366F1)
-val PrismIndigoDeep = Color(0xFF4F46E5) // For 3D Shadows
-val PrismIndigoLight = Color(0xFF818CF8) // For Highlights
+// --- Dark Mode (Neon Cyberpunk) ---
+val CyberBlack = Color(0xFF020408)    // Deep Obsidian
+val CyberSlate = Color(0xFF0B121E)    // Card surfaces
+val NeonCyan = Color(0xFF00F2FF)      // Primary action
+val NeonMagenta = Color(0xFFF000FF)   // Fever accent 1
+val NeonPurple = Color(0xFFBD00FF)    // Fever accent 2
+val NeonYellow = Color(0xFFFFE600)    // Coins / Score
+val NeonRed = Color(0xFFFF0055)       // Bombs / Critical
+val CyberWhite = Color(0xFFE2E8F0)    // High-contrast text
 
-// --- Secondary Accent Colors ---
-val PrismRose = Color(0xFFF43F5E)
-val PrismRoseDeep = Color(0xFFE11D48)
-val PrismEmerald = Color(0xFF10B981)
-val PrismAmber = Color(0xFFF59E0B)
+// --- Light Mode (Vibrant Gamer) ---
+val GamerWhite = Color(0xFFF0F4F8)    // Soft background
+val GamerSilver = Color(0xFFFFFFFF)   // Card surfaces
+val GamerAzure = Color(0xFF007BFF)    // Primary action
+val GamerElectricPurple = Color(0xFF6F42C1) // Secondary
+val GamerRose = Color(0xFFD81B60)     // Alerts
+val GamerDeepText = Color(0xFF1A202C) // Contrast text
 
-// --- Light Theme Neutrals ---
-val GhostWhite = Color(0xFFF8FAFC) // Main background
-val PureWhite = Color(0xFFFFFFFF)  // Card surfaces
-val SlateDark = Color(0xFF0F172A)  // Primary text
-val SlateMedium = Color(0xFF475569) // Secondary text
-
-// --- Dark Theme Neutrals ---
-val DeepSpace = Color(0xFF020617)  // Main background
-val DeepSlate = Color(0xFF0F172A)  // Card surfaces
-val GhostSlate = Color(0xFFF1F5F9) // Primary text
-val SlateLight = Color(0xFF94A3B8) // Secondary text
+// --- Common UI Utility ---
+val GlassWhite = Color(0xFFFFFFFF).copy(alpha = 0.1f)
+val GlassBlack = Color(0xFF000000).copy(alpha = 0.4f)

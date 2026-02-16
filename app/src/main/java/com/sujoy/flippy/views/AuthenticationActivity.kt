@@ -1,6 +1,5 @@
 package com.sujoy.flippy.views
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -89,7 +88,7 @@ class AuthenticationActivity : ComponentActivity() {
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)!!
@@ -101,7 +100,7 @@ class AuthenticationActivity : ComponentActivity() {
                     .show()
             }
         } else {
-            Log.w(TAG, "Google Sign-In flow was cancelled by user.")
+            Log.w(TAG, "Google Sign-In flow error. ${result.data.toString()}")
         }
     }
 }

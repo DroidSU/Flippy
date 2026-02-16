@@ -1,5 +1,6 @@
 package com.sujoy.flippy.auth.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.AuthCredential
@@ -10,6 +11,7 @@ import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.common.repository.ProfileRepository
+import com.sujoy.flippy.core.ConstantsManager
 import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.repository.MatchRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,11 +47,13 @@ class AuthViewModel @Inject constructor(
             authRepository.signInWithCredentials(credential).collect { result ->
                 when (result) {
                     is Result.Success -> {
+                        Log.d(ConstantsManager.TAG_AUTH, "Auth Success")
                         fetchUserData()
                     }
 
                     is Result.Failure -> {
                         _uiState.update {
+                            Log.d(ConstantsManager.TAG_AUTH, "Auth Failed: ${result.message}")
                             AppUIState.Error(result.message)
                         }
                     }

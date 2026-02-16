@@ -9,11 +9,15 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -21,38 +25,89 @@ import androidx.core.view.WindowCompat
 import com.sujoy.flippy.core.settings.AppTheme
 import com.sujoy.flippy.core.settings.SettingsRepository
 
-// Modern 3D color scheme for the Dark Theme
-private val DarkColorScheme = darkColorScheme(
-    primary = PrismIndigo,
-    onPrimary = GhostSlate,
-    secondary = PrismAmber,
-    onSecondary = DeepSpace,
-    background = DeepSpace,
-    onBackground = GhostSlate,
-    surface = DeepSlate,
-    onSurface = GhostSlate,
-    surfaceVariant = DeepSlate,
-    onSurfaceVariant = SlateLight,
-    outline = PrismIndigoDeep,
-    error = PrismRose,
-    onError = GhostSlate
+@Immutable
+data class FlippyGameColors(
+    val scorePopup: Color = Color.Unspecified,
+    val particleCoin: Color = Color.Unspecified,
+    val particleBomb: Color = Color.Unspecified,
+    val shockwave: Color = Color.Unspecified,
+    val criticalVignette: Color = Color.Unspecified,
+    val feverColor1: Color = Color.Unspecified,
+    val feverColor2: Color = Color.Unspecified,
+    val meshColor1: Color = Color.Unspecified,
+    val meshColor2: Color = Color.Unspecified,
+    val pausePulse: Color = Color.Unspecified,
+    val pauseDim: Color = Color.Unspecified
 )
 
-// Modern 3D color scheme for the Light Theme
+val LocalFlippyGameColors = staticCompositionLocalOf { FlippyGameColors() }
+
+val MaterialTheme.gameColors: FlippyGameColors
+    @Composable
+    get() = LocalFlippyGameColors.current
+
+private val DarkGameColors = FlippyGameColors(
+    scorePopup = NeonYellow,
+    particleCoin = NeonYellow,
+    particleBomb = NeonRed,
+    shockwave = NeonRed.copy(alpha = 0.5f),
+    criticalVignette = NeonRed,
+    feverColor1 = NeonMagenta,
+    feverColor2 = NeonPurple,
+    meshColor1 = NeonCyan,
+    meshColor2 = NeonPurple,
+    pausePulse = NeonYellow,
+    pauseDim = Color.Black.copy(alpha = 0.6f)
+)
+
+private val LightGameColors = FlippyGameColors(
+    scorePopup = GamerAzure,
+    particleCoin = GamerAzure,
+    particleBomb = GamerRose,
+    shockwave = GamerRose.copy(alpha = 0.3f),
+    criticalVignette = GamerRose,
+    feverColor1 = GamerElectricPurple,
+    feverColor2 = GamerAzure,
+    meshColor1 = GamerAzure,
+    meshColor2 = GamerElectricPurple,
+    pausePulse = GamerAzure,
+    pauseDim = Color.Black.copy(alpha = 0.1f)
+)
+
+// Neon Cyberpunk 2026 Dark Theme
+private val DarkColorScheme = darkColorScheme(
+    primary = NeonCyan,
+    onPrimary = CyberBlack,
+    secondary = NeonYellow,
+    onSecondary = CyberBlack,
+    tertiary = NeonMagenta,
+    background = CyberBlack,
+    onBackground = CyberWhite,
+    surface = CyberSlate,
+    onSurface = CyberWhite,
+    surfaceVariant = CyberSlate,
+    onSurfaceVariant = CyberWhite.copy(alpha = 0.7f),
+    outline = NeonCyan.copy(alpha = 0.5f),
+    error = NeonRed,
+    onError = CyberBlack
+)
+
+// Vibrant Gamer 2026 Light Theme
 private val LightColorScheme = lightColorScheme(
-    primary = PrismIndigo,
-    onPrimary = PureWhite,
-    secondary = PrismAmber,
-    onSecondary = SlateDark,
-    background = GhostWhite,
-    onBackground = SlateDark,
-    surface = PureWhite,
-    onSurface = SlateDark,
-    surfaceVariant = GhostWhite,
-    onSurfaceVariant = SlateMedium,
-    outline = PrismIndigoLight,
-    error = PrismRose,
-    onError = PureWhite
+    primary = GamerAzure,
+    onPrimary = Color.White,
+    secondary = GamerElectricPurple,
+    onSecondary = Color.White,
+    tertiary = GamerRose,
+    background = GamerWhite,
+    onBackground = GamerDeepText,
+    surface = GamerSilver,
+    onSurface = GamerDeepText,
+    surfaceVariant = GamerWhite,
+    onSurfaceVariant = GamerDeepText.copy(alpha = 0.7f),
+    outline = GamerAzure.copy(alpha = 0.3f),
+    error = GamerRose,
+    onError = Color.White
 )
 
 @Composable
@@ -81,6 +136,8 @@ fun FlippyTheme(
         else -> LightColorScheme
     }
 
+    val gameColors = if (darkTheme) DarkGameColors else LightGameColors
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -93,9 +150,11 @@ fun FlippyTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalFlippyGameColors provides gameColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

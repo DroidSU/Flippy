@@ -1,5 +1,6 @@
 package com.sujoy.flippy.game_engine.viewmodel
 
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -9,15 +10,21 @@ import com.sujoy.flippy.common.repository.ProfileRepository
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.game_engine.models.CardType
+import com.sujoy.flippy.game_engine.models.GameEffect
+import com.sujoy.flippy.game_engine.models.GameEffect.Particle
 import com.sujoy.flippy.game_engine.models.GameStatus
+import com.sujoy.flippy.game_engine.models.ParticleType
 import com.sujoy.flippy.game_engine.models.Tile
+import com.sujoy.flippy.game_engine.models.VibrationType
 import com.sujoy.flippy.game_engine.repository.GamePreferencesRepository
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -63,6 +70,15 @@ class GameViewModel @Inject constructor(
     private val _isGamePaused = MutableStateFlow(false)
     val isGamePaused = _isGamePaused.asStateFlow()
 
+    private val _streak = MutableStateFlow(0)
+    val streak = _streak.asStateFlow()
+
+    private val _lastReactionTime = MutableStateFlow(0L)
+    val lastReactionTime = _lastReactionTime.asStateFlow()
+
+    private val _effects = MutableSharedFlow<GameEffect>()
+    val effects = _effects.asSharedFlow()
+
     private var _currentUsername = ""
     private var _currentAvatarId = 1
 
@@ -75,7 +91,6 @@ class GameViewModel @Inject constructor(
     private var accumulatedTime = 0L
     private var tileRevealTime = 0L
     private var totalReflexTime = 0L
-    private var streak = 0
     private var perfectStreak = 0
     private var visibleDuration = 1200L
 
@@ -131,6 +146,8 @@ class GameViewModel @Inject constructor(
         _status.value = GameStatus.PLAYING
         coinsMissedConsecutively = 0
         _isGamePaused.value = false
+        _streak.value = 0
+        _lastReactionTime.value = 0L
 
         startTimer()
 
@@ -149,6 +166,8 @@ class GameViewModel @Inject constructor(
         _status.value = GameStatus.READY
         coinsMissedConsecutively = 0
         _isGamePaused.value = false
+        _streak.value = 0
+        _lastReactionTime.value = 0L
     }
 
     private fun startTimer() {
@@ -257,6 +276,7 @@ class GameViewModel @Inject constructor(
         if (_status.value != GameStatus.PLAYING) return
 
         coinsMissedConsecutively++
+        _streak.value = 0
         if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0
@@ -293,7 +313,7 @@ class GameViewModel @Inject constructor(
                 correctTaps = _correctTaps.value,
                 totalTaps = _totalTaps.value,
                 totalReflexTime = totalReflexTime,
-                perfectStreak = streak,
+                perfectStreak = perfectStreak,
                 isBackedUp = false,
                 username = _currentUsername,
                 avatarId = _currentAvatarId
@@ -311,40 +331,55 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun onTileTapped(tileId: Int) {
+    fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (!tile.isRevealed || _status.value != GameStatus.PLAYING || _isGamePaused.value) return
 
         updateTile(tileId) { it.copy(isRevealed = false) }
 
-        when (tile.type) {
-            CardType.COIN -> {
-                _score.update { it + 1 }
-                coinsMissedConsecutively = 0
-                _correctTaps.update { it + 1 }
-                _totalTaps.update { it + 1 }
-                streak += 1
-                val reactionTime = System.currentTimeMillis() - tileRevealTime
-                totalReflexTime += reactionTime
+        viewModelScope.launch {
+            tapPosition?.let {
+                _effects.emit(GameEffect.BackgroundRipple(it))
             }
+            
+            when (tile.type) {
+                CardType.COIN -> {
+                    _score.update { it + 1 }
+                    coinsMissedConsecutively = 0
+                    _correctTaps.update { it + 1 }
+                    _totalTaps.update { it + 1 }
+                    _streak.update { it + 1 }
+                    val reactionTime = System.currentTimeMillis() - tileRevealTime
+                    _lastReactionTime.value = reactionTime
+                    totalReflexTime += reactionTime
 
-            CardType.BOMB -> {
-                _lives.update { (it - 1).coerceAtLeast(0) }
-                if (_lives.value <= 0) {
-                    endGame()
-                } else {
-                    pauseGameTemporarily()
+                    _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
+                    _effects.emit(Particle(tileId, ParticleType.COIN))
+                    _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
                 }
-                _totalTaps.update { it + 1 }
 
-                if (perfectStreak < streak)
-                    perfectStreak = streak
+                CardType.BOMB -> {
+                    _lives.update { (it - 1).coerceAtLeast(0) }
+                    
+                    if (perfectStreak < _streak.value)
+                        perfectStreak = _streak.value
 
-                streak = 0
-            }
+                    _streak.value = 0
 
-            else -> {
-                _totalTaps.update { it + 1 }
+                    _effects.emit(Particle(tileId, ParticleType.BOMB))
+                    _effects.emit(GameEffect.Vibration(VibrationType.LONG))
+
+                    if (_lives.value <= 0) {
+                        endGame()
+                    } else {
+                        pauseGameTemporarily()
+                    }
+                    _totalTaps.update { it + 1 }
+                }
+
+                else -> {
+                    _totalTaps.update { it + 1 }
+                }
             }
         }
     }

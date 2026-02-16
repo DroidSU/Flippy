@@ -1,7 +1,9 @@
 package com.sujoy.flippy.game_engine.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -58,6 +61,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,19 +73,37 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.database.MatchHistory
+import com.sujoy.flippy.game_engine.models.EffectState
+import com.sujoy.flippy.game_engine.models.EffectType
+import com.sujoy.flippy.game_engine.models.GameEffect
 import com.sujoy.flippy.game_engine.models.GameStatus
+import com.sujoy.flippy.game_engine.models.ParticleType
+import com.sujoy.flippy.game_engine.models.RippleState
 import com.sujoy.flippy.game_engine.models.Tile
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+import kotlin.random.Random
 
 @Composable
 fun GameScreen(
@@ -93,7 +116,7 @@ fun GameScreen(
     leaderboard: List<MatchHistory>,
     showRules: Boolean,
     isPaused: Boolean,
-    onTileTapped: (Int) -> Unit,
+    onTileTapped: (Int, Offset?) -> Unit,
     onPlayClick: () -> Unit,
     onResetGame: () -> Unit,
     onDifficultyChange: (Difficulty) -> Unit,
@@ -102,11 +125,50 @@ fun GameScreen(
     onSignOutClick: () -> Unit,
     onProfileIntentClicked: () -> Unit,
     onLeaderboardIntentClicked: () -> Unit,
-    onPreferencesIntentClicked: () -> Unit
+    onPreferencesIntentClicked: () -> Unit,
+    streak: Int = 0,
+    reactionTime: Long = 0,
+    effects: SharedFlow<GameEffect>? = null
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
     var isMenuVisible by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+
+    val activeEffects = remember { mutableStateListOf<EffectState>() }
+    val ripples = remember { mutableStateListOf<RippleState>() }
+    val tilePositions = remember { mutableMapOf<Int, Offset>() }
+
+    LaunchedEffect(effects) {
+        effects?.collectLatest { effect ->
+            when (effect) {
+                is GameEffect.ScorePopup -> {
+                    tilePositions[effect.tileId]?.let { pos ->
+                        activeEffects.add(
+                            EffectState(
+                                position = pos,
+                                type = EffectType.SCORE,
+                                text = effect.score
+                            )
+                        )
+                    }
+                }
+
+                is GameEffect.Particle -> {
+                    tilePositions[effect.tileId]?.let { pos ->
+                        val type =
+                            if (effect.type == ParticleType.COIN) EffectType.PARTICLE_COIN else EffectType.PARTICLE_BOMB
+                        activeEffects.add(EffectState(position = pos, type = type))
+                    }
+                }
+
+                is GameEffect.BackgroundRipple -> {
+                    ripples.add(RippleState(position = effect.position))
+                }
+
+                else -> {}
+            }
+        }
+    }
 
     LaunchedEffect(status) {
         if (status == GameStatus.GAME_OVER) {
@@ -125,13 +187,32 @@ fun GameScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            MeshBackground()
+            MeshBackground(streak = streak)
+
+            ripples.forEach { ripple ->
+                key(ripple.id) {
+                    BackgroundRippleEffect(ripple.position) { ripples.remove(ripple) }
+                }
+            }
+
+            if (lives == 1 && status == GameStatus.PLAYING) {
+                CriticalVignette()
+            }
+
+            if (isPaused) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.gameColors.pauseDim)
+                        .zIndex(5f)
+                )
+            }
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .blur(if (showGameOverOverlay || showRules || isMenuVisible || isPaused) 16.dp else 0.dp),
+                    .blur(if (showGameOverOverlay || showRules || isMenuVisible) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Custom Top Bar
@@ -176,7 +257,13 @@ fun GameScreen(
                     }
                 }
 
-                GameHeader(score = score, lives = lives, gameTime = gameTime)
+                GameHeader(
+                    score = score,
+                    lives = lives,
+                    gameTime = gameTime,
+                    isPaused = isPaused,
+                    reactionTime = reactionTime
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -191,6 +278,7 @@ fun GameScreen(
                 GameGrid(
                     tiles = tiles,
                     onTileTapped = onTileTapped,
+                    onTilePositioned = { id, pos -> tilePositions[id] = pos },
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -201,6 +289,22 @@ fun GameScreen(
                     )
                 } else {
                     Spacer(modifier = Modifier.height(100.dp))
+                }
+            }
+
+            // Overlay for effects
+            activeEffects.toList().forEach { effect ->
+                key(effect.id) {
+                    when (effect.type) {
+                        EffectType.SCORE -> FloatingScore(effect) { activeEffects.remove(effect) }
+                        EffectType.PARTICLE_COIN -> SparkleEffect(effect) {
+                            activeEffects.remove(
+                                effect
+                            )
+                        }
+
+                        EffectType.PARTICLE_BOMB -> BombEffect(effect) { activeEffects.remove(effect) }
+                    }
                 }
             }
 
@@ -251,6 +355,189 @@ fun GameScreen(
 }
 
 @Composable
+fun BackgroundRippleEffect(position: Offset, onComplete: () -> Unit) {
+    val progress = remember { Animatable(0f) }
+    val color = MaterialTheme.gameColors.meshColor1
+
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, animationSpec = tween(1000, easing = LinearEasing))
+        onComplete()
+    }
+
+    Canvas(modifier = Modifier
+        .fillMaxSize()
+        .zIndex(0.1f)) {
+        drawCircle(
+            color = color.copy(alpha = 0.3f * (1f - progress.value)),
+            radius = size.maxDimension * progress.value,
+            center = position,
+            style = Stroke(width = 4.dp.toPx())
+        )
+    }
+}
+
+@Composable
+fun CriticalVignette() {
+    val infiniteTransition = rememberInfiniteTransition(label = "critical")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.4f,
+        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "alpha"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.radialGradient(
+                    0.0f to Color.Transparent,
+                    1.0f to MaterialTheme.gameColors.criticalVignette.copy(alpha = alpha),
+                    center = Offset.Unspecified
+                )
+            )
+    )
+}
+
+@Composable
+fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
+    val offsetY = remember { Animatable(0f) }
+    val alpha = remember { Animatable(1f) }
+
+    LaunchedEffect(Unit) {
+        launch {
+            offsetY.animateTo(-150f, animationSpec = tween(800, easing = LinearEasing))
+        }
+        launch {
+            delay(400)
+            alpha.animateTo(0f, animationSpec = tween(400))
+            onComplete()
+        }
+    }
+
+    Text(
+        text = effect.text,
+        style = MaterialTheme.typography.titleLarge.copy(
+            fontWeight = FontWeight.Black,
+            fontSize = 28.sp
+        ),
+        color = MaterialTheme.gameColors.scorePopup,
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    effect.position.x.roundToInt() - 50,
+                    (effect.position.y + offsetY.value).roundToInt() - 50
+                )
+            }
+            .alpha(alpha.value)
+    )
+}
+
+@Composable
+fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
+    val particles = remember { List(8) { Random.nextFloat() * 360f } }
+    val progress = remember { Animatable(0f) }
+    val particleColor = MaterialTheme.gameColors.particleCoin
+
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, animationSpec = tween(500, easing = LinearEasing))
+        onComplete()
+    }
+
+    Canvas(modifier = Modifier.offset {
+        IntOffset(
+            effect.position.x.roundToInt(),
+            effect.position.y.roundToInt()
+        )
+    }) {
+        particles.forEach { angle ->
+            val rad = Math.toRadians(angle.toDouble())
+            val dist = 100f * progress.value
+            val x = (Math.cos(rad) * dist).toFloat()
+            val y = (Math.sin(rad) * dist).toFloat()
+
+            drawCircle(
+                color = particleColor.copy(alpha = 1f - progress.value),
+                radius = 6f * (1f - progress.value),
+                center = Offset(x, y)
+            )
+        }
+    }
+}
+
+@Composable
+fun BombEffect(effect: EffectState, onComplete: () -> Unit) {
+    val progress = remember { Animatable(0f) }
+    val shockwaveColor = MaterialTheme.gameColors.shockwave
+    val particleColor = MaterialTheme.gameColors.particleBomb
+
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, animationSpec = tween(600, easing = LinearEasing))
+        onComplete()
+    }
+
+    Canvas(modifier = Modifier.offset {
+        IntOffset(
+            effect.position.x.roundToInt(),
+            effect.position.y.roundToInt()
+        )
+    }) {
+        // Shockwave
+        drawCircle(
+            color = shockwaveColor.copy(alpha = shockwaveColor.alpha * (1f - progress.value)),
+            radius = 200f * progress.value,
+            style = Stroke(width = 10f)
+        )
+        // Fire/Smoke
+        drawCircle(
+            color = particleColor.copy(alpha = 1f - progress.value),
+            radius = 50f * (1f - progress.value)
+        )
+    }
+}
+
+@Composable
+fun MeshBackground(streak: Int = 0) {
+    val isFever = streak >= 10
+    val infiniteTransition = rememberInfiniteTransition(label = "mesh")
+    val xOffset by infiniteTransition.animateFloat(
+        initialValue = -100f,
+        targetValue = 100f,
+        animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "x"
+    )
+
+    val gameColors = MaterialTheme.gameColors
+
+    val color1 by animateColorAsState(
+        targetValue = if (isFever) gameColors.feverColor1 else gameColors.meshColor1,
+        animationSpec = tween(1000), label = "c1"
+    )
+    val color2 by animateColorAsState(
+        targetValue = if (isFever) gameColors.feverColor2 else gameColors.meshColor2,
+        animationSpec = tween(1000), label = "c2"
+    )
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .blur(80.dp)
+            .alpha(0.3f)
+    ) {
+        drawCircle(
+            color = color1.copy(alpha = 0.4f),
+            radius = size.width / 1.5f,
+            center = Offset(size.width / 2 + xOffset, size.height / 4)
+        )
+        drawCircle(
+            color = color2.copy(alpha = 0.3f),
+            radius = size.width / 2f,
+            center = Offset(size.width / 4 - xOffset, size.height / 1.2f)
+        )
+    }
+}
+
+@Composable
 private fun SideNavigationMenu(
     isVisible: Boolean,
     onDismiss: () -> Unit,
@@ -259,7 +546,9 @@ private fun SideNavigationMenu(
     onLeaderboardIntentClicked: () -> Unit,
     onPreferencesIntentClicked: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .zIndex(10f)) {
         AnimatedVisibility(
             visible = isVisible,
             enter = fadeIn(),
@@ -293,7 +582,7 @@ private fun SideNavigationMenu(
                         .padding(24.dp)
                 ) {
                     Spacer(modifier = Modifier.height(48.dp))
-                    
+
                     Text(
                         text = "FLIPPY",
                         style = MaterialTheme.typography.headlineLarge.copy(
@@ -302,9 +591,9 @@ private fun SideNavigationMenu(
                         ),
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "Master your reflexes",
                         style = MaterialTheme.typography.labelLarge,
@@ -320,7 +609,7 @@ private fun SideNavigationMenu(
                             onProfileIntentClicked()
                         }
                     )
-                    
+
                     NavigationMenuItem(
                         icon = Icons.Default.Leaderboard,
                         label = "Leaderboard",
@@ -328,7 +617,7 @@ private fun SideNavigationMenu(
                             onLeaderboardIntentClicked()
                         }
                     )
-                    
+
                     NavigationMenuItem(
                         icon = Icons.Default.Settings,
                         label = "Preferences",
@@ -350,7 +639,7 @@ private fun SideNavigationMenu(
                         onClick = onSignOutClick,
                         color = Color(0xFFFF4B4B)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
@@ -436,9 +725,6 @@ fun PlayButtonComponent(
     }
 }
 
-/**
- * This composable is used to display the top three scores of the current player
- */
 @Composable
 private fun LeaderboardSection(
     leaderboard: List<MatchHistory>,
@@ -560,36 +846,23 @@ fun DifficultySelector(
 }
 
 @Composable
-fun MeshBackground() {
-    val infiniteTransition = rememberInfiniteTransition(label = "mesh")
-    val xOffset by infiniteTransition.animateFloat(
-        initialValue = -100f,
-        targetValue = 100f,
-        animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "x"
+private fun GameHeader(
+    score: Int,
+    lives: Int,
+    gameTime: Long,
+    isPaused: Boolean = false,
+    reactionTime: Long = 0
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pause_pulse")
+    val gameColors = MaterialTheme.gameColors
+
+    val pulseColor by infiniteTransition.animateColor(
+        initialValue = MaterialTheme.colorScheme.secondary,
+        targetValue = gameColors.pausePulse,
+        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "color"
     )
 
-    Canvas(
-        modifier = Modifier
-            .fillMaxSize()
-            .blur(80.dp)
-            .alpha(0.3f)
-    ) {
-        drawCircle(
-            color = Color(0xFFFFA900).copy(alpha = 0.4f),
-            radius = size.width / 1.5f,
-            center = Offset(size.width / 2 + xOffset, size.height / 4)
-        )
-        drawCircle(
-            color = Color(0xFF1976D2).copy(alpha = 0.3f),
-            radius = size.width / 2f,
-            center = Offset(size.width / 4 - xOffset, size.height / 1.2f)
-        )
-    }
-}
-
-@Composable
-private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -622,22 +895,44 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
                 )
             }
 
-            // Stopwatch in the middle
+            // Reaction Time & Timer in the middle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = UtilityMethods.formatTime(gameTime),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Animated Reaction Time
+                AnimatedVisibility(
+                    visible = reactionTime > 0,
+                    enter = fadeIn() + spring(
+                        Spring.DampingRatioHighBouncy,
+                        Spring.StiffnessMedium,
+                        visibilityThreshold = null
+                    ).let { fadeIn() },
+                    exit = fadeOut()
+                ) {
+                    Text(
+                        text = "${reactionTime / 1000f}s",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            color = gameColors.scorePopup
+                        )
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Timer,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (isPaused) pulseColor else MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = UtilityMethods.formatTime(gameTime),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        ),
+                        color = if (isPaused) pulseColor else MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             Row(
@@ -666,7 +961,8 @@ private fun GameHeader(score: Int, lives: Int, gameTime: Long) {
 @Composable
 private fun GameGrid(
     tiles: List<Tile>,
-    onTileTapped: (Int) -> Unit,
+    onTileTapped: (Int, Offset?) -> Unit,
+    onTilePositioned: (Int, Offset) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val columns = 4
@@ -685,13 +981,23 @@ private fun GameGrid(
                     val index = i * columns + j
                     if (index < tiles.size) {
                         val tile = tiles[index]
+                        var tileCenter by remember { mutableStateOf(Offset.Zero) }
+
                         GameCard(
                             isRevealed = tile.isRevealed,
                             type = tile.type,
-                            onClick = { onTileTapped(tile.id) },
+                            onClick = { onTileTapped(tile.id, tileCenter) },
                             modifier = Modifier
                                 .weight(1f)
                                 .aspectRatio(1f)
+                                .onGloballyPositioned { coords ->
+                                    val center = Offset(
+                                        coords.positionInRoot().x + coords.size.width / 2,
+                                        coords.positionInRoot().y + coords.size.height / 2
+                                    )
+                                    tileCenter = center
+                                    onTilePositioned(tile.id, center)
+                                }
                         )
                     } else {
                         Spacer(modifier = Modifier.weight(1f))
@@ -716,7 +1022,7 @@ fun GameScreenPreview() {
             leaderboard = emptyList(),
             showRules = false,
             isPaused = false,
-            onTileTapped = {},
+            onTileTapped = { _, _ -> },
             onPlayClick = {},
             onResetGame = {},
             onDifficultyChange = {},

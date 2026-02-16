@@ -1,19 +1,28 @@
 package com.sujoy.flippy.views
 
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.sujoy.flippy.core.settings.SettingsRepository
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.game_engine.models.GameEffect
+import com.sujoy.flippy.game_engine.models.VibrationType
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import com.sujoy.flippy.game_engine.ui.GameScreen
 import com.sujoy.flippy.game_engine.viewmodel.GameViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,6 +51,21 @@ class MainActivity : ComponentActivity() {
                 val topThreeScores by gameViewModel.topThreeScores.collectAsState()
                 val showRules by gameViewModel.showRules.collectAsState()
                 val isPaused by gameViewModel.isGamePaused.collectAsState()
+                val streak by gameViewModel.streak.collectAsState()
+                val reactionTime by gameViewModel.lastReactionTime.collectAsState()
+
+                LaunchedEffect(Unit) {
+                    gameViewModel.effects.collectLatest { effect ->
+                        when (effect) {
+                            is GameEffect.Vibration -> {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+                }
 
                 GameScreen(
                     tiles = tiles,
@@ -72,8 +96,42 @@ class MainActivity : ComponentActivity() {
                     },
                     onPreferencesIntentClicked = {
                         startActivity(Intent(this, SettingsActivity::class.java))
-                    }
+                    },
+                    streak = streak,
+                    reactionTime = reactionTime,
+                    effects = gameViewModel.effects
                 )
+            }
+        }
+    }
+
+    private fun triggerVibration(type: VibrationType) {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+
+        if (vibrator.hasVibrator()) {
+            when (type) {
+                VibrationType.SHORT -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(50)
+                    }
+                }
+                VibrationType.LONG -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(200)
+                    }
+                }
             }
         }
     }
@@ -81,9 +139,6 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         soundRepository.startBackgroundMusic()
-//        if (gameViewModel.status.value == GameStatus.PLAYING) {
-//            gameViewModel.pauseGameTemporarily()
-//        }
     }
 
     override fun onPause() {
