@@ -81,14 +81,12 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.UtilityMethods
-import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.game_engine.models.EffectState
@@ -128,6 +126,10 @@ fun GameScreen(
     onPreferencesIntentClicked: () -> Unit,
     streak: Int = 0,
     reactionTime: Long = 0,
+    totalTaps: Int = 0,
+    correctTaps: Int = 0,
+    maxStreak: Int = 0,
+    totalReflexTime: Long = 0,
     effects: SharedFlow<GameEffect>? = null
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
@@ -143,28 +145,18 @@ fun GameScreen(
             when (effect) {
                 is GameEffect.ScorePopup -> {
                     tilePositions[effect.tileId]?.let { pos ->
-                        activeEffects.add(
-                            EffectState(
-                                position = pos,
-                                type = EffectType.SCORE,
-                                text = effect.score
-                            )
-                        )
+                        activeEffects.add(EffectState(position = pos, type = EffectType.SCORE, text = effect.score))
                     }
                 }
-
                 is GameEffect.Particle -> {
                     tilePositions[effect.tileId]?.let { pos ->
-                        val type =
-                            if (effect.type == ParticleType.COIN) EffectType.PARTICLE_COIN else EffectType.PARTICLE_BOMB
+                        val type = if (effect.type == ParticleType.COIN) EffectType.PARTICLE_COIN else EffectType.PARTICLE_BOMB
                         activeEffects.add(EffectState(position = pos, type = type))
                     }
                 }
-
                 is GameEffect.BackgroundRipple -> {
                     ripples.add(RippleState(position = effect.position))
                 }
-
                 else -> {}
             }
         }
@@ -212,49 +204,19 @@ fun GameScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .blur(if (showGameOverOverlay || showRules || isMenuVisible) 16.dp else 0.dp),
+                    .blur(if (showGameOverOverlay || showRules || isMenuVisible) 20.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Custom Top Bar
+                // Glassy Top Bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        onClick = { isMenuVisible = true },
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(48.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
-
-                    Surface(
-                        onClick = onHelpClick,
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(48.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.AutoMirrored.Default.HelpOutline,
-                                contentDescription = "Help"
-                            )
-                        }
-                    }
+                    GlassIconButton(icon = Icons.Default.Menu, onClick = { isMenuVisible = true })
+                    GlassIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
                 }
 
                 GameHeader(
@@ -265,7 +227,7 @@ fun GameScreen(
                     reactionTime = reactionTime
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 DifficultySelector(
                     currentDifficulty = difficulty,
@@ -273,7 +235,7 @@ fun GameScreen(
                     enabled = status == GameStatus.READY
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 GameGrid(
                     tiles = tiles,
@@ -285,43 +247,35 @@ fun GameScreen(
                 if (status == GameStatus.READY) {
                     LeaderboardSection(
                         leaderboard = leaderboard,
-                        modifier = Modifier.padding(bottom = 100.dp)
+                        modifier = Modifier.padding(bottom = 120.dp)
                     )
                 } else {
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
 
-            // Overlay for effects
+            // Floating Effects
             activeEffects.toList().forEach { effect ->
                 key(effect.id) {
                     when (effect.type) {
                         EffectType.SCORE -> FloatingScore(effect) { activeEffects.remove(effect) }
-                        EffectType.PARTICLE_COIN -> SparkleEffect(effect) {
-                            activeEffects.remove(
-                                effect
-                            )
-                        }
-
+                        EffectType.PARTICLE_COIN -> SparkleEffect(effect) { activeEffects.remove(effect) }
                         EffectType.PARTICLE_BOMB -> BombEffect(effect) { activeEffects.remove(effect) }
                     }
                 }
             }
 
+            // Fixed Play Button at bottom
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 20.dp),
+                    .padding(bottom = 32.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 PlayButtonComponent(
                     status = status,
                     onAction = {
-                        if (status == GameStatus.PLAYING) {
-                            onResetGame()
-                        } else {
-                            onPlayClick()
-                        }
+                        if (status == GameStatus.PLAYING) onResetGame() else onPlayClick()
                     }
                 )
             }
@@ -345,11 +299,31 @@ fun GameScreen(
             GameStatusOverlay(
                 visible = showGameOverOverlay,
                 score = score,
+                totalTaps = totalTaps,
+                correctTaps = correctTaps,
+                maxStreak = maxStreak,
+                totalReflexTime = totalReflexTime,
+                gameTime = gameTime,
                 onDismiss = {
                     showGameOverOverlay = false
                     onResetGame()
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun GlassIconButton(icon: ImageVector, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+        modifier = Modifier.size(52.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -364,9 +338,7 @@ fun BackgroundRippleEffect(position: Offset, onComplete: () -> Unit) {
         onComplete()
     }
 
-    Canvas(modifier = Modifier
-        .fillMaxSize()
-        .zIndex(0.1f)) {
+    Canvas(modifier = Modifier.fillMaxSize().zIndex(0.1f)) {
         drawCircle(
             color = color.copy(alpha = 0.3f * (1f - progress.value)),
             radius = size.maxDimension * progress.value,
@@ -381,8 +353,8 @@ fun CriticalVignette() {
     val infiniteTransition = rememberInfiniteTransition(label = "critical")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.1f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse),
         label = "alpha"
     )
 
@@ -405,9 +377,7 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
     val alpha = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        launch {
-            offsetY.animateTo(-150f, animationSpec = tween(800, easing = LinearEasing))
-        }
+        launch { offsetY.animateTo(-180f, animationSpec = tween(800, easing = LinearEasing)) }
         launch {
             delay(400)
             alpha.animateTo(0f, animationSpec = tween(400))
@@ -419,23 +389,18 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
         text = effect.text,
         style = MaterialTheme.typography.titleLarge.copy(
             fontWeight = FontWeight.Black,
-            fontSize = 28.sp
+            fontSize = 32.sp
         ),
         color = MaterialTheme.gameColors.scorePopup,
         modifier = Modifier
-            .offset {
-                IntOffset(
-                    effect.position.x.roundToInt() - 50,
-                    (effect.position.y + offsetY.value).roundToInt() - 50
-                )
-            }
+            .offset { IntOffset(effect.position.x.roundToInt() - 50, (effect.position.y + offsetY.value).roundToInt() - 50) }
             .alpha(alpha.value)
     )
 }
 
 @Composable
 fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
-    val particles = remember { List(8) { Random.nextFloat() * 360f } }
+    val particles = remember { List(10) { Random.nextFloat() * 360f } }
     val progress = remember { Animatable(0f) }
     val particleColor = MaterialTheme.gameColors.particleCoin
 
@@ -444,21 +409,15 @@ fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
         onComplete()
     }
 
-    Canvas(modifier = Modifier.offset {
-        IntOffset(
-            effect.position.x.roundToInt(),
-            effect.position.y.roundToInt()
-        )
-    }) {
+    Canvas(modifier = Modifier.offset { IntOffset(effect.position.x.roundToInt(), effect.position.y.roundToInt()) }) {
         particles.forEach { angle ->
             val rad = Math.toRadians(angle.toDouble())
-            val dist = 100f * progress.value
+            val dist = 120f * progress.value
             val x = (Math.cos(rad) * dist).toFloat()
             val y = (Math.sin(rad) * dist).toFloat()
-
             drawCircle(
                 color = particleColor.copy(alpha = 1f - progress.value),
-                radius = 6f * (1f - progress.value),
+                radius = 8f * (1f - progress.value),
                 center = Offset(x, y)
             )
         }
@@ -476,22 +435,15 @@ fun BombEffect(effect: EffectState, onComplete: () -> Unit) {
         onComplete()
     }
 
-    Canvas(modifier = Modifier.offset {
-        IntOffset(
-            effect.position.x.roundToInt(),
-            effect.position.y.roundToInt()
-        )
-    }) {
-        // Shockwave
+    Canvas(modifier = Modifier.offset { IntOffset(effect.position.x.roundToInt(), effect.position.y.roundToInt()) }) {
         drawCircle(
             color = shockwaveColor.copy(alpha = shockwaveColor.alpha * (1f - progress.value)),
-            radius = 200f * progress.value,
-            style = Stroke(width = 10f)
+            radius = 250f * progress.value,
+            style = Stroke(width = 12f)
         )
-        // Fire/Smoke
         drawCircle(
             color = particleColor.copy(alpha = 1f - progress.value),
-            radius = 50f * (1f - progress.value)
+            radius = 60f * (1f - progress.value)
         )
     }
 }
@@ -501,38 +453,26 @@ fun MeshBackground(streak: Int = 0) {
     val isFever = streak >= 10
     val infiniteTransition = rememberInfiniteTransition(label = "mesh")
     val xOffset by infiniteTransition.animateFloat(
-        initialValue = -100f,
-        targetValue = 100f,
-        animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Reverse),
+        initialValue = -150f,
+        targetValue = 150f,
+        animationSpec = infiniteRepeatable(tween(10000, easing = LinearEasing), RepeatMode.Reverse),
         label = "x"
     )
 
     val gameColors = MaterialTheme.gameColors
+    val color1 by animateColorAsState(targetValue = if (isFever) gameColors.feverColor1 else gameColors.meshColor1, animationSpec = tween(1200), label = "c1")
+    val color2 by animateColorAsState(targetValue = if (isFever) gameColors.feverColor2 else gameColors.meshColor2, animationSpec = tween(1200), label = "c2")
 
-    val color1 by animateColorAsState(
-        targetValue = if (isFever) gameColors.feverColor1 else gameColors.meshColor1,
-        animationSpec = tween(1000), label = "c1"
-    )
-    val color2 by animateColorAsState(
-        targetValue = if (isFever) gameColors.feverColor2 else gameColors.meshColor2,
-        animationSpec = tween(1000), label = "c2"
-    )
-
-    Canvas(
-        modifier = Modifier
-            .fillMaxSize()
-            .blur(80.dp)
-            .alpha(0.3f)
-    ) {
+    Canvas(modifier = Modifier.fillMaxSize().blur(100.dp).alpha(0.4f)) {
         drawCircle(
-            color = color1.copy(alpha = 0.4f),
-            radius = size.width / 1.5f,
-            center = Offset(size.width / 2 + xOffset, size.height / 4)
+            color = color1.copy(alpha = 0.5f),
+            radius = size.width / 1.2f,
+            center = Offset(size.width / 2 + xOffset, size.height / 3)
         )
         drawCircle(
-            color = color2.copy(alpha = 0.3f),
-            radius = size.width / 2f,
-            center = Offset(size.width / 4 - xOffset, size.height / 1.2f)
+            color = color2.copy(alpha = 0.4f),
+            radius = size.width / 1.5f,
+            center = Offset(size.width / 4 - xOffset, size.height / 1.1f)
         )
     }
 }
@@ -546,20 +486,9 @@ private fun SideNavigationMenu(
     onLeaderboardIntentClicked: () -> Unit,
     onPreferencesIntentClicked: () -> Unit
 ) {
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .zIndex(10f)) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .clickable(onClick = onDismiss)
-            )
+    Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
+        AnimatedVisibility(visible = isVisible, enter = fadeIn(), exit = fadeOut()) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)).clickable(onClick = onDismiss))
         }
 
         AnimatedVisibility(
@@ -569,78 +498,34 @@ private fun SideNavigationMenu(
             modifier = Modifier.align(Alignment.CenterStart)
         ) {
             Surface(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.75f),
-                shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+                modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f),
+                shape = RoundedCornerShape(topEnd = 40.dp, bottomEnd = 40.dp),
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+                tonalElevation = 12.dp,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp)
-                ) {
-                    Spacer(modifier = Modifier.height(48.dp))
-
+                Column(modifier = Modifier.fillMaxSize().padding(32.dp)) {
+                    Spacer(modifier = Modifier.height(64.dp))
                     Text(
                         text = "FLIPPY",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 4.sp
-                        ),
+                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Black, letterSpacing = 6.sp),
                         color = MaterialTheme.colorScheme.primary
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
-                        text = "Master your reflexes",
+                        text = "The Reflex Game",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                    Spacer(modifier = Modifier.height(64.dp))
 
-                    Spacer(modifier = Modifier.height(48.dp))
-
-                    NavigationMenuItem(
-                        icon = Icons.Default.Person,
-                        label = "Profile",
-                        onClick = {
-                            onProfileIntentClicked()
-                        }
-                    )
-
-                    NavigationMenuItem(
-                        icon = Icons.Default.Leaderboard,
-                        label = "Leaderboard",
-                        onClick = {
-                            onLeaderboardIntentClicked()
-                        }
-                    )
-
-                    NavigationMenuItem(
-                        icon = Icons.Default.Settings,
-                        label = "Preferences",
-                        onClick = {
-                            onPreferencesIntentClicked()
-                        }
-                    )
+                    NavigationMenuItem(Icons.Default.Person, "Profile", onProfileIntentClicked)
+                    NavigationMenuItem(Icons.Default.Leaderboard, "Leaderboard", onLeaderboardIntentClicked)
+                    NavigationMenuItem(Icons.Default.Settings, "Preferences", onPreferencesIntentClicked)
 
                     Spacer(modifier = Modifier.weight(1f))
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                    )
-
-                    NavigationMenuItem(
-                        icon = Icons.AutoMirrored.Filled.Logout,
-                        label = "Sign Out",
-                        onClick = onSignOutClick,
-                        color = Color(0xFFFF4B4B)
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                    NavigationMenuItem(Icons.AutoMirrored.Filled.Logout, "Sign Out", onSignOutClick, color = Color(0xFFFF3366))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -648,67 +533,30 @@ private fun SideNavigationMenu(
 }
 
 @Composable
-private fun NavigationMenuItem(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    color: Color = MaterialTheme.colorScheme.onSurface
-) {
+private fun NavigationMenuItem(icon: ImageVector, label: String, onClick: () -> Unit, color: Color = MaterialTheme.colorScheme.onSurface) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color.copy(alpha = 0.8f),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = color
-            )
+        Row(modifier = Modifier.padding(vertical = 18.dp, horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = color.copy(alpha = 0.9f), modifier = Modifier.size(28.dp))
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(text = label, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = color)
         }
     }
 }
 
 @Composable
-fun PlayButtonComponent(
-    status: GameStatus,
-    onAction: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun PlayButtonComponent(status: GameStatus, onAction: () -> Unit, modifier: Modifier = Modifier) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "scale"
-    )
-
-    val color by animateColorAsState(
-        targetValue = if (status == GameStatus.PLAYING) Color(0xFFFF4B4B) else MaterialTheme.colorScheme.primary,
-        label = "color"
-    )
+    val scale by animateFloatAsState(targetValue = if (isPressed) 0.85f else 1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "scale")
+    val color by animateColorAsState(targetValue = if (status == GameStatus.PLAYING) Color(0xFFFF3366) else MaterialTheme.colorScheme.primary, label = "color")
 
     Surface(
-        modifier = modifier
-            .size(68.dp)
-            .scale(scale)
-            .shadow(
-                elevation = if (isPressed) 4.dp else 12.dp,
-                shape = CircleShape,
-                ambientColor = color,
-                spotColor = color
-            ),
+        modifier = modifier.size(76.dp).scale(scale).shadow(elevation = if (isPressed) 6.dp else 16.dp, shape = CircleShape, spotColor = color),
         shape = CircleShape,
         color = color,
         onClick = onAction,
@@ -718,7 +566,7 @@ fun PlayButtonComponent(
             Icon(
                 imageVector = if (status == GameStatus.PLAYING) Icons.Default.Stop else Icons.Default.PlayArrow,
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(40.dp),
                 tint = Color.White
             )
         }
@@ -726,69 +574,30 @@ fun PlayButtonComponent(
 }
 
 @Composable
-private fun LeaderboardSection(
-    leaderboard: List<MatchHistory>,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Leaderboard,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "High Scores",
-                style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.2.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-            )
-        }
+private fun LeaderboardSection(leaderboard: List<MatchHistory>, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+        Text(
+            text = "TOP PERFORMANCES",
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black, letterSpacing = 2.sp),
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 16.dp, start = 4.dp)
+        )
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
         ) {
             if (leaderboard.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No matches played yet",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                    )
+                Box(modifier = Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                    Text("No records found", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 }
             } else {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    leaderboard.forEachIndexed { index, match ->
+                Column(modifier = Modifier.padding(12.dp)) {
+                    leaderboard.take(3).forEachIndexed { index, match ->
                         LeaderboardItem(index + 1, match)
-                        if (index < leaderboard.size - 1 && index < 9) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                                thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f)
-                            )
-                        }
+                        if (index < leaderboard.size - 1) Spacer(Modifier.height(8.dp))
                     }
                 }
             }
@@ -797,48 +606,18 @@ private fun LeaderboardSection(
 }
 
 @Composable
-fun DifficultySelector(
-    currentDifficulty: Difficulty,
-    onDifficultyChange: (Difficulty) -> Unit,
-    enabled: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .alpha(if (enabled) 1f else 0.5f),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+fun DifficultySelector(currentDifficulty: Difficulty, onDifficultyChange: (Difficulty) -> Unit, enabled: Boolean) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).alpha(if (enabled) 1f else 0.5f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Difficulty.entries.forEach { diff ->
             val isSelected = currentDifficulty == diff
             Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(44.dp)
-                    .clickable(enabled = enabled) { onDifficultyChange(diff) },
-                shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
-                    alpha = 0.6f
-                ),
-                border = BorderStroke(
-                    1.dp,
-                    if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(
-                        alpha = 0.1f
-                    )
-                ),
-                tonalElevation = if (isSelected) 4.dp else 0.dp
+                modifier = Modifier.weight(1f).height(48.dp).clickable(enabled = enabled) { onDifficultyChange(diff) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, if (isSelected) Color.Transparent else Color.White.copy(alpha = 0.05f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = diff.label,
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.6f
-                        )
-                    )
+                    Text(diff.label, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold), color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
             }
         }
@@ -846,112 +625,34 @@ fun DifficultySelector(
 }
 
 @Composable
-private fun GameHeader(
-    score: Int,
-    lives: Int,
-    gameTime: Long,
-    isPaused: Boolean = false,
-    reactionTime: Long = 0
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pause_pulse")
-    val gameColors = MaterialTheme.gameColors
-
-    val pulseColor by infiniteTransition.animateColor(
-        initialValue = MaterialTheme.colorScheme.secondary,
-        targetValue = gameColors.pausePulse,
-        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "color"
-    )
+private fun GameHeader(score: Int, lives: Int, gameTime: Long, isPaused: Boolean = false, reactionTime: Long = 0) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseColor by infiniteTransition.animateColor(initialValue = MaterialTheme.colorScheme.secondary, targetValue = MaterialTheme.gameColors.pausePulse, animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse), label = "color")
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text(
-                    text = "SCORE",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                )
-                Text(
-                    text = "$score",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Black
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text("SCORE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.primary)
+                Text("$score", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black))
             }
-
-            // Reaction Time & Timer in the middle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Animated Reaction Time
-                AnimatedVisibility(
-                    visible = reactionTime > 0,
-                    enter = fadeIn() + spring(
-                        Spring.DampingRatioHighBouncy,
-                        Spring.StiffnessMedium,
-                        visibilityThreshold = null
-                    ).let { fadeIn() },
-                    exit = fadeOut()
-                ) {
-                    Text(
-                        text = "${reactionTime / 1000f}s",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            color = gameColors.scorePopup
-                        )
-                    )
+                if (reactionTime > 0) {
+                    Text("${reactionTime / 1000f}s", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black, color = MaterialTheme.gameColors.scorePopup))
                 }
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Timer,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (isPaused) pulseColor else MaterialTheme.colorScheme.secondary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = UtilityMethods.formatTime(gameTime),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
-                        ),
-                        color = if (isPaused) pulseColor else MaterialTheme.colorScheme.onSurface
-                    )
+                    Icon(Icons.Default.Timer, null, modifier = Modifier.size(16.dp), tint = if (isPaused) pulseColor else MaterialTheme.colorScheme.secondary)
+                    Spacer(Modifier.width(6.dp))
+                    Text(UtilityMethods.formatTime(gameTime), style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold))
                 }
             }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        CircleShape
-                    )
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(3) { index ->
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = "Life",
-                        tint = if (index < lives) Color(0xFFFF4B4B) else Color.LightGray.copy(alpha = 0.5f),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(Icons.Default.Favorite, null, tint = if (index < lives) Color(0xFFFF3366) else Color.Gray.copy(alpha = 0.3f), modifier = Modifier.size(22.dp))
                 }
             }
         }
@@ -959,79 +660,31 @@ private fun GameHeader(
 }
 
 @Composable
-private fun GameGrid(
-    tiles: List<Tile>,
-    onTileTapped: (Int, Offset?) -> Unit,
-    onTilePositioned: (Int, Offset) -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun GameGrid(tiles: List<Tile>, onTileTapped: (Int, Offset?) -> Unit, onTilePositioned: (Int, Offset) -> Unit, modifier: Modifier = Modifier) {
     val columns = 4
     val rows = (tiles.size + columns - 1) / columns
 
-    Column(
-        modifier = modifier.padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Column(modifier = modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         for (i in 0 until rows) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                 for (j in 0 until columns) {
                     val index = i * columns + j
                     if (index < tiles.size) {
                         val tile = tiles[index]
                         var tileCenter by remember { mutableStateOf(Offset.Zero) }
-
                         GameCard(
                             isRevealed = tile.isRevealed,
                             type = tile.type,
                             onClick = { onTileTapped(tile.id, tileCenter) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .onGloballyPositioned { coords ->
-                                    val center = Offset(
-                                        coords.positionInRoot().x + coords.size.width / 2,
-                                        coords.positionInRoot().y + coords.size.height / 2
-                                    )
-                                    tileCenter = center
-                                    onTilePositioned(tile.id, center)
-                                }
+                            modifier = Modifier.weight(1f).aspectRatio(1f).onGloballyPositioned { coords ->
+                                val center = Offset(coords.positionInRoot().x + coords.size.width / 2, coords.positionInRoot().y + coords.size.height / 2)
+                                tileCenter = center
+                                onTilePositioned(tile.id, center)
+                            }
                         )
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+                    } else { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GameScreenPreview() {
-    FlippyTheme {
-        GameScreen(
-            tiles = List(16) { Tile(it) },
-            score = 10,
-            lives = 3,
-            status = GameStatus.PLAYING,
-            difficulty = Difficulty.NORMAL,
-            gameTime = 1,
-            leaderboard = emptyList(),
-            showRules = false,
-            isPaused = false,
-            onTileTapped = { _, _ -> },
-            onPlayClick = {},
-            onResetGame = {},
-            onDifficultyChange = {},
-            onRulesDismissed = {},
-            onHelpClick = {},
-            onSignOutClick = {},
-            onProfileIntentClicked = {},
-            onLeaderboardIntentClicked = {},
-            onPreferencesIntentClicked = {}
-        )
     }
 }

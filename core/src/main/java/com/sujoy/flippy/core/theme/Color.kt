@@ -3,27 +3,32 @@ package com.sujoy.flippy.core.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Flippy Cyber-Gamer 2026 Palette
- * High-vibrancy, futuristic colors for a high-performance reflex game.
+ * Flippy Twilight Slate Palette
+ * A sophisticated, professional dark theme with balanced contrast.
  */
 
-// --- Dark Mode (Neon Cyberpunk) ---
-val CyberBlack = Color(0xFF020408)    // Deep Obsidian
-val CyberSlate = Color(0xFF0B121E)    // Card surfaces
-val NeonCyan = Color(0xFF00F2FF)      // Primary action
-val NeonMagenta = Color(0xFFF000FF)   // Fever accent 1
-val NeonPurple = Color(0xFFBD00FF)    // Fever accent 2
-val NeonYellow = Color(0xFFFFE600)    // Coins / Score
-val NeonRed = Color(0xFFFF0055)       // Bombs / Critical
-val CyberWhite = Color(0xFFE2E8F0)    // High-contrast text
+// --- Dark Mode (Twilight Slate) ---
+val TwilightDeep = Color(0xFF0F172A)      // Deep Slate Background
+val TwilightSurface = Color(0xFF1E293B)   // Lighter Slate Surface
+val TwilightElevated = Color(0xFF334155)  // Card / Elevated Surface
+val ElectricIndigo = Color(0xFF6366F1)    // Primary Action (Balanced Indigo)
+val SoftMint = Color(0xFF2DD4BF)          // Secondary / Success (Mint)
+val Rosewood = Color(0xFFFB7185)          // Tertiary / Fever / Bombs
+val SlateText = Color(0xFFF1F5F9)         // High-contrast text
+val SlateTextDim = Color(0xFF94A3B8)      // Muted slate text
 
-// --- Light Mode (Vibrant Gamer) ---
-val GamerWhite = Color(0xFFF0F4F8)    // Soft background
-val GamerSilver = Color(0xFFFFFFFF)   // Card surfaces
-val GamerAzure = Color(0xFF007BFF)    // Primary action
-val GamerElectricPurple = Color(0xFF6F42C1) // Secondary
-val GamerRose = Color(0xFFD81B60)     // Alerts
-val GamerDeepText = Color(0xFF1A202C) // Contrast text
+// --- Light Mode (Arctic Light) ---
+val ArcticWhite = Color(0xFFF8FAFC)     // Clean Slate Background
+val ArcticSurface = Color(0xFFFFFFFF)   // Pure White Surface
+val ArcticTeal = Color(0xFF0D9488)      // Primary action
+val ArcticViolet = Color(0xFF7C3AED)    // Secondary
+val ArcticRose = Color(0xFFDB2777)      // Tertiary
+val ArcticDeepText = Color(0xFF0F172A)  // Contrast text
+val ArcticMutedText = Color(0xFF475569) // Muted text
+
+// --- Game Specific Effects ---
+val GlowIndigo = Color(0xFF6366F1).copy(alpha = 0.4f)
+val GlowRose = Color(0xFFFB7185).copy(alpha = 0.4f)
 
 // --- Common UI Utility ---
 val GlassWhite = Color(0xFFFFFFFF).copy(alpha = 0.1f)

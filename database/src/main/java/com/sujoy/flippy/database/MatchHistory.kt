@@ -26,5 +26,5 @@ data class MatchHistory(
     @ColumnInfo(defaultValue = "Anonymous")
     val username: String = "",
     @ColumnInfo(defaultValue = "1")
-    val avatarId : Int
+    val avatarId : Int = 1
 )

@@ -47,66 +47,66 @@ val MaterialTheme.gameColors: FlippyGameColors
     get() = LocalFlippyGameColors.current
 
 private val DarkGameColors = FlippyGameColors(
-    scorePopup = NeonYellow,
-    particleCoin = NeonYellow,
-    particleBomb = NeonRed,
-    shockwave = NeonRed.copy(alpha = 0.5f),
-    criticalVignette = NeonRed,
-    feverColor1 = NeonMagenta,
-    feverColor2 = NeonPurple,
-    meshColor1 = NeonCyan,
-    meshColor2 = NeonPurple,
-    pausePulse = NeonYellow,
-    pauseDim = Color.Black.copy(alpha = 0.6f)
+    scorePopup = SoftMint,
+    particleCoin = SoftMint,
+    particleBomb = Rosewood,
+    shockwave = Rosewood.copy(alpha = 0.5f),
+    criticalVignette = Rosewood,
+    feverColor1 = ElectricIndigo,
+    feverColor2 = SoftMint,
+    meshColor1 = ElectricIndigo,
+    meshColor2 = TwilightElevated,
+    pausePulse = ElectricIndigo,
+    pauseDim = Color.Black.copy(alpha = 0.5f)
 )
 
 private val LightGameColors = FlippyGameColors(
-    scorePopup = GamerAzure,
-    particleCoin = GamerAzure,
-    particleBomb = GamerRose,
-    shockwave = GamerRose.copy(alpha = 0.3f),
-    criticalVignette = GamerRose,
-    feverColor1 = GamerElectricPurple,
-    feverColor2 = GamerAzure,
-    meshColor1 = GamerAzure,
-    meshColor2 = GamerElectricPurple,
-    pausePulse = GamerAzure,
+    scorePopup = ArcticTeal,
+    particleCoin = ArcticTeal,
+    particleBomb = ArcticRose,
+    shockwave = ArcticRose.copy(alpha = 0.3f),
+    criticalVignette = ArcticRose,
+    feverColor1 = ArcticViolet,
+    feverColor2 = ArcticTeal,
+    meshColor1 = ArcticTeal,
+    meshColor2 = ArcticViolet,
+    pausePulse = ArcticTeal,
     pauseDim = Color.Black.copy(alpha = 0.1f)
 )
 
-// Neon Cyberpunk 2026 Dark Theme
+// Twilight Slate Dark Theme
 private val DarkColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    onPrimary = CyberBlack,
-    secondary = NeonYellow,
-    onSecondary = CyberBlack,
-    tertiary = NeonMagenta,
-    background = CyberBlack,
-    onBackground = CyberWhite,
-    surface = CyberSlate,
-    onSurface = CyberWhite,
-    surfaceVariant = CyberSlate,
-    onSurfaceVariant = CyberWhite.copy(alpha = 0.7f),
-    outline = NeonCyan.copy(alpha = 0.5f),
-    error = NeonRed,
-    onError = CyberBlack
+    primary = ElectricIndigo,
+    onPrimary = Color.White,
+    secondary = SoftMint,
+    onSecondary = TwilightDeep,
+    tertiary = Rosewood,
+    background = TwilightDeep,
+    onBackground = SlateText,
+    surface = TwilightSurface,
+    onSurface = SlateText,
+    surfaceVariant = TwilightElevated,
+    onSurfaceVariant = SlateTextDim,
+    outline = ElectricIndigo.copy(alpha = 0.2f),
+    error = Rosewood,
+    onError = Color.White
 )
 
-// Vibrant Gamer 2026 Light Theme
+// Arctic Light Theme
 private val LightColorScheme = lightColorScheme(
-    primary = GamerAzure,
+    primary = ArcticTeal,
     onPrimary = Color.White,
-    secondary = GamerElectricPurple,
+    secondary = ArcticViolet,
     onSecondary = Color.White,
-    tertiary = GamerRose,
-    background = GamerWhite,
-    onBackground = GamerDeepText,
-    surface = GamerSilver,
-    onSurface = GamerDeepText,
-    surfaceVariant = GamerWhite,
-    onSurfaceVariant = GamerDeepText.copy(alpha = 0.7f),
-    outline = GamerAzure.copy(alpha = 0.3f),
-    error = GamerRose,
+    tertiary = ArcticRose,
+    background = ArcticWhite,
+    onBackground = ArcticDeepText,
+    surface = ArcticSurface,
+    onSurface = ArcticDeepText,
+    surfaceVariant = ArcticWhite,
+    onSurfaceVariant = ArcticMutedText,
+    outline = ArcticTeal.copy(alpha = 0.2f),
+    error = ArcticRose,
     onError = Color.White
 )
 
@@ -144,7 +144,10 @@ fun FlippyTheme(
             val window = (view.context as? Activity)?.window
             if (window != null) {
                 window.statusBarColor = colorScheme.background.toArgb()
+                window.navigationBarColor = colorScheme.background.toArgb()
                 WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars =
+                    !darkTheme
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =
                     !darkTheme
             }
         }

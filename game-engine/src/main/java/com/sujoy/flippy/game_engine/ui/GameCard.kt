@@ -49,7 +49,7 @@ fun GameCard(
     )
 
     val offset by animateDpAsState(
-        targetValue = if (isPressed) 2.dp else 6.dp,
+        targetValue = if (isPressed) 2.dp else 8.dp,
         label = "offset"
     )
 
@@ -57,7 +57,7 @@ fun GameCard(
         modifier = modifier
             .graphicsLayer {
                 rotationY = rotation
-                cameraDistance = 12 * density
+                cameraDistance = 15 * density
             }
             .clickable(
                 interactionSource = interactionSource,
@@ -66,20 +66,20 @@ fun GameCard(
             )
     ) {
         if (rotation <= 90f) {
-            // Front Side (Face down)
+            // Front Side (Face down) - Midnight Aurora Style
             Box(modifier = Modifier.fillMaxSize()) {
-                // Shadow/Depth
+                // Outer Glow / Shadow
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(top = 6.dp)
+                        .padding(top = 8.dp)
                         .background(
-                            color = Color.Black.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(16.dp)
+                            color = Color.Black.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(20.dp)
                         )
                 )
 
-                // Main Card body
+                // Main Card body with Gradient
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -88,26 +88,27 @@ fun GameCard(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     MaterialTheme.colorScheme.surfaceVariant,
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                                 )
                             ),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(20.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(16.dp)
+                            color = Color.White.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(20.dp)
                         )
                 ) {
-                    // Pattern or Logo on the back
+                    // Modern minimalist pattern on back
                     Box(
                         modifier = Modifier
-                            .fillMaxSize(0.4f)
+                            .fillMaxSize(0.35f)
                             .align(Alignment.Center)
                             .background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(8.dp)
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(10.dp)
                             )
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                     )
                 }
             }
@@ -118,14 +119,13 @@ fun GameCard(
                     .fillMaxSize()
                     .graphicsLayer { rotationY = 180f }
             ) {
-                // Shadow/Depth
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(top = 6.dp)
                         .background(
-                            color = Color.Black.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(16.dp)
+                            color = Color.Black.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp)
                         )
                 )
 
@@ -133,10 +133,9 @@ fun GameCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(bottom = offset),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(20.dp),
                     color = Color.White,
-                    tonalElevation = 4.dp,
-                    shadowElevation = 2.dp
+                    tonalElevation = 6.dp
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -160,7 +159,7 @@ private fun ImageContent(drawableId: Int, description: String) {
         painter = painterResource(id = drawableId),
         contentDescription = description,
         modifier = Modifier
-            .padding(12.dp)
+            .padding(14.dp)
             .fillMaxSize()
     )
 }

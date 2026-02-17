@@ -53,6 +53,12 @@ class MainActivity : ComponentActivity() {
                 val isPaused by gameViewModel.isGamePaused.collectAsState()
                 val streak by gameViewModel.streak.collectAsState()
                 val reactionTime by gameViewModel.lastReactionTime.collectAsState()
+                
+                // New stats for end-game overlay
+                val totalTaps by gameViewModel.totalTaps.collectAsState()
+                val correctTaps by gameViewModel.correctTaps.collectAsState()
+                val maxStreak by gameViewModel.maxStreak.collectAsState()
+                val totalReflexTime by gameViewModel.totalReflexTime.collectAsState()
 
                 LaunchedEffect(Unit) {
                     gameViewModel.effects.collectLatest { effect ->
@@ -99,6 +105,10 @@ class MainActivity : ComponentActivity() {
                     },
                     streak = streak,
                     reactionTime = reactionTime,
+                    totalTaps = totalTaps,
+                    correctTaps = correctTaps,
+                    maxStreak = maxStreak,
+                    totalReflexTime = totalReflexTime,
                     effects = gameViewModel.effects
                 )
             }

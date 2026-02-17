@@ -83,15 +83,23 @@ class GameViewModel @Inject constructor(
     private var _currentAvatarId = 1
 
     private val _totalTaps = MutableStateFlow(0)
+    val totalTaps = _totalTaps.asStateFlow()
+    
     private val _correctTaps = MutableStateFlow(0)
+    val correctTaps = _correctTaps.asStateFlow()
 
     private var timerJob: Job? = null
     private var coinsMissedConsecutively = 0
     private var lastStartTime = 0L
     private var accumulatedTime = 0L
     private var tileRevealTime = 0L
-    private var totalReflexTime = 0L
-    private var perfectStreak = 0
+    
+    private val _totalReflexTime = MutableStateFlow(0L)
+    val totalReflexTime = _totalReflexTime.asStateFlow()
+    
+    private val _maxStreak = MutableStateFlow(0)
+    val maxStreak = _maxStreak.asStateFlow()
+    
     private var visibleDuration = 1200L
 
     init {
@@ -147,6 +155,10 @@ class GameViewModel @Inject constructor(
         coinsMissedConsecutively = 0
         _isGamePaused.value = false
         _streak.value = 0
+        _maxStreak.value = 0
+        _totalReflexTime.value = 0L
+        _totalTaps.value = 0
+        _correctTaps.value = 0
         _lastReactionTime.value = 0L
 
         startTimer()
@@ -199,7 +211,6 @@ class GameViewModel @Inject constructor(
 
         viewModelScope.launch {
             soundRepository.pauseBackgroundMusic()
-            // Explicit delay ensures the pause lasts the intended duration even if sound is disabled
             delay(pauseDuration)
 
             if (_status.value == GameStatus.PLAYING) {
@@ -312,8 +323,8 @@ class GameViewModel @Inject constructor(
                 timestamp = timestamp,
                 correctTaps = _correctTaps.value,
                 totalTaps = _totalTaps.value,
-                totalReflexTime = totalReflexTime,
-                perfectStreak = perfectStreak,
+                totalReflexTime = _totalReflexTime.value,
+                perfectStreak = _maxStreak.value,
                 isBackedUp = false,
                 username = _currentUsername,
                 avatarId = _currentAvatarId
@@ -342,16 +353,23 @@ class GameViewModel @Inject constructor(
                 _effects.emit(GameEffect.BackgroundRipple(it))
             }
             
+            _totalTaps.update { it + 1 }
+
             when (tile.type) {
                 CardType.COIN -> {
                     _score.update { it + 1 }
                     coinsMissedConsecutively = 0
                     _correctTaps.update { it + 1 }
-                    _totalTaps.update { it + 1 }
-                    _streak.update { it + 1 }
+                    
+                    _streak.update { 
+                        val newStreak = it + 1
+                        if (newStreak > _maxStreak.value) _maxStreak.value = newStreak
+                        newStreak
+                    }
+                    
                     val reactionTime = System.currentTimeMillis() - tileRevealTime
                     _lastReactionTime.value = reactionTime
-                    totalReflexTime += reactionTime
+                    _totalReflexTime.update { it + reactionTime }
 
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
@@ -360,10 +378,6 @@ class GameViewModel @Inject constructor(
 
                 CardType.BOMB -> {
                     _lives.update { (it - 1).coerceAtLeast(0) }
-                    
-                    if (perfectStreak < _streak.value)
-                        perfectStreak = _streak.value
-
                     _streak.value = 0
 
                     _effects.emit(Particle(tileId, ParticleType.BOMB))
@@ -374,12 +388,8 @@ class GameViewModel @Inject constructor(
                     } else {
                         pauseGameTemporarily()
                     }
-                    _totalTaps.update { it + 1 }
                 }
-
-                else -> {
-                    _totalTaps.update { it + 1 }
-                }
+                else -> {}
             }
         }
     }
