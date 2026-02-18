@@ -206,11 +206,11 @@ class GameViewModel @Inject constructor(
         val pauseDuration = if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) 1000L else 500L
 
         _isGamePaused.value = true
-        soundRepository.playBombSound()
         accumulatedTime += System.currentTimeMillis() - lastStartTime
 
         viewModelScope.launch {
             soundRepository.pauseBackgroundMusic()
+            soundRepository.playBombSound()
             delay(pauseDuration)
 
             if (_status.value == GameStatus.PLAYING) {
