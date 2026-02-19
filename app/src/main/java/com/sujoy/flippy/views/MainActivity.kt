@@ -86,6 +86,9 @@ class MainActivity : ComponentActivity() {
                     onPlayClick = gameViewModel::startGame,
                     onResetGame = gameViewModel::resetGame,
                     onDifficultyChange = gameViewModel::setDifficulty,
+                    onChallengeModeClick = {
+                        // TODO: Implement and launch ChallengeActivity
+                    },
                     onRulesDismissed = gameViewModel::onRulesDismissed,
                     onHelpClick = gameViewModel::showRulesDialog,
                     onSignOutClick = {

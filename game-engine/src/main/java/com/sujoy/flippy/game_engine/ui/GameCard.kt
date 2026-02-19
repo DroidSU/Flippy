@@ -14,13 +14,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -48,16 +48,16 @@ fun GameCard(
         label = "rotation"
     )
 
-    val offset by animateDpAsState(
-        targetValue = if (isPressed) 2.dp else 8.dp,
-        label = "offset"
+    val elevation by animateDpAsState(
+        targetValue = if (isPressed) 2.dp else 12.dp,
+        label = "elevation"
     )
 
     Box(
         modifier = modifier
             .graphicsLayer {
                 rotationY = rotation
-                cameraDistance = 15 * density
+                cameraDistance = 20 * density
             }
             .clickable(
                 interactionSource = interactionSource,
@@ -66,84 +66,75 @@ fun GameCard(
             )
     ) {
         if (rotation <= 90f) {
-            // Front Side (Face down) - Midnight Aurora Style
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Outer Glow / Shadow
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 8.dp)
-                        .background(
-                            color = Color.Black.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                )
-
-                // Main Card body with Gradient
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = offset)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surfaceVariant,
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color.White.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                ) {
-                    // Modern minimalist pattern on back
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(0.35f)
-                            .align(Alignment.Center)
-                            .background(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
-                    )
-                }
-            }
-        } else {
-            // Back Side (Face up - Revealed)
+            // --- High-End Front Side ---
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer { rotationY = 180f }
+                    .graphicsLayer {
+                        shadowElevation = elevation.toPx()
+                        shape = RoundedCornerShape(24.dp)
+                    }
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF1E293B), // TwilightSurface
+                                Color(0xFF0F172A)  // TwilightDeep
+                            )
+                        )
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.2f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    )
             ) {
+                // Futuristic Geometric Pattern
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 6.dp)
+                        .fillMaxSize(0.4f)
+                        .align(Alignment.Center)
                         .background(
-                            color = Color.Black.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(20.dp)
+                            color = Color(0xFF6366F1).copy(alpha = 0.1f), // ElectricIndigo alpha
+                            shape = RoundedCornerShape(12.dp)
                         )
+                        .border(1.dp, Color(0xFF6366F1).copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                 )
-
+            }
+        } else {
+            // --- High-End Revealed Side ---
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { 
+                        rotationY = 180f
+                        shadowElevation = elevation.toPx()
+                    }
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
                 Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = offset),
-                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxSize(),
                     color = Color.White,
-                    tonalElevation = 6.dp
+                    tonalElevation = 8.dp
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(Color.White, Color(0xFFF1F5F9))
+                                )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         when (type) {
-                            CardType.COIN -> ImageContent(R.drawable.ic_coin, "Coin")
-                            CardType.BOMB -> ImageContent(R.drawable.ic_bomb, "Bomb")
+                            CardType.COIN -> ImageContent(R.drawable.ic_coin, "Credit")
+                            CardType.BOMB -> ImageContent(R.drawable.ic_bomb, "Danger")
                             else -> {}
                         }
                     }
@@ -159,7 +150,7 @@ private fun ImageContent(drawableId: Int, description: String) {
         painter = painterResource(id = drawableId),
         contentDescription = description,
         modifier = Modifier
-            .padding(14.dp)
+            .padding(16.dp)
             .fillMaxSize()
     )
 }

@@ -103,15 +103,18 @@ class GameViewModel @Inject constructor(
     private var visibleDuration = 1200L
 
     init {
+        updateVisibleDuration()
+        getUserData()
+        getTopThreeScores()
+        checkRulesVisibility()
+    }
+
+    private fun updateVisibleDuration() {
         visibleDuration = when (_difficulty.value) {
             Difficulty.EASY -> 1200L
             Difficulty.NORMAL -> 1000L
             Difficulty.HARD -> 800L
         }
-
-        getUserData()
-        getTopThreeScores()
-        checkRulesVisibility()
     }
 
     private fun checkRulesVisibility() {
@@ -136,12 +139,7 @@ class GameViewModel @Inject constructor(
     fun setDifficulty(difficulty: Difficulty) {
         if (_status.value == GameStatus.READY) {
             _difficulty.value = difficulty
-
-            visibleDuration = when (_difficulty.value) {
-                Difficulty.EASY -> 1200L
-                Difficulty.NORMAL -> 1000L
-                Difficulty.HARD -> 800L
-            }
+            updateVisibleDuration()
         }
     }
 
@@ -225,11 +223,7 @@ class GameViewModel @Inject constructor(
     private suspend fun gameLoop() {
         while (_status.value == GameStatus.PLAYING) {
             if (_isGamePaused.value) {
-                if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) {
-                    delay(300L)
-                } else {
-                    delay(800L)
-                }
+                delay(if (_difficulty.value == Difficulty.HARD) 500L else 1000L)
                 continue
             }
 

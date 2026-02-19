@@ -61,16 +61,16 @@ private val DarkGameColors = FlippyGameColors(
 )
 
 private val LightGameColors = FlippyGameColors(
-    scorePopup = ArcticTeal,
-    particleCoin = ArcticTeal,
-    particleBomb = ArcticRose,
-    shockwave = ArcticRose.copy(alpha = 0.3f),
-    criticalVignette = ArcticRose,
-    feverColor1 = ArcticViolet,
-    feverColor2 = ArcticTeal,
-    meshColor1 = ArcticTeal,
-    meshColor2 = ArcticViolet,
-    pausePulse = ArcticTeal,
+    scorePopup = InkTeal,
+    particleCoin = InkTeal,
+    particleBomb = InkRose,
+    shockwave = InkRose.copy(alpha = 0.3f),
+    criticalVignette = InkRose,
+    feverColor1 = InkIndigo,
+    feverColor2 = InkTeal,
+    meshColor1 = InkTeal,
+    meshColor2 = InkIndigo,
+    pausePulse = InkTeal,
     pauseDim = Color.Black.copy(alpha = 0.1f)
 )
 
@@ -92,21 +92,21 @@ private val DarkColorScheme = darkColorScheme(
     onError = Color.White
 )
 
-// Arctic Light Theme
+// Zenith Slate Light Theme
 private val LightColorScheme = lightColorScheme(
-    primary = ArcticTeal,
+    primary = InkIndigo,
     onPrimary = Color.White,
-    secondary = ArcticViolet,
+    secondary = InkTeal,
     onSecondary = Color.White,
-    tertiary = ArcticRose,
-    background = ArcticWhite,
-    onBackground = ArcticDeepText,
-    surface = ArcticSurface,
-    onSurface = ArcticDeepText,
-    surfaceVariant = ArcticWhite,
-    onSurfaceVariant = ArcticMutedText,
-    outline = ArcticTeal.copy(alpha = 0.2f),
-    error = ArcticRose,
+    tertiary = InkRose,
+    background = ZenithWhite,
+    onBackground = ZenithDeepText,
+    surface = ZenithSurface,
+    onSurface = ZenithDeepText,
+    surfaceVariant = ZenithElevated,
+    onSurfaceVariant = ZenithMutedText,
+    outline = InkIndigo.copy(alpha = 0.2f),
+    error = InkRose,
     onError = Color.White
 )
 
