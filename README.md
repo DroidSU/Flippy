@@ -1,60 +1,66 @@
-# Flippy 🧠🎮
+# Flippy
 
-**Flippy** is a high-performance, modularized memory-matching game built with a "Performance-First" mindset. It serves as a showcase for modern Android development, demonstrating advanced Jetpack Compose UI/UX patterns, multi-module architecture, and robust local persistence using Room with KSP.
+Flippy is a fast-paced, high-reflex Android game built with modern Android development tools. The game challenges players to tap on coins appearing on a 4x4 grid while avoiding bombs. It features a dynamic difficulty system, real-time feedback through haptics and sound, and a robust profile and leaderboard system.
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-blue.svg)](https://kotlinlang.org)
-[![Compose](https://img.shields.io/badge/Jetpack_Compose-Material_3-green.svg)](https://developer.android.com/jetpack/compose)
-[![Architecture](https://img.shields.io/badge/Architecture-MVVM_/_Modular-orange.svg)](https://developer.android.com/topic/architecture)
+## 🎮 Features
+
+- **Dynamic Gameplay**: A reactive 4x4 grid where tiles reveal rewards (Coins) and hazards (Bombs).
+- **Difficulty Levels**: Three distinct difficulty modes (Easy, Normal, Hard) that adjust the speed and frequency of tile reveals.
+- **Real-time Feedback**: Immersive experience with haptic feedback (vibrations) and synchronized sound effects.
+- **Visual Effects**: Custom animations including background ripples, score popups, and particle effects.
+- **Profile Management**: Personalized user experience with customizable usernames and avatars.
+- **Leaderboard & Match History**: Track your progress with detailed match statistics and view top scores.
+- **Offline Support**: Local database for match history with automatic synchronization to Firebase using WorkManager for reliable background processing.
+- **Analytics & Crashlytics**: Integrated performance monitoring and event tracking.
+
+## 🛠 Technical Specifications
+
+This project follows **Modern Android Development (MAD)** practices and is architected with scalability and maintainability in mind.
+
+### Architecture
+- **Clean Architecture**: Decoupled layers (Data, Domain, UI) for better separation of concerns.
+- **Multi-module Project**: Organized into specialized modules to improve build times and enforce boundaries.
+- **MVVM Pattern**: Robust state management using `ViewModel`, `StateFlow`, and `SharedFlow`.
+
+### Tech Stack
+- **Language**: Kotlin
+- **UI Framework**: Jetpack Compose
+- **Dependency Injection**: Dagger Hilt
+- **Asynchronous Programming**: Kotlin Coroutines & Flow
+- **Local Database**: Room (with KSP)
+- **Background Tasks**: WorkManager (for Firebase sync)
+- **Backend Services**: 
+  - Firebase Authentication (Social & Anonymous Sign-in)
+  - Firestore (Global Leaderboard & User Sync)
+  - Firebase Crashlytics & Analytics
+  - Firebase App Check (Play Integrity)
+- **UI Components & Animations**:
+  - Material 3 & Extended Icons
+  - Lottie Compose
+- **Haptics & Audio**: Android Vibrator API and specialized SoundRepository.
+
+## 🏗 Project Structure
+
+```text
+├── app                      # Main application module
+├── auth                     # Authentication logic
+├── common                   # Shared business logic and repositories
+├── core                     # Design system and global settings
+├── database                 # Local persistence layer
+├── feature
+│   ├── leaderboard          # Leaderboard UI and logic
+│   ├── profile              # User profile management
+│   └── settings             # App configuration
+└── game-engine              # Core game mechanics and Game VM
+```
+
+## 🚀 Getting Started
+
+1. Clone the repository.
+2. Open in Android Studio (Ladybug or newer recommended).
+3. Set up a Firebase project and add your `google-services.json` to the `app/` directory.
+4. Sync Gradle and run the `:app` module.
 
 ---
 
-## 🏗 Architectural Overview
-
-Flippy is engineered using a **Multi-Module Architecture**, ensuring strict separation of concerns, improved build times, and high testability. The project is divided into specialized layers:
-
-- **`:app`**: The entry point, handling dependency orchestration and global navigation.
-- **`:game-engine`**: Contains the core game state machine, tile-matching logic, and timer management.
-- **`:auth`**: Encapsulates player identity management and Firebase authentication integrations.
-- **`:database`**: A localized persistence layer using Room (via KSP) to manage match history and leaderboards.
-- **`:core`**: Design system module containing Material 3 themes, typography, and shared UI components.
-- **`:common`**: Shared utilities, constants, and global data models.
-
-## 🚀 Technical Highlights
-
-### 🎨 Advanced Compose UI & UX
-- **Custom Canvas Graphics:** Features a `MeshBackground` that utilizes `InfiniteTransition` and `Canvas` to draw hardware-accelerated, animated gradients without the overhead of heavy assets.
-- **Declarative Animations:** Heavy use of `animateFloatAsState` and `Spring` specs for haptic-like UI feedback on interactions (e.g., the reactive Play Button).
-- **Glassmorphism:** Implements real-time UI blurring using `Modifier.blur()` and semi-transparent surfaces to achieve a modern, layered depth effect.
-
-### ⚙️ Reactive Data Layer
-- **Cold Flows & StateFlows:** The game engine exposes a `GameStatus` via `StateFlow` to the UI, ensuring a Unidirectional Data Flow (UDF) pattern.
-- **Room + KSP:** Leverages Kotlin Symbol Processing (KSP) for compile-time optimized DAO implementations, reducing annotation processing overhead.
-- **Async Streams:** Match history is streamed directly from the SQLite layer to the UI using `Flow<List<MatchHistory>>`, ensuring the leaderboard remains reactive and "live."
-
-### 🛠 Engineering Excellence
-- **Modularization:** Strict internal visibility controls to prevent leaking implementation details between feature modules.
-- **Clean Code:** Adheres to SOLID principles, specifically focusing on Interface Segregation (DAOs) and Dependency Inversion (Repository patterns).
-- **Resource Optimization:** Optimized `LazyVerticalGrid` and `LazyColumn` implementations with stable keys to minimize recompositions during intense gameplay.
-
-## 📱 Features
-
-- **Dynamic Difficulty:** Intelligent grid scaling and life-management based on player selection.
-- **Live Leaderboard:** Local high-score tracking with optimized query limiters.
-- **Responsive Gameplay:** Zero-latency tile flipping powered by Compose's state-backed Snapshot system.
-- **Immersive Visuals:** High-fidelity animations including spring-physics buttons and mesh-gradient backgrounds.
-
-## 🛠 Tech Stack
-
-- **UI:** Jetpack Compose (Material 3)
-- **Logic:** Kotlin Coroutines & Flow
-- **Persistence:** Room Database
-- **Build System:** Gradle Kotlin DSL (KTS)
-- **Tooling:** KSP (Kotlin Symbol Processing)
-- **Backend (Optional):** Firebase Auth / Firestore (Ready for sync)
-
----
-
-### 👨‍💻 Author
-**Sujoy** - *Android Engineer*
-
-> "Building Flippy wasn't just about creating a game; it was about exploring the boundaries of declarative UI performance and modular scalability in the modern Android ecosystem."
+*Developed with ❤️ as a demonstration of modern Android capabilities.*
