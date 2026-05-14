@@ -141,11 +141,11 @@ class AuthViewModel @Inject constructor(
                 }
             }
 
-            when (val result = networkRepository.saveUserData(username, avatarId, oldUsername)) {
+            when (val result = networkRepository.updateUserName(username, avatarId, oldUsername)) {
                 is Result.Success -> {
                     _userData.value = userDataToSave
                     _showEditDialog.value = false
-                    profileRepository.saveProfile(username, avatarId)
+                    profileRepository.saveUserData(userDataToSave)
                     _uiState.update { AppUIState.Success }
                 }
 

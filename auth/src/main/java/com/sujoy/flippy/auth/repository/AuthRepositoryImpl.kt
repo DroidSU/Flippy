@@ -31,7 +31,7 @@ class AuthRepositoryImpl @Inject constructor(
                     if (result is Result.Success) {
                         val userData = result.data
                         if (userData != null) {
-                            profileRepository.saveProfile(userData.username, userData.avatarId)
+                            profileRepository.saveUserData(userData)
                         }
                     }
                 }

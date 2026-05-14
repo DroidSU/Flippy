@@ -9,19 +9,18 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.sujoy.flippy.common.UtilityMethods.Companion.toMap
 import com.sujoy.flippy.core.ConstantsManager
 import com.sujoy.flippy.core.models.UserData
+import com.sujoy.flippy.core.models.toMap
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
+import com.sujoy.flippy.database.toMap
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -39,24 +38,23 @@ class NetworkRepositoryImpl @Inject constructor(
         return UtilityMethods.isInternetAvailable(context)
     }
 
-    override fun storeMatchData(matchList: List<MatchHistory>) {
-        val userId = auth.currentUser?.uid ?: return
+    override suspend fun storeMatchData(matchList: List<MatchHistory>) = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: return@withContext
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val matchMap = mutableMapOf<String, Any>()
-                val matchIds = matchList.map { it.id }
+        try {
+            val matchMap = mutableMapOf<String, Any>()
+            val matchIds = matchList.map { it.id }
 
-                matchList.forEach { match ->
-                    matchMap[match.id] = match
-                }
-
-                database.child("matches").child(userId).updateChildren(matchMap).await()
-                matchDAO.markMatchesAsBackedUp(matchIds)
-            } catch (e: Exception) {
-                Log.e(ConstantsManager.APP_TAG, "Error storing match data: ${e.message}")
-                e.printStackTrace()
+            matchList.forEach { match ->
+                matchMap[match.id] = match.toMap()
             }
+
+            database.child("matches").child(userId).updateChildren(matchMap).await()
+            matchDAO.markMatchesAsBackedUp(matchIds)
+        } catch (e: Exception) {
+            Log.e(ConstantsManager.APP_TAG, "Error storing match data: ${e.message}")
+            e.printStackTrace()
+            throw e // Rethrow to let the caller (like SyncWorker) know it failed
         }
     }
 
@@ -96,15 +94,15 @@ class NetworkRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveUserData(username: String, avatarId: Int, oldUsername: String?): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun updateUserName(username: String, avatarId: Int, oldUsername: String?): Result<Unit> = withContext(Dispatchers.IO) {
         val userId = auth.currentUser?.uid ?: return@withContext Result.Failure("User not logged in")
-        val userdata = UserData(userId = userId, username = username, avatarId = avatarId)
 
         try {
             val updates = mutableMapOf<String, Any?>()
             
-            // Update user profile
-            updates["users/$userId"] = userdata.toMap()
+            // Only update username and avatarId in user profile to avoid wiping stats
+            updates["users/$userId/username"] = username
+            updates["users/$userId/avatarId"] = avatarId
             
             // Remove old username claim if it changed
             if (oldUsername != null && oldUsername.lowercase() != username.lowercase()) {
@@ -118,6 +116,16 @@ class NetworkRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(e.message ?: "Failed to save user data")
+        }
+    }
+
+    override suspend fun uploadUserData(userData: UserData): Result<Unit> = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: return@withContext Result.Failure("User not logged in")
+        try {
+            database.child("users").child(userId).setValue(userData.toMap()).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to upload user stats")
         }
     }
 

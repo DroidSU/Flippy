@@ -9,7 +9,6 @@ import android.os.Build
 import android.text.format.DateUtils
 import androidx.annotation.RequiresPermission
 import com.sujoy.flippy.core.R
-import com.sujoy.flippy.core.models.UserData
 import java.util.Locale
 import kotlin.random.Random
 
@@ -56,14 +55,6 @@ class UtilityMethods {
                 8 -> R.drawable.user_avatar_8
                 else -> null
             }
-        }
-
-        fun UserData.toMap(): Map<String, Any?> {
-            return mapOf(
-                "userId" to userId,
-                "username" to username,
-                "avatarId" to avatarId
-            )
         }
 
         fun generateUniqueUsername(): String {

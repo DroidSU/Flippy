@@ -23,4 +23,8 @@ class MatchRepositoryImpl @Inject constructor(
     override fun getMatchHistory(): Flow<List<MatchHistory>> {
         return matchDAO.getMatchHistory()
     }
+
+    override suspend fun getPendingMatches(): List<MatchHistory> {
+        return matchDAO.getPendingMatches()
+    }
 }

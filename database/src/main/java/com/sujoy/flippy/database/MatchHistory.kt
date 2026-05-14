@@ -26,5 +26,23 @@ data class MatchHistory(
     @ColumnInfo(defaultValue = "Anonymous")
     val username: String = "",
     @ColumnInfo(defaultValue = "1")
-    val avatarId : Int
+    val avatarId : Int = 1
 )
+
+fun MatchHistory.toMap(): Map<String, Any?> {
+    return mapOf(
+        "id" to id,
+        "playerId" to playerId,
+        "score" to score,
+        "difficulty" to difficulty,
+        "gameDuration" to gameDuration,
+        "timestamp" to timestamp,
+        "correctTaps" to correctTaps,
+        "totalTaps" to totalTaps,
+        "totalReflexTime" to totalReflexTime,
+        "perfectStreak" to perfectStreak,
+        "isBackedUp" to isBackedUp,
+        "username" to username,
+        "avatarId" to avatarId
+    )
+}

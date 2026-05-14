@@ -19,4 +19,8 @@ abstract class CommonModule {
     @Binds
     @Singleton
     abstract fun bindProfileRepository(impl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAnalyticsRepository(impl: AnalyticsRepositoryImpl): AnalyticsRepository
 }

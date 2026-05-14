@@ -42,10 +42,9 @@ class ProfileActivity : ComponentActivity() {
                     avatarId = avatarId,
                     uiState = uiState,
                     isEditing = isEditing,
-                    onUsernameChanged = { viewModel.onUsernameChanged(it) },
                     onAvatarIdChanged = { viewModel.onAvatarIdChanged(it) },
-                    onSaveProfile = { u, a ->
-                        viewModel.saveProfile(u, a)
+                    onSaveProfile = { _, a ->
+                        viewModel.saveProfile(a)
                         viewModel.onCancelEdit()
                     },
                     onBackClick = { finish() },

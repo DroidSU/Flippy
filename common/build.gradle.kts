@@ -1,10 +1,3 @@
-import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
-import org.gradle.kotlin.dsl.android
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.ksp
-import org.gradle.kotlin.dsl.libs
-import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -55,8 +48,15 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.work.compiler)
 }

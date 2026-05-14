@@ -7,8 +7,8 @@ import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
 import com.sujoy.flippy.common.repository.ProfileRepository
+import com.sujoy.flippy.core.models.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,85 +64,64 @@ class ProfileViewModel @Inject constructor(
         val userId = auth.currentUser?.uid
         if (userId != null) {
             viewModelScope.launch {
+                // Observe local user data
+                profileRepository.getUserData(userId).collect { localData ->
+                    if (localData != null) {
+                        _username.value = localData.username
+                        _avatarId.value = localData.avatarId
+                        _totalMatchesPlayed.value = localData.totalMatches
+                        _highestScore.value = localData.highestScore
+                        _longestRound.value = localData.longestRound
+                        
+                        if (localData.totalTaps > 0) {
+                            _accuracyRate.value = (localData.totalCorrectTaps.toDouble() / localData.totalTaps.toDouble()) * 100
+                        }
+                        
+                        if (localData.totalCorrectTaps > 0) {
+                            _reflexAverage.value = localData.totalReflexTime / localData.totalCorrectTaps
+                        }
+                    }
+                }
+            }
+
+            viewModelScope.launch {
                 networkRepository.fetchUserData(userId).collect { result ->
                     if (result is Result.Success) {
                         val userData = result.data
                         if (userData != null) {
-                            // Sync remote to local if they differ
-                            if (userData.username != savedUsername || userData.avatarId != savedAvatarId) {
-                                _username.value = userData.username
-                                _avatarId.value = userData.avatarId
-                                profileRepository.saveProfile(userData.username, userData.avatarId)
-                            }
+                            // Sync remote to local
+                            profileRepository.saveUserData(userData)
                         }
                     }
                 }
             }
         }
-
-        loadMatchData()
-    }
-
-    private fun loadMatchData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                profileRepository.getMatchHistory().collect { matchHistories ->
-
-                    if (matchHistories.isNotEmpty()) {
-                        _totalMatchesPlayed.value = matchHistories.size
-                        _highestScore.value = matchHistories.maxByOrNull { it.score }?.score ?: 0
-                        _longestRound.value =
-                            matchHistories.maxByOrNull { it -> it.gameDuration }?.gameDuration ?: 0L
-
-                        val sumOfCorrectTaps = matchHistories.sumOf { it.correctTaps }
-                        val sumOfTotalTaps = matchHistories.sumOf { it.totalTaps }
-
-                        if (sumOfTotalTaps > 0) {
-                            _accuracyRate.value =
-                                (sumOfCorrectTaps.toDouble() / sumOfTotalTaps.toDouble()) * 100
-                        }
-
-                        val sumOfReflexTimes = matchHistories.sumOf { it.totalReflexTime }
-                        if (sumOfCorrectTaps > 0) {
-                            _reflexAverage.value = sumOfReflexTimes / sumOfCorrectTaps
-                        }
-                    }
-                }
-            } catch (ex: Exception) {
-                // Handle match history load error
-            }
-        }
-    }
-
-    fun onUsernameChanged(username: String) {
-        _username.value = username
     }
 
     fun onAvatarIdChanged(avatarId: Int) {
         _avatarId.value = avatarId
     }
 
-    fun saveProfile(username: String, avatarId: Int) {
+    fun saveProfile(avatarId: Int) {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch {
-            val currentSavedUsername = profileRepository.getUsername()
-
-            // Only check for uniqueness if the username has actually changed
-            if (username.lowercase() != currentSavedUsername.lowercase()) {
-                if (networkRepository.isUsernameExisting(username)) {
-                    _uiState.value = AppUIState.Error("Username already exists. Please choose another one.")
-                    return@launch
-                }
-            }
-
-            // Save to Remote, including the old username to be cleared
-            val result = networkRepository.saveUserData(username, avatarId, currentSavedUsername)
+            val username = _username.value
+            val userId = auth.currentUser?.uid ?: return@launch
+            
+            val result = networkRepository.updateUserName(username, avatarId)
 
             when (result) {
                 is Result.Success -> {
-                    // Save to Local
-                    profileRepository.saveProfile(username, avatarId)
-                    _username.value = username
+                    // Get current stats to not lose them
+                    val currentData = profileRepository.getUserDataSync(userId) ?: UserData(
+                        userId = userId,
+                        username = username,
+                        avatarId = avatarId
+                    )
+                    val updatedData = currentData.copy(avatarId = avatarId)
+
+                    // Save to Local using saveUserData
+                    profileRepository.saveUserData(updatedData)
                     _avatarId.value = avatarId
                     _isEditing.value = false
                     _uiState.value = AppUIState.Success

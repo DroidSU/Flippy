@@ -23,6 +23,9 @@ interface MatchDAO {
     @Query("SELECT * FROM match_history WHERE playerId = :playerId ORDER BY score DESC LIMIT 3")
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
 
+    @Query("SELECT * FROM match_history WHERE isBackedUp = 0")
+    suspend fun getPendingMatches(): List<MatchHistory>
+
     @Query("DELETE FROM match_history")
     suspend fun clearAll()
 }

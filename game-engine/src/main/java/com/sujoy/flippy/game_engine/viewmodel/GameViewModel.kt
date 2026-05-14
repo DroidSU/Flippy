@@ -1,12 +1,15 @@
 package com.sujoy.flippy.game_engine.viewmodel
 
+import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.common.AnalyticsRepository
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.repository.ProfileRepository
+import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.game_engine.models.CardType
@@ -19,6 +22,7 @@ import com.sujoy.flippy.game_engine.models.VibrationType
 import com.sujoy.flippy.game_engine.repository.GamePreferencesRepository
 import com.sujoy.flippy.game_engine.repository.SoundRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,6 +32,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -38,8 +43,15 @@ class GameViewModel @Inject constructor(
     private val matchRepository: MatchRepository,
     private val networkRepository: NetworkRepository,
     private val preferencesRepository: GamePreferencesRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val analyticsRepository: AnalyticsRepository
 ) : ViewModel() {
+
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e("GameViewModel", "Coroutine exception: ${throwable.localizedMessage}", throwable)
+    }
+
+    private val scope = viewModelScope + exceptionHandler
 
     private val playerId: String get() = auth.currentUser?.uid ?: "anonymous"
 
@@ -148,10 +160,17 @@ class GameViewModel @Inject constructor(
         _isGamePaused.value = false
         _streak.value = 0
         _lastReactionTime.value = 0L
+        _totalTaps.value = 0
+        _correctTaps.value = 0
+        totalReflexTime = 0L
+        perfectStreak = 0
+
+        analyticsRepository.logEvent("game_started", mapOf("difficulty" to _difficulty.value.label))
+        analyticsRepository.logScreenView("GameScreen")
 
         startTimer()
 
-        viewModelScope.launch {
+        scope.launch {
             gameLoop()
         }
     }
@@ -168,12 +187,16 @@ class GameViewModel @Inject constructor(
         _isGamePaused.value = false
         _streak.value = 0
         _lastReactionTime.value = 0L
+        _totalTaps.value = 0
+        _correctTaps.value = 0
+        totalReflexTime = 0L
+        perfectStreak = 0
     }
 
     private fun startTimer() {
         timerJob?.cancel()
         lastStartTime = System.currentTimeMillis()
-        timerJob = viewModelScope.launch {
+        timerJob = scope.launch {
             while (_status.value == GameStatus.PLAYING) {
                 if (!_isGamePaused.value) {
                     _gameTime.value = accumulatedTime + (System.currentTimeMillis() - lastStartTime)
@@ -197,7 +220,7 @@ class GameViewModel @Inject constructor(
         soundRepository.playBombSound()
         accumulatedTime += System.currentTimeMillis() - lastStartTime
 
-        viewModelScope.launch {
+        scope.launch {
             soundRepository.pauseBackgroundMusic()
             // Explicit delay ensures the pause lasts the intended duration even if sound is disabled
             delay(pauseDuration)
@@ -237,7 +260,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun revealAndHideTile(tileId: Int) {
-        viewModelScope.launch {
+        scope.launch {
             val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
             tileRevealTime = System.currentTimeMillis()
             updateTile(tileId) {
@@ -276,6 +299,9 @@ class GameViewModel @Inject constructor(
         if (_status.value != GameStatus.PLAYING) return
 
         coinsMissedConsecutively++
+        if (perfectStreak < _streak.value) {
+            perfectStreak = _streak.value
+        }
         _streak.value = 0
         if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
@@ -293,6 +319,19 @@ class GameViewModel @Inject constructor(
         _status.value = GameStatus.GAME_OVER
         stopTimer()
         soundRepository.playGameOverSound()
+
+        // Finalize perfect streak in case the game ended on a high streak
+        if (perfectStreak < _streak.value) {
+            perfectStreak = _streak.value
+        }
+
+        analyticsRepository.logEvent("game_over", mapOf(
+            "score" to _score.value,
+            "duration" to _gameTime.value,
+            "difficulty" to _difficulty.value.label,
+            "accuracy" to if (_totalTaps.value > 0) (_correctTaps.value.toDouble() / _totalTaps.value) else 0.0
+        ))
+
         saveMatchResult()
     }
 
@@ -302,7 +341,7 @@ class GameViewModel @Inject constructor(
         val currentDifficulty = _difficulty.value.label
         val timestamp = System.currentTimeMillis()
 
-        viewModelScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             val match = MatchHistory(
                 id = "${playerId}_$timestamp",
                 playerId = playerId,
@@ -319,9 +358,40 @@ class GameViewModel @Inject constructor(
                 avatarId = _currentAvatarId
             )
             matchRepository.saveMatch(match)
-            if (networkRepository.isInternetAvailable()) {
-                networkRepository.storeMatchData(listOf(match))
+
+            try {
+                if (networkRepository.isInternetAvailable()) {
+                    networkRepository.storeMatchData(listOf(match))
+                }
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "Failed to sync match result: ${e.message}")
             }
+
+            updateUserStats(match)
+        }
+    }
+
+    private suspend fun updateUserStats(match: MatchHistory) {
+        val currentStats = profileRepository.getUserDataSync(playerId) ?: UserData(
+            userId = playerId,
+            username = _currentUsername,
+            avatarId = _currentAvatarId
+        )
+
+        val updatedStats = currentStats.copy(
+            totalMatches = currentStats.totalMatches + 1,
+            highestScore = maxOf(currentStats.highestScore, match.score),
+            longestRound = maxOf(currentStats.longestRound, match.gameDuration),
+            totalCorrectTaps = currentStats.totalCorrectTaps + match.correctTaps,
+            totalTaps = currentStats.totalTaps + match.totalTaps,
+            totalReflexTime = currentStats.totalReflexTime + match.totalReflexTime,
+            bestPerfectStreak = maxOf(currentStats.bestPerfectStreak, match.perfectStreak)
+        )
+
+        profileRepository.saveUserData(updatedStats)
+
+        if (networkRepository.isInternetAvailable()) {
+            networkRepository.uploadUserData(updatedStats)
         }
     }
 
@@ -333,11 +403,16 @@ class GameViewModel @Inject constructor(
 
     fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
         val tile = _tiles.value.find { it.id == tileId } ?: return
-        if (!tile.isRevealed || _status.value != GameStatus.PLAYING || _isGamePaused.value) return
+        if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
+
+        // Every tap on a tile area during gameplay counts towards total taps (accuracy)
+        _totalTaps.update { it + 1 }
+
+        if (!tile.isRevealed) return
 
         updateTile(tileId) { it.copy(isRevealed = false) }
 
-        viewModelScope.launch {
+        scope.launch {
             tapPosition?.let {
                 _effects.emit(GameEffect.BackgroundRipple(it))
             }
@@ -347,7 +422,6 @@ class GameViewModel @Inject constructor(
                     _score.update { it + 1 }
                     coinsMissedConsecutively = 0
                     _correctTaps.update { it + 1 }
-                    _totalTaps.update { it + 1 }
                     _streak.update { it + 1 }
                     val reactionTime = System.currentTimeMillis() - tileRevealTime
                     _lastReactionTime.value = reactionTime
@@ -361,6 +435,11 @@ class GameViewModel @Inject constructor(
                 CardType.BOMB -> {
                     _lives.update { (it - 1).coerceAtLeast(0) }
                     
+                    analyticsRepository.logEvent("bomb_hit", mapOf(
+                        "score_at_hit" to _score.value,
+                        "lives_remaining" to _lives.value
+                    ))
+
                     if (perfectStreak < _streak.value)
                         perfectStreak = _streak.value
 
@@ -374,18 +453,15 @@ class GameViewModel @Inject constructor(
                     } else {
                         pauseGameTemporarily()
                     }
-                    _totalTaps.update { it + 1 }
                 }
 
-                else -> {
-                    _totalTaps.update { it + 1 }
-                }
+                else -> {}
             }
         }
     }
 
     fun getTopThreeScores() {
-        viewModelScope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             matchRepository.getTopThreeScores(playerId).collect {
                 _topThreeScores.value = it
             }
@@ -393,7 +469,7 @@ class GameViewModel @Inject constructor(
     }
 
     fun signOut() {
-        viewModelScope.launch {
+        scope.launch {
             profileRepository.clearLocalData()
             auth.signOut()
         }

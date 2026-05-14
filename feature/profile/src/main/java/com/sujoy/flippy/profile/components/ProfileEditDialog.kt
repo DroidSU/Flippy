@@ -48,7 +48,8 @@ fun EditDialog(
     username: String,
     avatarId: Int,
     isLoading: Boolean,
-    onUserNameChanged: (String) -> Unit,
+    isUsernameEditable: Boolean = false,
+    onUserNameChanged: (String) -> Unit = {},
     onAvatarChanged: (Int) -> Unit,
     onSave: (String, Int) -> Unit,
     onDismiss: () -> Unit,
@@ -69,7 +70,7 @@ fun EditDialog(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 Text(
-                    text = if (username.isEmpty()) "Create Profile" else "Update Profile",
+                    text = if (isUsernameEditable) "Create Profile" else "Update Profile",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -77,25 +78,28 @@ fun EditDialog(
 
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { if (it.length <= 15) onUserNameChanged(it) },
-                    label = { Text("How should we call you?") },
+                    onValueChange = { if (isUsernameEditable && it.length <= 15) onUserNameChanged(it) },
+                    label = { Text(if (isUsernameEditable) "How should we call you?" else "Your Username") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !isLoading,
+                    enabled = isUsernameEditable && !isLoading,
+                    readOnly = !isUsernameEditable,
                     placeholder = { Text("e.g. Speedster") },
                     trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                onUserNameChanged(UtilityMethods.generateUniqueUsername())
-                            },
-                            enabled = !isLoading
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Generate Username",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        if (isUsernameEditable) {
+                            IconButton(
+                                onClick = {
+                                    onUserNameChanged(UtilityMethods.generateUniqueUsername())
+                                },
+                                enabled = !isLoading
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Generate Username",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 )
@@ -171,7 +175,7 @@ fun EditDialog(
                         )
                     } else {
                         Text(
-                            if (username.isEmpty()) "Get Started" else "Save Changes",
+                            if (isUsernameEditable) "Get Started" else "Save Changes",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -190,9 +194,8 @@ private fun EditDialogPreview() {
             isLoading = false,
             onSave = { _, _ -> },
             onDismiss = {},
-            username = "",
-            avatarId = 0,
-            onUserNameChanged = {},
+            username = "Sujoy",
+            avatarId = 1,
             onAvatarChanged = {},
         )
     }

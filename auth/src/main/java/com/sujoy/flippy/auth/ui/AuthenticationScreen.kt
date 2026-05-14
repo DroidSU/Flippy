@@ -48,6 +48,7 @@ fun AuthenticationScreen(
                 username = userData?.username ?: "",
                 avatarId = userData?.avatarId ?: 1,
                 isLoading = uiState is AppUIState.Loading,
+                isUsernameEditable = true,
                 onUserNameChanged = {
                     onUsernameChanged(it)
                 },
