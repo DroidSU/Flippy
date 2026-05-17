@@ -47,7 +47,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.core.theme.Gold
-import com.sujoy.flippy.core.theme.White
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.game_engine.R
 
@@ -69,7 +68,7 @@ fun FlippyRulesDialog(
             shape = RoundedCornerShape(40.dp),
             color = gameColors.backgroundGradient.first().copy(alpha = 0.95f),
             shadowElevation = 32.dp,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
         ) {
             Column(
                 modifier = Modifier
@@ -101,7 +100,7 @@ fun FlippyRulesDialog(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.sp
                     ),
-                    color = White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -139,7 +138,7 @@ fun FlippyRulesDialog(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.White.copy(alpha = 0.05f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                     onClick = { showOnStartup = !showOnStartup }
                 ) {
                     Row(
@@ -151,14 +150,14 @@ fun FlippyRulesDialog(
                             onCheckedChange = null,
                             colors = CheckboxDefaults.colors(
                                 checkedColor = MaterialTheme.colorScheme.primary,
-                                uncheckedColor = Color.White.copy(alpha = 0.2f)
+                                uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                             )
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Show on startup",
                             style = MaterialTheme.typography.labelLarge,
-                            color = White.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -186,7 +185,7 @@ fun FlippyRulesDialog(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 3.sp
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -237,12 +236,12 @@ private fun RuleItemRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                color = White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = White.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 lineHeight = 18.sp
             )
         }
@@ -269,7 +268,7 @@ fun FlippyRulesComponent(
 @Composable
 private fun FlippyRulesComponentPreview() {
     FlippyTheme {
-        Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray)) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             FlippyRulesDialog(onDismiss = {})
         }
     }

@@ -48,6 +48,10 @@
             android:exported="false"
             android:theme="@style/Theme.Flippy" />
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-4337844951984192~5525619994" />
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

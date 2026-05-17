@@ -23,4 +23,8 @@ abstract class CommonModule {
     @Binds
     @Singleton
     abstract fun bindAnalyticsRepository(impl: AnalyticsRepositoryImpl): AnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAdManager(impl: AdManagerImpl): AdManager
 }

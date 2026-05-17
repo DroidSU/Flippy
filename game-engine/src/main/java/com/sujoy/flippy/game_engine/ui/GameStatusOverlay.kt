@@ -39,13 +39,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.core.theme.FlippyTheme
-import com.sujoy.flippy.core.theme.White
 import com.sujoy.flippy.core.theme.gameColors
 
 @Composable
@@ -83,7 +81,7 @@ fun GameStatusOverlay(
                     shape = RoundedCornerShape(40.dp),
                     color = gameColors.backgroundGradient.first().copy(alpha = 0.9f),
                     shadowElevation = 40.dp,
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -114,7 +112,7 @@ fun GameStatusOverlay(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 4.sp
                             ),
-                            color = White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(40.dp))
@@ -123,8 +121,8 @@ fun GameStatusOverlay(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(28.dp),
-                            color = Color.White.copy(alpha = 0.05f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -136,7 +134,7 @@ fun GameStatusOverlay(
                                         fontWeight = FontWeight.Black,
                                         letterSpacing = 2.sp
                                     ),
-                                    color = White.copy(alpha = 0.4f)
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                                 )
                                 Text(
                                     text = "$score",
@@ -174,8 +172,6 @@ fun OverlayPlayButton(onClick: () -> Unit) {
         label = "scale"
     )
 
-    val gameColors = MaterialTheme.gameColors
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -209,7 +205,7 @@ fun OverlayPlayButton(onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Refresh,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(28.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -219,7 +215,7 @@ fun OverlayPlayButton(onClick: () -> Unit) {
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 ),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }

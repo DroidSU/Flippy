@@ -11,10 +11,19 @@ val BgDeepDark = Color(0xFF0F172A)
 val BgMidnight = Color(0xFF111827)
 val BgSlate = Color(0xFF1E293B)
 
+// --- Light Theme Colors (Professional/Soft) ---
+val LightBgMain = Color(0xFFF8FAFC)
+val LightBgSurface = Color(0xFFFFFFFF)
+val LightBgSlate = Color(0xFFE2E8F0)
+val LightBgAccent = Color(0xFFEEF2FF)
+val LightTextPrimary = Color(0xFF0F172A)
+val LightTextSecondary = Color(0xFF64748B)
+
 // --- Accent Colors (Neon) ---
 val NeonCyan = Color(0xFF22D3EE)
 val NeonPurple = Color(0xFF8B5CF6)
 val NeonPink = Color(0xFFD946EF)
+val ElectricBlue = Color(0xFF3B82F6)
 val Gold = Color(0xFFFACC15)
 val SoftGold = Color(0xFFFFE066)
 

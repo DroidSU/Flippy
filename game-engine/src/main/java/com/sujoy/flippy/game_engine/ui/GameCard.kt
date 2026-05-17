@@ -80,8 +80,8 @@ fun GameCard(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                Color.White.copy(alpha = 0.15f),
-                                Color.White.copy(alpha = 0.05f)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
                             )
                         )
                     )
@@ -96,9 +96,9 @@ fun GameCard(
                         1.dp,
                         Brush.linearGradient(
                             listOf(
-                                Color.White.copy(alpha = 0.2f),
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.1f)
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                             )
                         )
                     )

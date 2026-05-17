@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.common.AdManager
 import com.sujoy.flippy.common.AnalyticsRepository
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.NetworkRepository
@@ -44,7 +45,8 @@ class GameViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
     private val preferencesRepository: GamePreferencesRepository,
     private val profileRepository: ProfileRepository,
-    private val analyticsRepository: AnalyticsRepository
+    private val analyticsRepository: AnalyticsRepository,
+    private val adManager: AdManager
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -78,6 +80,12 @@ class GameViewModel @Inject constructor(
 
     private val _showRules = MutableStateFlow(false)
     val showRules = _showRules.asStateFlow()
+
+    private val _showAdRewardDialog = MutableStateFlow(false)
+    val showAdRewardDialog = _showAdRewardDialog.asStateFlow()
+
+    private val _isAdRewardAvailable = MutableStateFlow(true)
+    val isAdRewardAvailable = _isAdRewardAvailable.asStateFlow()
 
     private val _isGamePaused = MutableStateFlow(false)
     val isGamePaused = _isGamePaused.asStateFlow()
@@ -164,6 +172,9 @@ class GameViewModel @Inject constructor(
         _correctTaps.value = 0
         totalReflexTime = 0L
         perfectStreak = 0
+        _isAdRewardAvailable.value = true
+        _showAdRewardDialog.value = false
+        adManager.loadRewardedAd()
 
         soundRepository.startBackgroundMusic()
 
@@ -193,6 +204,9 @@ class GameViewModel @Inject constructor(
         _correctTaps.value = 0
         totalReflexTime = 0L
         perfectStreak = 0
+        _isAdRewardAvailable.value = true
+        _showAdRewardDialog.value = false
+        adManager.loadRewardedAd()
         soundRepository.startBackgroundMusic()
     }
 
@@ -311,15 +325,27 @@ class GameViewModel @Inject constructor(
             coinsMissedConsecutively = 0
 
             if (_lives.value <= 0) {
-                endGame()
+                if (_isAdRewardAvailable.value && adManager.isAdLoaded()) {
+                    pauseForAdReward()
+                } else {
+                    endGame()
+                }
             } else {
                 pauseGameTemporarily()
             }
         }
     }
 
+    private fun pauseForAdReward() {
+        _isGamePaused.value = true
+        _showAdRewardDialog.value = true
+        accumulatedTime += System.currentTimeMillis() - lastStartTime
+        soundRepository.pauseBackgroundMusic()
+    }
+
     private fun endGame() {
         _status.value = GameStatus.GAME_OVER
+        _isGamePaused.value = false
         stopTimer()
         soundRepository.playGameOverSound()
 
@@ -452,7 +478,11 @@ class GameViewModel @Inject constructor(
                     _effects.emit(GameEffect.Vibration(VibrationType.LONG))
 
                     if (_lives.value <= 0) {
-                        endGame()
+                        if (_isAdRewardAvailable.value && adManager.isAdLoaded()) {
+                            pauseForAdReward()
+                        } else {
+                            endGame()
+                        }
                     } else {
                         pauseGameTemporarily()
                     }
@@ -469,6 +499,36 @@ class GameViewModel @Inject constructor(
                 _topThreeScores.value = it
             }
         }
+    }
+
+    fun onWatchAdClicked(activity: android.app.Activity) {
+        _showAdRewardDialog.value = false
+        var rewardEarned = false
+
+        adManager.showRewardedAd(
+            activity = activity,
+            onRewardEarned = {
+                rewardEarned = true
+                _lives.value = 1
+                _isAdRewardAvailable.value = false
+                analyticsRepository.logEvent("rewarded_ad_watched", mapOf("score" to _score.value))
+            },
+            onAdClosed = {
+                if (rewardEarned) {
+                    _isGamePaused.value = false
+                    lastStartTime = System.currentTimeMillis()
+                    soundRepository.startBackgroundMusic()
+                } else {
+                    endGame()
+                }
+            }
+        )
+    }
+
+    fun onSkipAdClicked() {
+        _showAdRewardDialog.value = false
+        _isAdRewardAvailable.value = false
+        endGame()
     }
 
     fun signOut() {

@@ -3,12 +3,16 @@ package com.sujoy.flippy
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.sujoy.flippy.common.SyncScheduler
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -31,6 +35,10 @@ class CustomApplication : Application(), Configuration.Provider {
         syncScheduler.schedulePeriodicSync()
 
         FirebaseApp.initializeApp(this)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@CustomApplication) {}
+        }
 
         val firebaseAppCheck = FirebaseAppCheck.getInstance()
 

@@ -96,6 +96,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.crashlytics)
     implementation(libs.play.services.auth)
+    implementation(libs.play.services.ads)
     implementation("com.google.firebase:firebase-appcheck-playintegrity")
     implementation(libs.firebase.appcheck.debug)
 

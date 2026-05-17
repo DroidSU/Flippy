@@ -228,7 +228,7 @@ private fun SettingsToggleItem(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = androidx.compose.material3.SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -320,7 +320,7 @@ private fun RowScope.ThemeOption(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = if (selected) FontWeight.Black else FontWeight.Bold,
-                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
     }
@@ -377,13 +377,6 @@ private fun SettingsClickableItem(
                     )
                 }
             }
-
-//            Icon(
-//                imageVector = Icons.Default.ChevronRight,
-//                contentDescription = null,
-//                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-//                modifier = Modifier.size(20.dp)
-//            )
         }
     }
 }

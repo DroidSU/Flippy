@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
                 val gameTime by gameViewModel.gameTime.collectAsState()
                 val topThreeScores by gameViewModel.topThreeScores.collectAsState()
                 val showRules by gameViewModel.showRules.collectAsState()
+                val showAdRewardDialog by gameViewModel.showAdRewardDialog.collectAsState()
                 val isPaused by gameViewModel.isGamePaused.collectAsState()
                 val streak by gameViewModel.streak.collectAsState()
                 val reactionTime by gameViewModel.lastReactionTime.collectAsState()
@@ -76,11 +77,14 @@ class MainActivity : ComponentActivity() {
                     gameTime = gameTime,
                     leaderboard = topThreeScores,
                     showRules = showRules,
+                    showAdRewardDialog = showAdRewardDialog,
                     onTileTapped = gameViewModel::onTileTapped,
                     onPlayClick = gameViewModel::startGame,
                     onResetGame = gameViewModel::resetGame,
                     onDifficultyChange = gameViewModel::setDifficulty,
                     onRulesDismissed = gameViewModel::onRulesDismissed,
+                    onWatchAdClick = { gameViewModel.onWatchAdClicked(this@MainActivity) },
+                    onSkipAdClick = gameViewModel::onSkipAdClicked,
                     onHelpClick = gameViewModel::showRulesDialog,
                     onSignOutClick = {
                         gameViewModel.signOut()
