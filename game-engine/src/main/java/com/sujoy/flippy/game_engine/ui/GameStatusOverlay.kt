@@ -2,7 +2,6 @@ package com.sujoy.flippy.game_engine.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -24,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -37,12 +37,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.White
+import com.sujoy.flippy.core.theme.gameColors
 
 @Composable
 fun GameStatusOverlay(
@@ -50,7 +54,7 @@ fun GameStatusOverlay(
     score: Int,
     onDismiss: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val gameColors = MaterialTheme.gameColors
 
     AnimatedVisibility(
         visible = visible,
@@ -60,61 +64,91 @@ fun GameStatusOverlay(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
+                .background(gameColors.pauseDim),
             contentAlignment = Alignment.Center
         ) {
             AnimatedVisibility(
                 visible = visible,
-                enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+                enter = scaleIn(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn()
             ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth(0.85f)
                         .padding(24.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    color = Color.White,
-                    shadowElevation = 24.dp,
-                    border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.05f))
+                    shape = RoundedCornerShape(40.dp),
+                    color = gameColors.backgroundGradient.first().copy(alpha = 0.9f),
+                    shadowElevation = 40.dp,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 40.dp)
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 48.dp)
                     ) {
-                        Text(
-                            text = "GAME OVER",
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp
-                            ),
-                            color = Color(0xFF222222)
-                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                            modifier = Modifier.size(80.dp),
+                            border = BorderStroke(2.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "!",
+                                    style = MaterialTheme.typography.displaySmall.copy(
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        // Score Card
+                        Text(
+                            text = "GAME OVER",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 4.sp
+                            ),
+                            color = White
+                        )
+
+                        Spacer(modifier = Modifier.height(40.dp))
+
+                        // Score Card - Frosted Glass
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                            shape = RoundedCornerShape(28.dp),
+                            color = Color.White.copy(alpha = 0.05f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(24.dp)
+                                modifier = Modifier.padding(vertical = 32.dp)
                             ) {
                                 Text(
                                     text = "FINAL SCORE",
                                     style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 2.sp
                                     ),
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                    color = White.copy(alpha = 0.4f)
                                 )
                                 Text(
                                     text = "$score",
-                                    style = MaterialTheme.typography.displayMedium.copy(
-                                        fontWeight = FontWeight.Black
-                                    ),
-                                    color = MaterialTheme.colorScheme.primary
+                                    style = MaterialTheme.typography.displayLarge.copy(
+                                        fontWeight = FontWeight.Black,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.primary,
+                                                MaterialTheme.colorScheme.tertiary
+                                            )
+                                        )
+                                    )
                                 )
                             }
                         }
@@ -136,19 +170,31 @@ fun OverlayPlayButton(onClick: () -> Unit) {
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
 
-    val elevation by animateDpAsState(
-        targetValue = if (isPressed) 2.dp else 8.dp,
-        label = "elevation"
-    )
+    val gameColors = MaterialTheme.gameColors
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(72.dp)
             .scale(scale)
+            .shadow(
+                elevation = if (isPressed) 8.dp else 24.dp,
+                shape = RoundedCornerShape(24.dp),
+                spotColor = MaterialTheme.colorScheme.primary
+            )
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary
+                    )
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -156,46 +202,25 @@ fun OverlayPlayButton(onClick: () -> Unit) {
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Shadow/Depth
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(20.dp)
-                )
-        )
-
-        // Button Surface
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = elevation),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.primary,
-            tonalElevation = 4.dp
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "TRY AGAIN",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    ),
-                    color = Color.White
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "TRY AGAIN",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp
+                ),
+                color = Color.White
+            )
         }
     }
 }

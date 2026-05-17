@@ -11,17 +11,22 @@ class SoundRepositoryImpl @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : SoundRepository {
     private val soundPlayer = SoundPlayer(context)
+    private var isMusicAllowed = true
 
     private fun isSoundEnabled() = settingsRepository.getGameSoundEnabled()
 
     override fun startBackgroundMusic() {
-        if (isSoundEnabled()) {
+        if (isSoundEnabled() && isMusicAllowed) {
             soundPlayer.startBackgroundMusic()
         }
     }
 
     override fun pauseBackgroundMusic() {
         soundPlayer.pauseBackgroundMusic()
+    }
+
+    override fun setMusicAllowed(allowed: Boolean) {
+        isMusicAllowed = allowed
     }
 
     override suspend fun pauseBackgroundMusicTemp(millis: Long) {

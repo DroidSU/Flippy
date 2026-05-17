@@ -1,7 +1,9 @@
 package com.sujoy.leaderboard.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,39 +44,53 @@ fun LeaderboardItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = if (isCurrentUser) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) 
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        tonalElevation = if (isCurrentUser) 4.dp else 1.dp
+        shape = RoundedCornerShape(24.dp),
+        color = if (isCurrentUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) 
+                else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = if (isCurrentUser) 2.dp else 1.dp,
+            color = if (isCurrentUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+        ),
+        shadowElevation = if (isCurrentUser) 12.dp else 2.dp
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Rank Display
-            Box(
-                modifier = Modifier.size(36.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "#$rank",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = if (isCurrentUser) MaterialTheme.colorScheme.primary 
-                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                )
+            // Rank Display with Gradient / Background
+            val rankColor = when(rank) {
+                1 -> Color(0xFFFACC15) // Gold
+                2 -> Color(0xFF94A3B8) // Silver
+                3 -> Color(0xFFB45309) // Bronze
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = if (rank <= 3) rankColor else Color.Transparent,
+                border = if (rank > 3) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)) else null
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = rank.toString(),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            color = if (rank <= 3) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+            }
 
-            // Avatar with a border if current user
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Avatar
             Surface(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.surface,
-                border = if (isCurrentUser) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                    .size(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 if (avatarRes != null) {
                     Image(
@@ -89,7 +105,7 @@ fun LeaderboardItem(
                             Icons.Default.Person,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                         )
                     }
                 }
@@ -97,26 +113,35 @@ fun LeaderboardItem(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Username and Label
-            Text(
-                text = username,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier.weight(1f)
-            )
+            // Username
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = username,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+                if (isCurrentUser) {
+                    Text(
+                        text = "You",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
 
-
+            // Score with Background
             Surface(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(12.dp)
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
             ) {
                 Text(
                     text = score.toString(),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary
                     )
                 )

@@ -165,6 +165,8 @@ class GameViewModel @Inject constructor(
         totalReflexTime = 0L
         perfectStreak = 0
 
+        soundRepository.startBackgroundMusic()
+
         analyticsRepository.logEvent("game_started", mapOf("difficulty" to _difficulty.value.label))
         analyticsRepository.logScreenView("GameScreen")
 
@@ -191,6 +193,7 @@ class GameViewModel @Inject constructor(
         _correctTaps.value = 0
         totalReflexTime = 0L
         perfectStreak = 0
+        soundRepository.startBackgroundMusic()
     }
 
     private fun startTimer() {

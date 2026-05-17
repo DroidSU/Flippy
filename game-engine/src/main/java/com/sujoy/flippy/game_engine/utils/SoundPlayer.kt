@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SoundPlayer(context: Context) {
+class SoundPlayer(private val context: Context) {
 
     private var soundPool: SoundPool
     private var bombSoundId: Int = 0
@@ -42,9 +42,15 @@ class SoundPlayer(context: Context) {
             gameOverSoundId = soundPool.load(context, R.raw.sound_game_over, 1)
         }
 
-        backgroundMusicPlayer = MediaPlayer.create(context, R.raw.sound_island_clearing).apply {
-            isLooping = true
-            setVolume(0.3f, 0.3f)
+        initializeMediaPlayer()
+    }
+
+    private fun initializeMediaPlayer() {
+        if (backgroundMusicPlayer == null) {
+            backgroundMusicPlayer = MediaPlayer.create(context, R.raw.sound_island_clearing).apply {
+                isLooping = true
+                setVolume(0.3f, 0.3f)
+            }
         }
     }
 
@@ -62,6 +68,9 @@ class SoundPlayer(context: Context) {
     }
 
     fun startBackgroundMusic() {
+        if (backgroundMusicPlayer == null) {
+            initializeMediaPlayer()
+        }
         backgroundMusicPlayer?.setVolume(0.3f, 0.3f)
         backgroundMusicPlayer?.takeIf { !it.isPlaying }?.start()
     }
@@ -73,17 +82,24 @@ class SoundPlayer(context: Context) {
     suspend fun pauseBackgroundMusicTemp(milliseconds: Long) {
         backgroundMusicPlayer?.pause()
         delay(milliseconds)
-        backgroundMusicPlayer?.start()
+        if (backgroundMusicPlayer != null && !backgroundMusicPlayer!!.isPlaying) {
+            backgroundMusicPlayer?.start()
+        }
     }
 
     fun resumeBackgroundMusic() {
+        if (backgroundMusicPlayer == null) {
+            initializeMediaPlayer()
+        }
         backgroundMusicPlayer?.start()
     }
 
     fun stopBackgroundMusic() {
-        if (backgroundMusicPlayer?.isPlaying == true) {
-            backgroundMusicPlayer?.pause()
-            backgroundMusicPlayer?.seekTo(0)
+        backgroundMusicPlayer?.let {
+            if (it.isPlaying) {
+                it.pause()
+            }
+            it.seekTo(0)
         }
     }
 

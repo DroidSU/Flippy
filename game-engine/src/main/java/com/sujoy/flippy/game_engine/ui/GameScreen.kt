@@ -88,7 +88,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.UtilityMethods
+import com.sujoy.flippy.core.theme.BombRed
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.HeartRed
+import com.sujoy.flippy.core.theme.White
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.game_engine.models.EffectState
@@ -138,6 +141,8 @@ fun GameScreen(
     val ripples = remember { mutableStateListOf<RippleState>() }
     val tilePositions = remember { mutableMapOf<Int, Offset>() }
 
+    val gameColors = MaterialTheme.gameColors
+
     LaunchedEffect(effects) {
         effects?.collectLatest { effect ->
             when (effect) {
@@ -180,12 +185,12 @@ fun GameScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color.Transparent
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .background(Brush.verticalGradient(gameColors.backgroundGradient))
         ) {
             MeshBackground(streak = streak)
 
@@ -203,7 +208,7 @@ fun GameScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.gameColors.pauseDim)
+                        .background(gameColors.pauseDim)
                         .zIndex(5f)
                 )
             }
@@ -211,50 +216,31 @@ fun GameScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(innerPadding)
                     .verticalScroll(scrollState)
                     .blur(if (showGameOverOverlay || showRules || isMenuVisible) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Custom Top Bar
+                // Custom Top Bar - Frosted Glass
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        onClick = { isMenuVisible = true },
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(48.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                    IconButton(icon = Icons.Default.Menu, onClick = { isMenuVisible = true })
+                    
+                    Text(
+                        text = "FLIPPY",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp,
+                            brush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                         )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
+                    )
 
-                    Surface(
-                        onClick = onHelpClick,
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                        modifier = Modifier.size(48.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
-                        )
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.AutoMirrored.Default.HelpOutline,
-                                contentDescription = "Help"
-                            )
-                        }
-                    }
+                    IconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
                 }
 
                 GameHeader(
@@ -265,15 +251,21 @@ fun GameScreen(
                     reactionTime = reactionTime
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                DifficultySelector(
-                    currentDifficulty = difficulty,
-                    onDifficultyChange = onDifficultyChange,
-                    enabled = status == GameStatus.READY
-                )
+                AnimatedVisibility(
+                    visible = status == GameStatus.READY,
+                    enter = fadeIn() + slideInHorizontally(),
+                    exit = fadeOut()
+                ) {
+                    DifficultySelector(
+                        currentDifficulty = difficulty,
+                        onDifficultyChange = onDifficultyChange,
+                        enabled = true
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 GameGrid(
                     tiles = tiles,
@@ -285,10 +277,10 @@ fun GameScreen(
                 if (status == GameStatus.READY) {
                     LeaderboardSection(
                         leaderboard = leaderboard,
-                        modifier = Modifier.padding(bottom = 100.dp)
+                        modifier = Modifier.padding(bottom = 120.dp)
                     )
                 } else {
-                    Spacer(modifier = Modifier.height(100.dp))
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
 
@@ -311,7 +303,7 @@ fun GameScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 20.dp),
+                    .padding(bottom = 32.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 PlayButtonComponent(
@@ -355,12 +347,27 @@ fun GameScreen(
 }
 
 @Composable
+private fun IconButton(icon: ImageVector, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = Color.White.copy(alpha = 0.1f),
+        modifier = Modifier.size(44.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
 fun BackgroundRippleEffect(position: Offset, onComplete: () -> Unit) {
     val progress = remember { Animatable(0f) }
-    val color = MaterialTheme.gameColors.meshColor1
+    val color = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(1000, easing = LinearEasing))
+        progress.animateTo(1f, animationSpec = tween(1200, easing = LinearEasing))
         onComplete()
     }
 
@@ -368,10 +375,10 @@ fun BackgroundRippleEffect(position: Offset, onComplete: () -> Unit) {
         .fillMaxSize()
         .zIndex(0.1f)) {
         drawCircle(
-            color = color.copy(alpha = 0.3f * (1f - progress.value)),
-            radius = size.maxDimension * progress.value,
+            color = color.copy(alpha = 0.25f * (1f - progress.value)),
+            radius = size.maxDimension * 0.8f * progress.value,
             center = position,
-            style = Stroke(width = 4.dp.toPx())
+            style = Stroke(width = 2.dp.toPx())
         )
     }
 }
@@ -381,8 +388,8 @@ fun CriticalVignette() {
     val infiniteTransition = rememberInfiniteTransition(label = "critical")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.1f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse),
         label = "alpha"
     )
 
@@ -393,7 +400,6 @@ fun CriticalVignette() {
                 Brush.radialGradient(
                     0.0f to Color.Transparent,
                     1.0f to MaterialTheme.gameColors.criticalVignette.copy(alpha = alpha),
-                    center = Offset.Unspecified
                 )
             )
     )
@@ -403,13 +409,18 @@ fun CriticalVignette() {
 fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
     val offsetY = remember { Animatable(0f) }
     val alpha = remember { Animatable(1f) }
+    val scale = remember { Animatable(0.5f) }
 
     LaunchedEffect(Unit) {
         launch {
-            offsetY.animateTo(-150f, animationSpec = tween(800, easing = LinearEasing))
+            scale.animateTo(1.2f, spring(Spring.DampingRatioHighBouncy))
+            scale.animateTo(1f, tween(200))
         }
         launch {
-            delay(400)
+            offsetY.animateTo(-180f, animationSpec = tween(1000, easing = LinearEasing))
+        }
+        launch {
+            delay(600)
             alpha.animateTo(0f, animationSpec = tween(400))
             onComplete()
         }
@@ -417,9 +428,10 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
 
     Text(
         text = effect.text,
-        style = MaterialTheme.typography.titleLarge.copy(
+        style = MaterialTheme.typography.headlineMedium.copy(
             fontWeight = FontWeight.Black,
-            fontSize = 28.sp
+            fontSize = 32.sp,
+            shadow = shadow(color = Color.Black, blurRadius = 8f)
         ),
         color = MaterialTheme.gameColors.scorePopup,
         modifier = Modifier
@@ -429,18 +441,21 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
                     (effect.position.y + offsetY.value).roundToInt() - 50
                 )
             }
+            .scale(scale.value)
             .alpha(alpha.value)
     )
 }
 
+private fun shadow(color: Color, blurRadius: Float) = androidx.compose.ui.graphics.Shadow(color, blurRadius = blurRadius)
+
 @Composable
 fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
-    val particles = remember { List(8) { Random.nextFloat() * 360f } }
+    val particles = remember { List(12) { Random.nextFloat() * 360f } }
     val progress = remember { Animatable(0f) }
     val particleColor = MaterialTheme.gameColors.particleCoin
 
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(500, easing = LinearEasing))
+        progress.animateTo(1f, animationSpec = tween(600, easing = LinearEasing))
         onComplete()
     }
 
@@ -452,13 +467,13 @@ fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
     }) {
         particles.forEach { angle ->
             val rad = Math.toRadians(angle.toDouble())
-            val dist = 100f * progress.value
+            val dist = 140f * progress.value
             val x = (Math.cos(rad) * dist).toFloat()
             val y = (Math.sin(rad) * dist).toFloat()
 
             drawCircle(
                 color = particleColor.copy(alpha = 1f - progress.value),
-                radius = 6f * (1f - progress.value),
+                radius = 8f * (1f - progress.value),
                 center = Offset(x, y)
             )
         }
@@ -472,7 +487,7 @@ fun BombEffect(effect: EffectState, onComplete: () -> Unit) {
     val particleColor = MaterialTheme.gameColors.particleBomb
 
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(600, easing = LinearEasing))
+        progress.animateTo(1f, animationSpec = tween(700, easing = LinearEasing))
         onComplete()
     }
 
@@ -485,13 +500,13 @@ fun BombEffect(effect: EffectState, onComplete: () -> Unit) {
         // Shockwave
         drawCircle(
             color = shockwaveColor.copy(alpha = shockwaveColor.alpha * (1f - progress.value)),
-            radius = 200f * progress.value,
-            style = Stroke(width = 10f)
+            radius = 250f * progress.value,
+            style = Stroke(width = 8f)
         )
         // Fire/Smoke
         drawCircle(
             color = particleColor.copy(alpha = 1f - progress.value),
-            radius = 50f * (1f - progress.value)
+            radius = 60f * (1f - progress.value)
         )
     }
 }
@@ -500,39 +515,88 @@ fun BombEffect(effect: EffectState, onComplete: () -> Unit) {
 fun MeshBackground(streak: Int = 0) {
     val isFever = streak >= 10
     val infiniteTransition = rememberInfiniteTransition(label = "mesh")
+    
     val xOffset by infiniteTransition.animateFloat(
+        initialValue = -150f,
+        targetValue = 150f,
+        animationSpec = infiniteRepeatable(tween(10000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "x"
+    )
+
+    val yOffset by infiniteTransition.animateFloat(
         initialValue = -100f,
         targetValue = 100f,
         animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Reverse),
-        label = "x"
+        label = "y"
     )
 
     val gameColors = MaterialTheme.gameColors
 
     val color1 by animateColorAsState(
         targetValue = if (isFever) gameColors.feverColor1 else gameColors.meshColor1,
-        animationSpec = tween(1000), label = "c1"
+        animationSpec = tween(1500), label = "c1"
     )
     val color2 by animateColorAsState(
         targetValue = if (isFever) gameColors.feverColor2 else gameColors.meshColor2,
-        animationSpec = tween(1000), label = "c2"
+        animationSpec = tween(1500), label = "c2"
     )
 
     Canvas(
         modifier = Modifier
             .fillMaxSize()
-            .blur(80.dp)
-            .alpha(0.3f)
+            .blur(100.dp)
+            .alpha(0.4f)
     ) {
         drawCircle(
-            color = color1.copy(alpha = 0.4f),
-            radius = size.width / 1.5f,
-            center = Offset(size.width / 2 + xOffset, size.height / 4)
+            color = color1.copy(alpha = 0.5f),
+            radius = size.width,
+            center = Offset(size.width / 2 + xOffset, size.height / 3 + yOffset)
         )
         drawCircle(
-            color = color2.copy(alpha = 0.3f),
-            radius = size.width / 2f,
-            center = Offset(size.width / 4 - xOffset, size.height / 1.2f)
+            color = color2.copy(alpha = 0.4f),
+            radius = size.width * 0.8f,
+            center = Offset(size.width / 4 - xOffset, size.height / 1.5f - yOffset)
+        )
+    }
+    
+    // Floating Particles
+    repeat(15) {
+         FloatingParticle()
+    }
+}
+
+@Composable
+fun FloatingParticle() {
+    val infiniteTransition = rememberInfiniteTransition(label = "particle")
+    val x = remember { Random.nextFloat() }
+    val y = remember { Random.nextFloat() }
+    val size = remember { Random.nextFloat() * 4 + 2 }
+    val duration = remember { Random.nextInt(4000, 8000) }
+    
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(tween(duration / 2, easing = LinearEasing), RepeatMode.Reverse),
+        label = "alpha"
+    )
+    
+    val animY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -100f,
+        animationSpec = infiniteRepeatable(tween(duration, easing = LinearEasing), RepeatMode.Restart),
+        label = "y"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = (y * 1000).dp, start = (x * 400).dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(y = animY.dp)
+                .size(size.dp)
+                .background(Color.White.copy(alpha = alpha), CircleShape)
         )
     }
 }
@@ -557,7 +621,7 @@ private fun SideNavigationMenu(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
+                    .background(Color.Black.copy(alpha = 0.6f))
                     .clickable(onClick = onDismiss)
             )
         }
@@ -571,76 +635,76 @@ private fun SideNavigationMenu(
             Surface(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.75f),
-                shape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+                    .fillMaxWidth(0.8f),
+                shape = RoundedCornerShape(topEnd = 40.dp, bottomEnd = 40.dp),
+                color = MaterialTheme.gameColors.backgroundGradient.first().copy(alpha = 0.95f),
+                tonalElevation = 16.dp,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp)
+                        .padding(32.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(64.dp))
 
                     Text(
                         text = "FLIPPY",
-                        style = MaterialTheme.typography.headlineLarge.copy(
+                        style = MaterialTheme.typography.displaySmall.copy(
                             fontWeight = FontWeight.Black,
-                            letterSpacing = 4.sp
-                        ),
-                        color = MaterialTheme.colorScheme.primary
+                            letterSpacing = 6.sp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
+                                )
+                            )
+                        )
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Master your reflexes",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        text = "MASTER YOUR REFLEXES",
+                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
+                        color = White.copy(alpha = 0.4f)
                     )
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(64.dp))
 
                     NavigationMenuItem(
                         icon = Icons.Default.Person,
                         label = "Profile",
-                        onClick = {
-                            onProfileIntentClicked()
-                        }
+                        onClick = onProfileIntentClicked
                     )
 
                     NavigationMenuItem(
                         icon = Icons.Default.Leaderboard,
                         label = "Leaderboard",
-                        onClick = {
-                            onLeaderboardIntentClicked()
-                        }
+                        onClick = onLeaderboardIntentClicked
                     )
 
                     NavigationMenuItem(
                         icon = Icons.Default.Settings,
                         label = "Preferences",
-                        onClick = {
-                            onPreferencesIntentClicked()
-                        }
+                        onClick = onPreferencesIntentClicked
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 16.dp),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        modifier = Modifier.padding(vertical = 24.dp),
+                        color = Color.White.copy(alpha = 0.1f)
                     )
 
                     NavigationMenuItem(
                         icon = Icons.AutoMirrored.Filled.Logout,
                         label = "Sign Out",
                         onClick = onSignOutClick,
-                        color = Color(0xFFFF4B4B)
+                        color = BombRed
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -652,28 +716,35 @@ private fun NavigationMenuItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,
-    color: Color = MaterialTheme.colorScheme.onSurface
+    color: Color = White
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
+            modifier = Modifier.padding(vertical = 20.dp, horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color.copy(alpha = 0.8f),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = color,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
                 color = color
             )
         }
@@ -688,37 +759,61 @@ fun PlayButtonComponent(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Reverse),
+        label = "pulse"
+    )
+    
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.9f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "scale"
     )
 
-    val color by animateColorAsState(
-        targetValue = if (status == GameStatus.PLAYING) Color(0xFFFF4B4B) else MaterialTheme.colorScheme.primary,
-        label = "color"
-    )
+    val isPlaying = status == GameStatus.PLAYING
+    val gameColors = MaterialTheme.gameColors
 
-    Surface(
-        modifier = modifier
-            .size(68.dp)
-            .scale(scale)
-            .shadow(
-                elevation = if (isPressed) 4.dp else 12.dp,
-                shape = CircleShape,
-                ambientColor = color,
-                spotColor = color
-            ),
-        shape = CircleShape,
-        color = color,
-        onClick = onAction,
-        interactionSource = interactionSource
-    ) {
-        Box(contentAlignment = Alignment.Center) {
+    val gradient = if (isPlaying) {
+        Brush.linearGradient(listOf(BombRed, Color(0xFFE11D48)))
+    } else {
+        Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
+    }
+
+    Box(contentAlignment = Alignment.Center, modifier = modifier.scale(scale)) {
+        if (!isPlaying) {
+            // Pulsing background for CTA
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .scale(pulseScale)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(76.dp)
+                .shadow(
+                    elevation = 20.dp,
+                    shape = CircleShape,
+                    spotColor = if (isPlaying) BombRed else MaterialTheme.colorScheme.primary
+                )
+                .background(brush = gradient, shape = CircleShape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onAction
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
-                imageVector = if (status == GameStatus.PLAYING) Icons.Default.Stop else Icons.Default.PlayArrow,
+                imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
                 contentDescription = null,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(40.dp),
                 tint = Color.White
             )
         }
@@ -733,60 +828,60 @@ private fun LeaderboardSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 24.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Leaderboard,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "High Scores",
+                text = "TOP SCORES",
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
-                    letterSpacing = 1.2.sp
+                    letterSpacing = 2.sp
                 ),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                color = White.copy(alpha = 0.6f)
             )
         }
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+            shape = RoundedCornerShape(28.dp),
+            color = Color.White.copy(alpha = 0.05f),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
         ) {
             if (leaderboard.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp),
+                        .padding(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No matches played yet",
+                        text = "Start playing to see rankings",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        color = White.copy(alpha = 0.3f)
                     )
                 }
             } else {
                 Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     leaderboard.forEachIndexed { index, match ->
                         LeaderboardItem(index + 1, match)
-                        if (index < leaderboard.size - 1 && index < 9) {
+                        if (index < leaderboard.size - 1) {
                             HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 12.dp),
+                                modifier = Modifier.padding(horizontal = 16.dp),
                                 thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.05f)
+                                color = Color.White.copy(alpha = 0.05f)
                             )
                         }
                     }
@@ -807,37 +902,32 @@ fun DifficultySelector(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .alpha(if (enabled) 1f else 0.5f),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Difficulty.entries.forEach { diff ->
             val isSelected = currentDifficulty == diff
+            val targetColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.05f)
+            
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
+                    .height(52.dp)
                     .clickable(enabled = enabled) { onDifficultyChange(diff) },
-                shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
-                    alpha = 0.6f
-                ),
+                shape = RoundedCornerShape(16.dp),
+                color = targetColor,
                 border = BorderStroke(
                     1.dp,
-                    if (isSelected) Color.Transparent else MaterialTheme.colorScheme.outline.copy(
-                        alpha = 0.1f
-                    )
-                ),
-                tonalElevation = if (isSelected) 4.dp else 0.dp
+                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.1f)
+                )
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = diff.label,
+                        text = diff.label.uppercase(),
                         style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                            letterSpacing = 1.sp
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp
                         ),
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.6f
-                        )
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else White.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -858,7 +948,7 @@ private fun GameHeader(
 
     val pulseColor by infiniteTransition.animateColor(
         initialValue = MaterialTheme.colorScheme.secondary,
-        targetValue = gameColors.pausePulse,
+        targetValue = MaterialTheme.colorScheme.primary,
         animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
         label = "color"
     )
@@ -866,14 +956,13 @@ private fun GameHeader(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+            .padding(horizontal = 24.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = Color.White.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f))
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -881,76 +970,76 @@ private fun GameHeader(
                 Text(
                     text = "SCORE",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "$score",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Black
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 36.sp
                     ),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = White
                 )
             }
 
-            // Reaction Time & Timer in the middle
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Animated Reaction Time
                 AnimatedVisibility(
                     visible = reactionTime > 0,
-                    enter = fadeIn() + spring(
-                        Spring.DampingRatioHighBouncy,
-                        Spring.StiffnessMedium,
-                        visibilityThreshold = null
-                    ).let { fadeIn() },
+                    enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    Text(
-                        text = "${reactionTime / 1000f}s",
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            color = gameColors.scorePopup
+                    Surface(
+                        color = gameColors.scorePopup.copy(alpha = 0.2f),
+                        shape = CircleShape,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    ) {
+                        Text(
+                            text = "${reactionTime / 1000f}s",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Black,
+                                color = gameColors.scorePopup
+                            )
                         )
-                    )
+                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Timer,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = if (isPaused) pulseColor else MaterialTheme.colorScheme.secondary
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = UtilityMethods.formatTime(gameTime),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp
                         ),
-                        color = if (isPaused) pulseColor else MaterialTheme.colorScheme.onSurface
+                        color = if (isPaused) pulseColor else White
                     )
                 }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        CircleShape
-                    )
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 repeat(3) { index ->
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = "Life",
-                        tint = if (index < lives) Color(0xFFFF4B4B) else Color.LightGray.copy(alpha = 0.5f),
-                        modifier = Modifier.size(20.dp)
+                        tint = if (index < lives) HeartRed else White.copy(alpha = 0.1f),
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }

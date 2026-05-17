@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AvTimer
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -49,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.UtilityMethods
-import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
 import com.sujoy.flippy.core.theme.FlippyTheme
 import com.sujoy.flippy.profile.components.EditDialog
 import com.sujoy.flippy.profile.components.StatCard
@@ -151,17 +152,23 @@ fun ProfileScreen(
 
 @Composable
 private fun ProfileHeader(username: String, avatarId: Int) {
-    val avatarRes = getAvatarResource(avatarId)
+    val avatarRes = UtilityMethods.getAvatarResource(avatarId)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(
-            modifier = Modifier.size(120.dp),
+            modifier = Modifier.size(140.dp),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            border = BorderStroke(4.dp, MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(4.dp, Brush.linearGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.secondary
+                )
+            )),
+            shadowElevation = 16.dp
         ) {
             if (avatarRes != null) {
                 Image(
@@ -175,20 +182,28 @@ private fun ProfileHeader(username: String, avatarId: Int) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(60.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(70.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = username.ifEmpty { "Guest Player" },
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
             ),
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = "FLIPPY MASTER",
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 4.sp
+            ),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
         )
     }
 }
@@ -201,71 +216,82 @@ private fun UserStatsSection(
     accuracyRate: Double,
     reflexAverage: Long
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Insights,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Insights,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
-                "Player Statistics",
+                "Player Insights",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onBackground
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
         // Stats Grid
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Total Matches",
+                    label = "Matches",
                     value = totalMatches,
                     icon = Icons.Default.Gamepad,
-                    color = MaterialTheme.colorScheme.primaryContainer
+                    color = MaterialTheme.colorScheme.primary
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Highest Score",
+                    label = "Best Score",
                     value = highestScore,
                     icon = Icons.Default.EmojiEvents,
-                    color = Color(0xFFFFD700).copy(alpha = 0.2f)
+                    color = Color(0xFFFACC15) // Golden
                 )
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Accuracy Rate",
+                    label = "Accuracy",
                     value = "%.1f%%".format(accuracyRate),
                     icon = Icons.Default.TrackChanges,
-                    color = Color(0xFF00E676).copy(alpha = 0.2f)
+                    color = Color(0xFF22C55E) // Green
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    label = "Longest Match",
+                    label = "Endurance",
                     value = longestRound,
                     icon = Icons.Default.Timer,
-                    color = Color(0xFF2196F3).copy(alpha = 0.2f)
+                    color = Color(0xFF3B82F6) // Blue
                 )
             }
 
             StatCard(
                 modifier = Modifier.fillMaxWidth(),
-                label = "Reflex Time Average",
+                label = "Average Reflex Response",
                 value = "${reflexAverage}ms",
                 icon = Icons.Default.AvTimer,
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.secondary,
                 isFullWidth = true
             )
         }

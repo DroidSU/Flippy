@@ -1,5 +1,6 @@
 package com.sujoy.flippy.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -23,8 +25,6 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -178,52 +178,61 @@ private fun SettingsToggleItem(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) },
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)),
+        onClick = { onCheckedChange(!checked) }
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(20.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(40.dp),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(20.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        lineHeight = 16.sp
                     )
                 }
             }
 
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
+                colors = androidx.compose.material3.SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             )
         }
     }
@@ -236,38 +245,40 @@ private fun ThemeSettingItem(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Palette,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Text(
-                    text = "App Theme",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
+                    text = "Personalization",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ThemeOption(
                     title = "Light",
@@ -296,29 +307,23 @@ private fun RowScope.ThemeOption(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    FilterChip(
-        selected = selected,
+    Surface(
         onClick = onClick,
-        label = {
-            Text(
-                title,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        },
         modifier = Modifier.weight(1f),
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primary,
-            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-            containerColor = Color.Transparent,
-            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        border = if (selected) null else FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = false,
-            borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.padding(vertical = 12.dp),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = if (selected) FontWeight.Black else FontWeight.Bold,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         )
-    )
+    }
 }
 
 @Composable

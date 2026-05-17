@@ -128,16 +128,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        soundRepository.setMusicAllowed(true)
         soundRepository.startBackgroundMusic()
     }
 
     override fun onPause() {
         super.onPause()
+        soundRepository.setMusicAllowed(false)
         soundRepository.pauseBackgroundMusic()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        soundRepository.release()
     }
 }

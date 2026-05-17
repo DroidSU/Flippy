@@ -19,9 +19,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
@@ -35,7 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -46,22 +46,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.Gold
+import com.sujoy.flippy.core.theme.White
+import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.game_engine.R
 
-/**
- * A modern and aesthetic dialog component that displays the rules of Flippy.
- *
- * This component adheres to the app's visual style, featuring glassmorphism-inspired 
- * surfaces and clear, icon-driven instructions.
- *
- * @param onDismiss Callback invoked when the user clicks "OKAY". 
- * It passes a boolean indicating whether the user wants to see the rules on every startup.
- */
 @Composable
 fun FlippyRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
+    val gameColors = MaterialTheme.gameColors
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
@@ -69,107 +64,129 @@ fun FlippyRulesDialog(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+            shape = RoundedCornerShape(40.dp),
+            color = gameColors.backgroundGradient.first().copy(alpha = 0.95f),
+            shadowElevation = 32.dp,
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
         ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp),
+                    .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Animated or Static Header
+                // Header
+                Surface(
+                    modifier = Modifier.size(64.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
-                    text = "Rules of Flippy",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    text = "HOW TO PLAY",
+                    style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 2.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary
+                    color = White
                 )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Rule Items
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     RuleItemRow(
                         iconRes = R.drawable.ic_coin,
-                        title = "Tap the Coins",
-                        description = "This is a game of reflex. Tap on Coin icons immediately to score points!",
-                        tintColor = Color(0xFFFFD700) // Golden for Coins
+                        title = "Speed Matters",
+                        description = "Tap coins rapidly to build your score and streak.",
+                        tintColor = Gold
                     )
 
                     RuleItemRow(
                         iconRes = R.drawable.ic_bomb,
-                        title = "Avoid the Bombs",
-                        description = "Skip the Bomb icons. Tapping a bomb will cost you 1 heart (life).",
-                        tintColor = Color(0xFFFF4B4B) // Red for Bombs
+                        title = "Danger Zones",
+                        description = "Avoid tapping bombs. Each mistake costs you a heart.",
+                        tintColor = Color(0xFFF43F5E) // Red
                     )
 
                     RuleItemRow(
                         iconVector = Icons.Default.Favorite,
-                        title = "Don't Miss Out",
-                        description = "If you skip 2 coin taps in a row, you lose 1 heart. Stay focused!",
+                        title = "Vital Focus",
+                        description = "Missing 2 coins in a row will also cost a heart.",
                         tintColor = MaterialTheme.colorScheme.primary,
                         isVector = true
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Persistence Option
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { showOnStartup = !showOnStartup }
-                        .padding(vertical = 8.dp, horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    onClick = { showOnStartup = !showOnStartup }
                 ) {
-                    Checkbox(
-                        checked = showOnStartup,
-                        onCheckedChange = null, // Handled by row click
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = showOnStartup,
+                            onCheckedChange = null,
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = MaterialTheme.colorScheme.primary,
+                                uncheckedColor = Color.White.copy(alpha = 0.2f)
+                            )
                         )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Show on startup",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Show on startup",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = White.copy(alpha = 0.6f)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 // Action Button
-                Button(
-                    onClick = { onDismiss(showOnStartup) },
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 0.dp
-                    )
+                        .height(64.dp)
+                        .shadow(16.dp, RoundedCornerShape(20.dp))
+                        .background(
+                            brush = Brush.linearGradient(
+                                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .clickable { onDismiss(showOnStartup) },
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "OKAY",
+                        text = "GOT IT!",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black,
-                            letterSpacing = 1.2.sp
-                        )
+                            letterSpacing = 3.sp
+                        ),
+                        color = Color.White
                     )
                 }
             }
@@ -187,50 +204,46 @@ private fun RuleItemRow(
     isVector: Boolean = false
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                RoundedCornerShape(20.dp)
-            )
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(tintColor.copy(alpha = 0.15f), CircleShape),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = Modifier.size(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = tintColor.copy(alpha = 0.12f),
+            border = BorderStroke(1.dp, tintColor.copy(alpha = 0.2f))
         ) {
-            if (isVector && iconVector != null) {
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = null,
-                    tint = tintColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp)
-                )
+            Box(contentAlignment = Alignment.Center) {
+                if (isVector && iconVector != null) {
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = null,
+                        tint = tintColor,
+                        modifier = Modifier.size(28.dp)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(20.dp))
 
         Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                color = White
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                lineHeight = 16.sp
+                color = White.copy(alpha = 0.5f),
+                lineHeight = 18.sp
             )
         }
     }
