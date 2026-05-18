@@ -42,21 +42,24 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override fun getAppTheme(): AppTheme {
-        val themeName = prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.name)
+        val themeName = prefs.getString(KEY_APP_THEME, AppTheme.DARK.name)
         return try {
-            AppTheme.valueOf(themeName ?: AppTheme.SYSTEM.name)
+            AppTheme.valueOf(themeName ?: AppTheme.DARK.name)
         } catch (e: IllegalArgumentException) {
-            AppTheme.SYSTEM
+            AppTheme.DARK
         }
     }
 
     private fun applyTheme(theme: AppTheme) {
+        /* 
         val mode = when (theme) {
             AppTheme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
             AppTheme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
             AppTheme.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        AppCompatDelegate.setDefaultNightMode(mode)
+        */
+        // Force Dark mode only as per requirement
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
     }
 
     override fun setNotificationsEnabled(enabled: Boolean) {

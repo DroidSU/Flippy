@@ -112,13 +112,13 @@ class GameViewModel @Inject constructor(
     private var tileRevealTime = 0L
     private var totalReflexTime = 0L
     private var perfectStreak = 0
-    private var visibleDuration = 1200L
+    private var visibleDuration = 500L
 
     init {
         visibleDuration = when (_difficulty.value) {
-            Difficulty.EASY -> 1200L
-            Difficulty.NORMAL -> 1000L
-            Difficulty.HARD -> 800L
+            Difficulty.EASY -> 700L
+            Difficulty.NORMAL -> 500L
+            Difficulty.HARD -> 250L
         }
 
         getUserData()

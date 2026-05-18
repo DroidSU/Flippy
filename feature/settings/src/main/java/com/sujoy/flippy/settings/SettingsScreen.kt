@@ -90,6 +90,8 @@ fun SettingsScreen(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            /* Hiding theme selection for Dark Mode Only requirement
+
             item {
                 SettingsSectionHeader(title = "Appearance")
             }
@@ -100,6 +102,7 @@ fun SettingsScreen(
                     onThemeChange = { onThemeChange(it) }
                 )
             }
+            */
 
             item {
                 SettingsSectionHeader(title = "Notifications & Sound")
