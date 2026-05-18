@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.repository.ProfileRepository
+import com.sujoy.flippy.database.repository.BadgeRepository
 import com.sujoy.flippy.database.repository.MatchRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -16,6 +17,7 @@ class SyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val matchRepository: MatchRepository,
+    private val badgeRepository: BadgeRepository,
     private val networkRepository: NetworkRepository,
     private val profileRepository: ProfileRepository,
     private val auth: FirebaseAuth
@@ -31,6 +33,13 @@ class SyncWorker @AssistedInject constructor(
                 if (pendingMatches.isNotEmpty()) {
                     Log.d("SyncWorker", "Syncing ${pendingMatches.size} matches")
                     networkRepository.storeMatchData(pendingMatches)
+                }
+
+                // Sync Badges
+                val pendingBadges = badgeRepository.getPendingBadges()
+                if (pendingBadges.isNotEmpty()) {
+                    Log.d("SyncWorker", "Syncing ${pendingBadges.size} badges")
+                    networkRepository.storeBadgeData(pendingBadges)
                 }
 
                 // Sync User Stats

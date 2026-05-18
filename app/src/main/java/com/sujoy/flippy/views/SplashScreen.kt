@@ -19,7 +19,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.sujoy.flippy.R
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import kotlinx.coroutines.delay
 
 @Composable
@@ -54,7 +54,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun SplashScreenPreview() {
-    FlippyTheme {
+    FliqTheme {
         SplashScreen(onTimeout = {})
     }
 }

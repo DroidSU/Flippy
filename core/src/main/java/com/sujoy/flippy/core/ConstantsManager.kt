@@ -8,4 +8,5 @@ object ConstantsManager {
 
     const val DATABASE_NAME = "flippy_database"
     const val TABLE_NAME_MATCH_HISTORY = "match_history"
+    const val TABLE_NAME_BADGES = "badges"
 }

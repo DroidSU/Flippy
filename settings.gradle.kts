@@ -13,7 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Flippy"
+rootProject.name = "Fliq"
 include(":app")
 include(":core")
 include(":auth")

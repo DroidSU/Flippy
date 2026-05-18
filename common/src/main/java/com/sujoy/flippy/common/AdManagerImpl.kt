@@ -27,12 +27,12 @@ class AdManagerImpl @Inject constructor(
     private var isLoading = false
 
     // --- Rewarded Ad IDs ---
-    // private val adUnitId = "ca-app-pub-4337844951984192/3829394947" // Real
+//     private val adUnitId = "ca-app-pub-4337844951984192/3829394947" // Real
     // private val adUnitId = "ca-app-pub-3940256099942544/5224354917" // Test
     
     // --- Rewarded Interstitial Ad IDs ---
-    // private val adUnitId = "ca-app-pub-4337844951984192/8256707650" // Real
-    private val adUnitId = "ca-app-pub-3940256099942544/5354046379" // Test (Rewarded Interstitial)
+     private val adUnitId = "ca-app-pub-4337844951984192/8256707650" // Real
+//    private val adUnitId = "ca-app-pub-3940256099942544/5354046379" // Test (Rewarded Interstitial)
 
     override fun loadRewardedAd(onAdLoaded: () -> Unit, onAdFailed: () -> Unit) {
         if (rewardedInterstitialAd != null || isLoading) return

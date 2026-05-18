@@ -12,6 +12,8 @@ import com.google.firebase.database.ValueEventListener
 import com.sujoy.flippy.core.ConstantsManager
 import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.core.models.toMap
+import com.sujoy.flippy.database.BadgeDAO
+import com.sujoy.flippy.database.BadgeEntity
 import com.sujoy.flippy.database.MatchDAO
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.flippy.database.toMap
@@ -28,6 +30,7 @@ import javax.inject.Inject
 class NetworkRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val matchDAO: MatchDAO,
+    private val badgeDAO: BadgeDAO,
     private val auth: FirebaseAuth
 ) : NetworkRepository {
 
@@ -54,7 +57,26 @@ class NetworkRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(ConstantsManager.APP_TAG, "Error storing match data: ${e.message}")
             e.printStackTrace()
-            throw e // Rethrow to let the caller (like SyncWorker) know it failed
+            throw e 
+        }
+    }
+
+    override suspend fun storeBadgeData(badgeList: List<BadgeEntity>) = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: return@withContext
+
+        try {
+            val badgeMap = mutableMapOf<String, Any>()
+            val badgeIds = badgeList.map { it.badgeId }
+
+            badgeList.forEach { badge ->
+                badgeMap[badge.badgeId] = badge.toMap()
+            }
+
+            database.child("badges").child(userId).updateChildren(badgeMap).await()
+            badgeDAO.markAsBackedUp(badgeIds)
+        } catch (e: Exception) {
+            Log.e(ConstantsManager.APP_TAG, "Error storing badge data: ${e.message}")
+            throw e
         }
     }
 
@@ -138,6 +160,18 @@ class NetworkRepositoryImpl @Inject constructor(
             emit(Result.Success(matchHistory))
         } catch (e: Exception) {
             emit(Result.Failure(e.message ?: "Failed to fetch match history"))
+        }
+    }
+
+    override fun fetchBadges(userId: String): Flow<Result<List<BadgeEntity>>> = flow {
+        try {
+            val snapshot = database.child("badges").child(userId).get().await()
+            val badges = snapshot.children.mapNotNull { child ->
+                child.getValue(BadgeEntity::class.java)
+            }
+            emit(Result.Success(badges))
+        } catch (e: Exception) {
+            emit(Result.Failure(e.message ?: "Failed to fetch badges"))
         }
     }
 

@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -73,8 +74,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.Badge
 import com.sujoy.flippy.common.UtilityMethods
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
+import com.sujoy.flippy.core.theme.Gold
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.profile.components.EditDialog
 import kotlinx.coroutines.delay
@@ -95,6 +98,7 @@ fun ProfileScreen(
     longestRound: Long = 0L,
     accuracyRate: Double = 0.0,
     reflexAverage: Long = 0L,
+    unlockedBadges: List<Badge> = emptyList(),
 ) {
     val gameColors = MaterialTheme.gameColors
     val scrollState = rememberScrollState()
@@ -117,6 +121,7 @@ fun ProfileScreen(
             .background(Brush.verticalGradient(gameColors.backgroundGradient))
     ) {
         MeshBackground()
+        ProfileHeaderCurve()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -134,10 +139,10 @@ fun ProfileScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(32.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 ProfileHeader(username, avatarId)
 
@@ -148,8 +153,12 @@ fun ProfileScreen(
                     longestRound = longestRound,
                     reflexAverage = reflexAverage
                 )
+
+                BadgeGallery(
+                    unlockedBadges = unlockedBadges
+                )
                 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
@@ -238,14 +247,14 @@ private fun ProfileHeader(username: String, avatarId: Int) {
             // Animated background rings
             val infiniteTransition = rememberInfiniteTransition(label = "rings")
             val radius by infiniteTransition.animateFloat(
-                initialValue = 75f,
-                targetValue = 90f,
+                initialValue = 60f,
+                targetValue = 72f,
                 animationSpec = infiniteRepeatable(tween(2000, easing = LinearEasing), RepeatMode.Reverse),
                 label = "radius"
             )
 
             val ringColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-            Canvas(modifier = Modifier.size(180.dp)) {
+            Canvas(modifier = Modifier.size(140.dp)) {
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(ringColor, Color.Transparent),
@@ -257,11 +266,11 @@ private fun ProfileHeader(username: String, avatarId: Int) {
 
             Surface(
                 modifier = Modifier
-                    .size(130.dp)
-                    .shadow(24.dp, CircleShape, spotColor = MaterialTheme.colorScheme.primary),
+                    .size(100.dp)
+                    .shadow(16.dp, CircleShape, spotColor = MaterialTheme.colorScheme.primary),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(3.dp, Brush.linearGradient(
+                border = BorderStroke(2.dp, Brush.linearGradient(
                     colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
                 ))
             ) {
@@ -283,13 +292,13 @@ private fun ProfileHeader(username: String, avatarId: Int) {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         
         Text(
             text = username.ifEmpty { "Guest Player" }.uppercase(),
-            style = MaterialTheme.typography.headlineMedium.copy(
+            style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp,
+                letterSpacing = 1.5.sp,
                 brush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)))
             )
         )
@@ -325,8 +334,8 @@ private fun PlayerInsightsCard(
             ))
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -336,9 +345,9 @@ private fun PlayerInsightsCard(
                     Column {
                         Text(
                             text = "PLAYER INSIGHTS",
-                            style = MaterialTheme.typography.labelLarge.copy(
+                            style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp,
+                                letterSpacing = 1.5.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         )
@@ -543,6 +552,45 @@ private fun ReflexIndicator(reflexMs: Long) {
 }
 
 @Composable
+private fun ProfileHeaderCurve() {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+    
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
+        // Layer 1: Main background curve (The Wave) - Drawn first
+        Canvas(modifier = Modifier.fillMaxSize().alpha(0.1f)) {
+            val path = Path().apply {
+                moveTo(0f, 0f)
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height * 0.75f)
+                quadraticTo(size.width * 0.5f, size.height * 0.95f, 0f, size.height * 0.75f)
+                close()
+            }
+            drawPath(path = path, brush = Brush.verticalGradient(listOf(primaryColor, Color.Transparent)))
+        }
+
+        // Layer 2: The Spotlight (Focused behind avatar) - Drawn second (on top of wave)
+        Canvas(modifier = Modifier.fillMaxSize().alpha(0.15f)) {
+            val path = Path().apply {
+                moveTo(size.width * 0.2f, 0f)
+                lineTo(size.width * 0.8f, 0f)
+                lineTo(size.width * 0.85f, size.height * 0.6f)
+                quadraticTo(size.width * 0.5f, size.height * 1.1f, size.width * 0.15f, size.height * 0.6f)
+                close()
+            }
+            drawPath(
+                path = path, 
+                brush = Brush.radialGradient(
+                    colors = listOf(tertiaryColor, Color.Transparent),
+                    center = Offset(size.width / 2, size.height * 0.2f),
+                    radius = size.width * 0.6f
+                )
+            )
+        }
+    }
+}
+
+@Composable
 private fun MeshBackground() {
     val infiniteTransition = rememberInfiniteTransition(label = "mesh")
     
@@ -582,10 +630,105 @@ private fun MeshBackground() {
     }
 }
 
+@Composable
+private fun BadgeGallery(
+    unlockedBadges: List<Badge>
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(20.dp, RoundedCornerShape(28.dp), spotColor = Gold.copy(alpha = 0.2f)),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+        border = BorderStroke(1.dp, Gold.copy(alpha = 0.1f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "HALL OF FAME",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp,
+                            color = Gold
+                        )
+                    )
+                    Text(
+                        text = "${unlockedBadges.size} badges earned",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (unlockedBadges.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Play matches to unlock badges!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    unlockedBadges.take(4).forEach { badge ->
+                        Surface(
+                            modifier = Modifier.size(56.dp),
+                            shape = CircleShape,
+                            color = Gold.copy(alpha = 0.05f),
+                            border = BorderStroke(1.5.dp, Gold.copy(alpha = 0.3f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = badge.icon,
+                                    contentDescription = null,
+                                    tint = Gold,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+                    
+                    if (unlockedBadges.size > 4) {
+                        Surface(
+                            modifier = Modifier.size(56.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "+${unlockedBadges.size - 4}",
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 internal fun ProfileScreenPreview() {
-    FlippyTheme {
+    FliqTheme {
         ProfileScreen(
             username = "Sujoy",
             avatarId = 1,

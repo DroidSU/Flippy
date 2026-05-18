@@ -21,7 +21,7 @@ import com.sujoy.flippy.auth.ui.AuthenticationScreen
 import com.sujoy.flippy.auth.viewmodel.AuthViewModel
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.core.settings.SettingsRepository
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -49,7 +49,7 @@ class AuthenticationActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            FlippyTheme(settingsRepository = settingsRepository) {
+            FliqTheme(settingsRepository = settingsRepository) {
                 val uiState by viewModel.uiState.collectAsState(AppUIState.Idle)
                 val userData by viewModel.userData.collectAsState()
                 val showEditDialog by viewModel.showEditDialog.collectAsState()

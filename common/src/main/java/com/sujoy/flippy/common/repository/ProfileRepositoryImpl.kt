@@ -22,7 +22,7 @@ class ProfileRepositoryImpl @Inject constructor(
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val PREF_NAME = "flippy_profile"
+        private const val PREF_NAME = "fliq_profile"
         private const val KEY_USERNAME = "username"
         private const val KEY_AVATAR_ID = "avatar_id"
     }

@@ -59,7 +59,7 @@ class UtilityMethods {
 
         fun generateUniqueUsername(): String {
             val adjectives = listOf(
-                "Swift", "Flippy", "Mega", "Cool", "Epic", "Turbo", "Ghost", "Neon",
+                "Swift", "Fliq", "Mega", "Cool", "Epic", "Turbo", "Ghost", "Neon",
                 "Fire", "Shadow", "Elite", "Hyper", "Frost", "Mystic", "Iron", "Storm",
                 "Wild", "Silent", "Rapid", "Gilded", "Crimson", "Azure", "Sonic", "Zen",
                 "Vortex", "Cosmic", "Solar", "Lunar", "Radiant", "Lucky", "Vivid", "Noble",

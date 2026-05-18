@@ -9,7 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.settings.SettingsRepository
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.settings.SettingsScreen
 import com.sujoy.flippy.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,7 +31,7 @@ class SettingsActivity : ComponentActivity() {
             val gameSoundEnabled by viewModel.gameSoundEnabled.collectAsState()
             val hapticFeedbackEnabled by viewModel.hapticFeedbackEnabled.collectAsState()
 
-            FlippyTheme(settingsRepository = settingsRepository) {
+            FliqTheme(settingsRepository = settingsRepository) {
                 SettingsScreen(
                     selectedTheme = selectedTheme,
                     notificationsEnabled = notificationsEnabled,

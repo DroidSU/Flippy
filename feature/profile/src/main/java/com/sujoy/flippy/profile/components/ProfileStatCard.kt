@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 
 @Composable
 fun StatCard(
@@ -66,7 +66,7 @@ fun StatCard(
 @Preview(showBackground = true)
 @Composable
 private fun ProfileStatCardPreview() {
-    FlippyTheme {
+    FliqTheme {
         StatCard(
             label = "Total Matches",
             value = "10",

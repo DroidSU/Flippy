@@ -17,6 +17,9 @@ interface MatchDAO {
     @Query("SELECT * FROM match_history ORDER BY timestamp DESC")
     fun getMatchHistory(): Flow<List<MatchHistory>>
 
+    @Query("SELECT * FROM match_history WHERE playerId = :playerId ORDER BY timestamp DESC")
+    suspend fun getMatchHistorySync(playerId: String): List<MatchHistory>
+
     @Query("UPDATE match_history SET isBackedUp = 1 WHERE id IN (:matchIds)")
     suspend fun markMatchesAsBackedUp(matchIds: List<String>)
 

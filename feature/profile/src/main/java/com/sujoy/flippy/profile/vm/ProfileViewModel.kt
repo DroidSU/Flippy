@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.sujoy.flippy.common.AppUIState
+import com.sujoy.flippy.common.Badge
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.Result
 import com.sujoy.flippy.common.repository.ProfileRepository
 import com.sujoy.flippy.core.models.UserData
+import com.sujoy.flippy.database.repository.BadgeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
+    private val badgeRepository: BadgeRepository,
     private val networkRepository: NetworkRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
@@ -48,6 +51,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _reflexAverage = MutableStateFlow(0L)
     val reflexAverage: StateFlow<Long> = _reflexAverage.asStateFlow()
+
+    private val _unlockedBadges = MutableStateFlow<List<Badge>>(emptyList())
+    val unlockedBadges: StateFlow<List<Badge>> = _unlockedBadges.asStateFlow()
 
 
     init {
@@ -85,6 +91,12 @@ class ProfileViewModel @Inject constructor(
             }
 
             viewModelScope.launch {
+                badgeRepository.getBadgesForUser(userId).collect { localBadges ->
+                    _unlockedBadges.value = localBadges.mapNotNull { Badge.fromId(it.badgeId) }
+                }
+            }
+
+            viewModelScope.launch {
                 networkRepository.fetchUserData(userId).collect { result ->
                     if (result is Result.Success) {
                         val userData = result.data
@@ -92,6 +104,14 @@ class ProfileViewModel @Inject constructor(
                             // Sync remote to local
                             profileRepository.saveUserData(userData)
                         }
+                    }
+                }
+            }
+
+            viewModelScope.launch {
+                networkRepository.fetchBadges(userId).collect { result ->
+                    if (result is Result.Success) {
+                        badgeRepository.syncBadgesFromServer(result.data)
                     }
                 }
             }

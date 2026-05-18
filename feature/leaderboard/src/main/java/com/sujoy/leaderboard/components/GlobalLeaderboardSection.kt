@@ -49,7 +49,7 @@ import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.LeaderboardModel
 import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 
 @Composable
 fun GlobalLeaderboardSection(
@@ -337,7 +337,7 @@ fun PodiumItem(
 @Preview(showBackground = true)
 @Composable
 private fun GlobalLeaderboardPreview() {
-    FlippyTheme {
+    FliqTheme {
         GlobalLeaderboardSection(
             uiState = AppUIState.Success,
             leaderboard = listOf(

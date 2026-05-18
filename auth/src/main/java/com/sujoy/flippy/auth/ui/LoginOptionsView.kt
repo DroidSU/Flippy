@@ -63,7 +63,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.sujoy.flippy.auth.R
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 
 @Composable
 fun LoginOptionsView(
@@ -297,7 +297,7 @@ fun GoogleButton(
 @Preview(showBackground = true)
 @Composable
 private fun LoginOptionsViewPreview() {
-    FlippyTheme {
+    FliqTheme {
         LoginOptionsView(isLoading = false, onGoogleSignIn = {})
     }
 }

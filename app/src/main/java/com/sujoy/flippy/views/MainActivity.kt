@@ -15,7 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.sujoy.flippy.core.settings.SettingsRepository
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.game_engine.models.GameEffect
 import com.sujoy.flippy.game_engine.models.VibrationType
 import com.sujoy.flippy.game_engine.repository.SoundRepository
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            FlippyTheme(settingsRepository) {
+            FliqTheme(settingsRepository) {
                 val tiles by gameViewModel.tiles.collectAsState()
                 val score by gameViewModel.score.collectAsState()
                 val lives by gameViewModel.lives.collectAsState()
@@ -54,6 +54,11 @@ class MainActivity : ComponentActivity() {
                 val isPaused by gameViewModel.isGamePaused.collectAsState()
                 val streak by gameViewModel.streak.collectAsState()
                 val reactionTime by gameViewModel.lastReactionTime.collectAsState()
+                val newlyUnlockedBadges by gameViewModel.newlyUnlockedBadges.collectAsState()
+                val totalTaps by gameViewModel.totalTaps.collectAsState()
+                val correctTaps by gameViewModel.correctTaps.collectAsState()
+
+                val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
 
                 LaunchedEffect(Unit) {
                     gameViewModel.effects.collectLatest { effect ->
@@ -98,11 +103,16 @@ class MainActivity : ComponentActivity() {
                     onLeaderboardIntentClicked = {
                         startActivity(Intent(this, LeaderboardActivity::class.java))
                     },
+                    onAchievementsIntentClicked = {
+                        startActivity(Intent(this, AchievementsActivity::class.java))
+                    },
                     onPreferencesIntentClicked = {
                         startActivity(Intent(this, SettingsActivity::class.java))
                     },
                     streak = streak,
                     reactionTime = reactionTime,
+                    accuracy = accuracy,
+                    newBadges = newlyUnlockedBadges,
                     effects = gameViewModel.effects
                 )
             }

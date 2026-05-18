@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.play.services.ads)
     
     // Firebase

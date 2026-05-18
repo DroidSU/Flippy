@@ -44,6 +44,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Menu
@@ -86,10 +87,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.sujoy.flippy.common.Badge
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.core.theme.BombRed
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.core.theme.HeartRed
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.database.MatchHistory
@@ -130,9 +132,12 @@ fun GameScreen(
     onSignOutClick: () -> Unit,
     onProfileIntentClicked: () -> Unit,
     onLeaderboardIntentClicked: () -> Unit,
+    onAchievementsIntentClicked: () -> Unit,
     onPreferencesIntentClicked: () -> Unit,
     streak: Int = 0,
     reactionTime: Long = 0,
+    accuracy: Float = 0f,
+    newBadges: List<Badge> = emptyList(),
     effects: SharedFlow<GameEffect>? = null
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
@@ -329,6 +334,7 @@ fun GameScreen(
                 },
                 onProfileIntentClicked = onProfileIntentClicked,
                 onLeaderboardIntentClicked = onLeaderboardIntentClicked,
+                onAchievementsIntentClicked = onAchievementsIntentClicked,
                 onPreferencesIntentClicked = onPreferencesIntentClicked
             )
 
@@ -346,6 +352,9 @@ fun GameScreen(
             GameStatusOverlay(
                 visible = showGameOverOverlay,
                 score = score,
+                gameTime = gameTime,
+                accuracy = accuracy,
+                newBadges = newBadges,
                 onDismiss = {
                     showGameOverOverlay = false
                     onResetGame()
@@ -622,6 +631,7 @@ private fun SideNavigationMenu(
     onSignOutClick: () -> Unit,
     onProfileIntentClicked: () -> Unit,
     onLeaderboardIntentClicked: () -> Unit,
+    onAchievementsIntentClicked: () -> Unit,
     onPreferencesIntentClicked: () -> Unit
 ) {
     Box(modifier = Modifier
@@ -696,6 +706,12 @@ private fun SideNavigationMenu(
                         icon = Icons.Default.Leaderboard,
                         label = "Leaderboard",
                         onClick = onLeaderboardIntentClicked
+                    )
+
+                    NavigationMenuItem(
+                        icon = Icons.Default.EmojiEvents,
+                        label = "Achievements",
+                        onClick = onAchievementsIntentClicked
                     )
 
                     NavigationMenuItem(
@@ -1123,7 +1139,7 @@ private fun GameGrid(
 @Preview(showBackground = true)
 @Composable
 fun GameScreenPreview() {
-    FlippyTheme {
+    FliqTheme {
         GameScreen(
             tiles = List(16) { Tile(it) },
             score = 10,
@@ -1143,6 +1159,7 @@ fun GameScreenPreview() {
             onSignOutClick = {},
             onProfileIntentClicked = {},
             onLeaderboardIntentClicked = {},
+            onAchievementsIntentClicked = {},
             onPreferencesIntentClicked = {},
             showAdRewardDialog = false,
             onSkipAdClick = {},

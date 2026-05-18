@@ -24,6 +24,10 @@ class MatchRepositoryImpl @Inject constructor(
         return matchDAO.getMatchHistory()
     }
 
+    override suspend fun getMatchHistorySync(playerId: String): List<MatchHistory> {
+        return matchDAO.getMatchHistorySync(playerId)
+    }
+
     override suspend fun getPendingMatches(): List<MatchHistory> {
         return matchDAO.getPendingMatches()
     }

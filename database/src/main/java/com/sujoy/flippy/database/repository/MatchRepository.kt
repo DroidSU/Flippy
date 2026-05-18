@@ -8,5 +8,6 @@ interface MatchRepository {
     suspend fun saveMatches(matchList: List<MatchHistory>)
     fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
     fun getMatchHistory(): Flow<List<MatchHistory>>
+    suspend fun getMatchHistorySync(playerId: String): List<MatchHistory>
     suspend fun getPendingMatches(): List<MatchHistory>
 }

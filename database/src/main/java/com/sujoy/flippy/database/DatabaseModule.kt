@@ -3,6 +3,8 @@ package com.sujoy.flippy.database
 import android.content.Context
 import androidx.room.Room
 import com.sujoy.flippy.core.ConstantsManager
+import com.sujoy.flippy.database.repository.BadgeRepository
+import com.sujoy.flippy.database.repository.BadgeRepositoryImpl
 import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.database.repository.MatchRepositoryImpl
 import dagger.Binds
@@ -21,6 +23,10 @@ abstract class DatabaseModule {
     @Singleton
     abstract fun bindMatchRepository(impl: MatchRepositoryImpl): MatchRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindBadgeRepository(impl: BadgeRepositoryImpl): BadgeRepository
+
     companion object {
         @Provides
         @Singleton
@@ -36,7 +42,9 @@ abstract class DatabaseModule {
                 AppDatabase.MIGRATION_3_4,
                 AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6,
-                AppDatabase.MIGRATION_6_7
+                AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8,
+                AppDatabase.MIGRATION_8_9
             )
                 .fallbackToDestructiveMigration(true)
             .build()
@@ -50,6 +58,11 @@ abstract class DatabaseModule {
         @Provides
         fun provideUserDao(appDatabase: AppDatabase): UserDAO {
             return appDatabase.userDao()
+        }
+
+        @Provides
+        fun provideBadgeDao(appDatabase: AppDatabase): BadgeDAO {
+            return appDatabase.badgeDao()
         }
     }
 }

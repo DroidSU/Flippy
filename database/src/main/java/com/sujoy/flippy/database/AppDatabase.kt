@@ -6,11 +6,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.sujoy.flippy.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class, UserEntity::class], version = 7)
+@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 9)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun matchDao(): MatchDAO
     abstract fun userDao(): UserDAO
+    abstract fun badgeDao(): BadgeDAO
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -63,6 +64,30 @@ abstract class AppDatabase : RoomDatabase() {
                         PRIMARY KEY(`userId`)
                     )
                 """.trimIndent())
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `${ConstantsManager.TABLE_NAME_BADGES}` (
+                        `badgeId` TEXT NOT NULL, 
+                        `userId` TEXT NOT NULL, 
+                        `unlockTimestamp` INTEGER NOT NULL, 
+                        `isBackedUp` INTEGER NOT NULL DEFAULT 0, 
+                        PRIMARY KEY(`badgeId`)
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // To change Primary Key in SQLite, we must recreate the table
+                db.execSQL("CREATE TABLE IF NOT EXISTS `badges_new` (`badgeId` TEXT NOT NULL, `userId` TEXT NOT NULL, `unlockTimestamp` INTEGER NOT NULL, `isBackedUp` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`badgeId`, `userId`))")
+                db.execSQL("INSERT INTO `badges_new` (`badgeId`, `userId`, `unlockTimestamp`, `isBackedUp`) SELECT `badgeId`, `userId`, `unlockTimestamp`, `isBackedUp` FROM `${ConstantsManager.TABLE_NAME_BADGES}`")
+                db.execSQL("DROP TABLE `${ConstantsManager.TABLE_NAME_BADGES}`")
+                db.execSQL("ALTER TABLE `badges_new` RENAME TO `${ConstantsManager.TABLE_NAME_BADGES}`")
             }
         }
     }

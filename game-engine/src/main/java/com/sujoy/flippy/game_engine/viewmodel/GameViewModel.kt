@@ -5,13 +5,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.sujoy.flippy.common.AchievementManager
 import com.sujoy.flippy.common.AdManager
 import com.sujoy.flippy.common.AnalyticsRepository
+import com.sujoy.flippy.common.Badge
 import com.sujoy.flippy.common.Difficulty
 import com.sujoy.flippy.common.NetworkRepository
 import com.sujoy.flippy.common.repository.ProfileRepository
 import com.sujoy.flippy.core.models.UserData
 import com.sujoy.flippy.database.MatchHistory
+import com.sujoy.flippy.database.repository.BadgeRepository
 import com.sujoy.flippy.database.repository.MatchRepository
 import com.sujoy.flippy.game_engine.models.CardType
 import com.sujoy.flippy.game_engine.models.GameEffect
@@ -31,6 +34,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -42,11 +46,12 @@ class GameViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,
+    private val badgeRepository: BadgeRepository,
     private val networkRepository: NetworkRepository,
     private val preferencesRepository: GamePreferencesRepository,
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
-    private val adManager: AdManager
+    private val adManager: AdManager,
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -78,7 +83,7 @@ class GameViewModel @Inject constructor(
     private val _topThreeScores = MutableStateFlow<List<MatchHistory>>(emptyList())
     val topThreeScores = _topThreeScores.asStateFlow()
 
-    private val _showRules = MutableStateFlow(false)
+    private val _showRules = MutableStateFlow(value = false)
     val showRules = _showRules.asStateFlow()
 
     private val _showAdRewardDialog = MutableStateFlow(false)
@@ -96,6 +101,9 @@ class GameViewModel @Inject constructor(
     private val _lastReactionTime = MutableStateFlow(0L)
     val lastReactionTime = _lastReactionTime.asStateFlow()
 
+    private val _newlyUnlockedBadges = MutableStateFlow<List<Badge>>(emptyList())
+    val newlyUnlockedBadges = _newlyUnlockedBadges.asStateFlow()
+
     private val _effects = MutableSharedFlow<GameEffect>()
     val effects = _effects.asSharedFlow()
 
@@ -103,7 +111,10 @@ class GameViewModel @Inject constructor(
     private var _currentAvatarId = 1
 
     private val _totalTaps = MutableStateFlow(0)
+    val totalTaps = _totalTaps.asStateFlow()
+
     private val _correctTaps = MutableStateFlow(0)
+    val correctTaps = _correctTaps.asStateFlow()
 
     private var timerJob: Job? = null
     private var coinsMissedConsecutively = 0
@@ -111,6 +122,9 @@ class GameViewModel @Inject constructor(
     private var accumulatedTime = 0L
     private var tileRevealTime = 0L
     private var totalReflexTime = 0L
+    private var bestReactionTime = Long.MAX_VALUE
+    private var clutchTime = 0L
+    private var clutchStartTime = 0L
     private var perfectStreak = 0
     private var visibleDuration = 500L
 
@@ -171,9 +185,13 @@ class GameViewModel @Inject constructor(
         _totalTaps.value = 0
         _correctTaps.value = 0
         totalReflexTime = 0L
+        bestReactionTime = Long.MAX_VALUE
+        clutchTime = 0L
+        clutchStartTime = 0L
         perfectStreak = 0
         _isAdRewardAvailable.value = true
         _showAdRewardDialog.value = false
+        _newlyUnlockedBadges.value = emptyList()
         adManager.loadRewardedAd()
 
         soundRepository.startBackgroundMusic()
@@ -203,9 +221,13 @@ class GameViewModel @Inject constructor(
         _totalTaps.value = 0
         _correctTaps.value = 0
         totalReflexTime = 0L
+        bestReactionTime = Long.MAX_VALUE
+        clutchTime = 0L
+        clutchStartTime = 0L
         perfectStreak = 0
         _isAdRewardAvailable.value = true
         _showAdRewardDialog.value = false
+        _newlyUnlockedBadges.value = emptyList()
         adManager.loadRewardedAd()
         soundRepository.startBackgroundMusic()
     }
@@ -324,6 +346,15 @@ class GameViewModel @Inject constructor(
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0
 
+            if (_lives.value == 1) {
+                clutchStartTime = System.currentTimeMillis()
+            } else if (_lives.value == 0) {
+                if (clutchStartTime > 0) {
+                    clutchTime += System.currentTimeMillis() - clutchStartTime
+                    clutchStartTime = 0
+                }
+            }
+
             if (_lives.value <= 0) {
                 if (_isAdRewardAvailable.value && adManager.isAdLoaded()) {
                     pauseForAdReward()
@@ -349,6 +380,13 @@ class GameViewModel @Inject constructor(
         stopTimer()
         soundRepository.playGameOverSound()
 
+        // Clear badges immediately as game ends to avoid stale data from previous game
+        _newlyUnlockedBadges.value = emptyList()
+        if (clutchStartTime > 0) {
+            clutchTime += System.currentTimeMillis() - clutchStartTime
+            clutchStartTime = 0
+        }
+
         // Finalize perfect streak in case the game ended on a high streak
         if (perfectStreak < _streak.value) {
             perfectStreak = _streak.value
@@ -370,6 +408,14 @@ class GameViewModel @Inject constructor(
         val currentDifficulty = _difficulty.value.label
         val timestamp = System.currentTimeMillis()
 
+        // Capture snapshot of metrics to avoid race conditions if a new game starts immediately
+        val currentCorrectTaps = _correctTaps.value
+        val currentTotalTaps = _totalTaps.value
+        val currentTotalReflexTime = totalReflexTime
+        val currentPerfectStreak = perfectStreak
+        val currentBestReactionTime = bestReactionTime
+        val currentClutchTime = clutchTime
+
         scope.launch(Dispatchers.IO) {
             val match = MatchHistory(
                 id = "${playerId}_$timestamp",
@@ -378,10 +424,10 @@ class GameViewModel @Inject constructor(
                 difficulty = currentDifficulty,
                 gameDuration = currentTime,
                 timestamp = timestamp,
-                correctTaps = _correctTaps.value,
-                totalTaps = _totalTaps.value,
-                totalReflexTime = totalReflexTime,
-                perfectStreak = perfectStreak,
+                correctTaps = currentCorrectTaps,
+                totalTaps = currentTotalTaps,
+                totalReflexTime = currentTotalReflexTime,
+                perfectStreak = currentPerfectStreak,
                 isBackedUp = false,
                 username = _currentUsername,
                 avatarId = _currentAvatarId
@@ -397,6 +443,36 @@ class GameViewModel @Inject constructor(
             }
 
             updateUserStats(match)
+            checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
+        }
+    }
+
+    private suspend fun checkAndAwardBadges(
+        match: MatchHistory,
+        bestReactionTime: Long,
+        clutchTime: Long
+    ) {
+        val userId = playerId
+        val allMatches = matchRepository.getMatchHistorySync(userId)
+        val userData = profileRepository.getUserDataSync(userId)
+        val existingBadges = badgeRepository.getBadgesForUser(userId).firstOrNull() ?: emptyList()
+        val existingBadgeIds = existingBadges.asSequence().map { it.badgeId }.toSet()
+
+        val newlyUnlocked = AchievementManager.checkBadges(
+            match = match,
+            allMatches = allMatches,
+            userData = userData,
+            bestReactionTime = bestReactionTime,
+            clutchTime = clutchTime
+        ).filter { it.id !in existingBadgeIds }
+
+        // Update the state with ONLY the badges earned in this specific match
+        _newlyUnlockedBadges.value = newlyUnlocked
+
+        if (newlyUnlocked.isNotEmpty()) {
+            newlyUnlocked.forEach { badge ->
+                badgeRepository.saveBadge(badge.id, userId)
+            }
         }
     }
 
@@ -455,6 +531,7 @@ class GameViewModel @Inject constructor(
                     val reactionTime = System.currentTimeMillis() - tileRevealTime
                     _lastReactionTime.value = reactionTime
                     totalReflexTime += reactionTime
+                    bestReactionTime = minOf(bestReactionTime, reactionTime)
 
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
@@ -462,8 +539,16 @@ class GameViewModel @Inject constructor(
                 }
 
                 CardType.BOMB -> {
+                    val oldLives = _lives.value
                     _lives.update { (it - 1).coerceAtLeast(0) }
                     
+                    if (_lives.value == 1 && oldLives > 1) {
+                        clutchStartTime = System.currentTimeMillis()
+                    } else if (_lives.value == 0 && clutchStartTime > 0) {
+                        clutchTime += System.currentTimeMillis() - clutchStartTime
+                        clutchStartTime = 0
+                    }
+
                     analyticsRepository.logEvent("bomb_hit", mapOf(
                         "score_at_hit" to _score.value,
                         "lives_remaining" to _lives.value

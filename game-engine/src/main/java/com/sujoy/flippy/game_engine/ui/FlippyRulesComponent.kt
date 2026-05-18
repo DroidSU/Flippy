@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.core.theme.Gold
 import com.sujoy.flippy.core.theme.gameColors
 import com.sujoy.flippy.game_engine.R
@@ -249,7 +249,7 @@ private fun RuleItemRow(
 }
 
 @Composable
-fun FlippyRulesComponent(
+fun FliqRulesComponent(
     onRulesDismissed: (Boolean) -> Unit = {}
 ) {
     var isVisible by remember { mutableStateOf(true) }
@@ -267,7 +267,7 @@ fun FlippyRulesComponent(
 @Preview(showBackground = true)
 @Composable
 private fun FlippyRulesComponentPreview() {
-    FlippyTheme {
+    FliqTheme {
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             FlippyRulesDialog(onDismiss = {})
         }

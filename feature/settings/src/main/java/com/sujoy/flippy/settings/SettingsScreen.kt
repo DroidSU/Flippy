@@ -45,7 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sujoy.flippy.core.settings.AppTheme
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -387,7 +387,7 @@ private fun SettingsClickableItem(
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    FlippyTheme {
+    FliqTheme {
         SettingsScreen(
             selectedTheme = AppTheme.SYSTEM,
             notificationsEnabled = true,

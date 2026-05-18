@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.sujoy.flippy.common.UtilityMethods
 import com.sujoy.flippy.common.UtilityMethods.Companion.getAvatarResource
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 
 @Composable
 fun EditDialog(
@@ -189,7 +189,7 @@ fun EditDialog(
 @Preview(showBackground = true)
 @Composable
 private fun EditDialogPreview() {
-    FlippyTheme {
+    FliqTheme {
         EditDialog(
             isLoading = false,
             onSave = { _, _ -> },

@@ -8,7 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.sujoy.flippy.core.settings.SettingsRepository
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.profile.ui.ProfileScreen
 import com.sujoy.flippy.profile.vm.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +26,7 @@ class ProfileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            FlippyTheme(settingsRepository = settingsRepository) {
+            FliqTheme(settingsRepository = settingsRepository) {
                 val username by viewModel.username.collectAsState()
                 val avatarId by viewModel.avatarId.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
@@ -36,6 +36,7 @@ class ProfileActivity : ComponentActivity() {
                 val longestRound by viewModel.longestRound.collectAsState()
                 val reflexAverage by viewModel.reflexAverage.collectAsState()
                 val accuracyRate by viewModel.accuracyRate.collectAsState()
+                val unlockedBadges by viewModel.unlockedBadges.collectAsState()
 
                 ProfileScreen(
                     username = username,
@@ -56,7 +57,8 @@ class ProfileActivity : ComponentActivity() {
                     highestScore = highestScore,
                     longestRound = longestRound,
                     accuracyRate = accuracyRate,
-                    reflexAverage = reflexAverage
+                    reflexAverage = reflexAverage,
+                    unlockedBadges = unlockedBadges,
                 )
             }
         }

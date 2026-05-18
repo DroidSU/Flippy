@@ -17,7 +17,7 @@ import androidx.core.view.WindowCompat
 import com.sujoy.flippy.core.settings.SettingsRepository
 
 @Immutable
-data class FlippyGameColors(
+data class FliqGameColors(
     val scorePopup: Color = Color.Unspecified,
     val particleCoin: Color = Color.Unspecified,
     val particleBomb: Color = Color.Unspecified,
@@ -36,13 +36,13 @@ data class FlippyGameColors(
     val backgroundGradient: List<Color> = emptyList()
 )
 
-val LocalFlippyGameColors = staticCompositionLocalOf { FlippyGameColors() }
+val LocalFliqGameColors = staticCompositionLocalOf { FliqGameColors() }
 
-val MaterialTheme.gameColors: FlippyGameColors
+val MaterialTheme.gameColors: FliqGameColors
     @Composable
-    get() = LocalFlippyGameColors.current
+    get() = LocalFliqGameColors.current
 
-private val DarkGameColors = FlippyGameColors(
+private val DarkGameColors = FliqGameColors(
     scorePopup = Gold,
     particleCoin = Gold,
     particleBomb = BombRed,
@@ -61,7 +61,7 @@ private val DarkGameColors = FlippyGameColors(
     backgroundGradient = listOf(BgDeepDark, BgMidnight, BgSlate)
 )
 
-private val LightGameColors = FlippyGameColors(
+private val LightGameColors = FliqGameColors(
     scorePopup = Gold,
     particleCoin = Gold,
     particleBomb = BombRed,
@@ -115,7 +115,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun FlippyTheme(
+fun FliqTheme(
     settingsRepository: SettingsRepository? = null,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
@@ -152,7 +152,7 @@ fun FlippyTheme(
         }
     }
 
-    CompositionLocalProvider(LocalFlippyGameColors provides gameColors) {
+    CompositionLocalProvider(LocalFliqGameColors provides gameColors) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

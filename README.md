@@ -1,6 +1,6 @@
-# Flippy
+# Fliq
 
-Flippy is a fast-paced, high-reflex Android game built with modern Android development tools. The game challenges players to tap on coins appearing on a 4x4 grid while avoiding bombs. It features a dynamic difficulty system, real-time feedback through haptics and sound, and a robust profile and leaderboard system.
+Fliq is a fast-paced, high-reflex Android game built with modern Android development tools. The game challenges players to tap on coins appearing on a 4x4 grid while avoiding bombs. It features a dynamic difficulty system, real-time feedback through haptics and sound, and a robust profile and leaderboard system.
 
 ## 🎮 Features
 

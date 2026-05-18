@@ -38,7 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sujoy.flippy.common.AppUIState
 import com.sujoy.flippy.common.LeaderboardModel
-import com.sujoy.flippy.core.theme.FlippyTheme
+import com.sujoy.flippy.core.theme.FliqTheme
 import com.sujoy.flippy.database.MatchHistory
 import com.sujoy.leaderboard.components.GlobalLeaderboardSection
 import com.sujoy.leaderboard.components.MyScoresSection
@@ -177,7 +177,7 @@ fun LeaderboardTabSwitcher(
 @Preview(showBackground = true)
 @Composable
 private fun LeaderboardScreenPreview() {
-    FlippyTheme {
+    FliqTheme {
         LeaderboardScreen(
             uiState = AppUIState.Idle,
             leaderboardList = emptyList(),
