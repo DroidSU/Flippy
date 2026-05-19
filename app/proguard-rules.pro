@@ -1,35 +1,46 @@
-# Firebase and Play Services rules
+# --- General Android & Project Rules ---
 -keepattributes Signature
 -keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# --- Firebase Rules ---
 -keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
 -keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
 
-# Keep data models used by Firebase and Room
--keepclassmembers class com.fliq.core.models.** { *; }
--keepclassmembers class com.fliq.database.** { *; }
+# --- Data Models (Firestore/Room) ---
+# Keep all data models to prevent shrinking of fields needed for serialization
 -keep class com.fliq.core.models.** { *; }
--keep class com.fliq.database.** { *; }
--keep class com.fliq.common.LeaderboardModel { *; }
+-keep class com.fliq.database.models.** { *; }
+-keep class com.fliq.common.models.** { *; }
 
-# Room specific rules
+# --- Room ---
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.room.paging.**
 
-# Lottie rules
--keep class com.airbnb.lottie.** { *; }
+# --- AdMob Rules ---
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
 
-# Hilt rules
+# --- Hilt & Dagger ---
 -keep class dagger.hilt.** { *; }
 -keep class com.fliq.**_HiltComponents* { *; }
 -keep class com.fliq.Hilt_* { *; }
+-keep class * { @dagger.hilt.android.lifecycle.HiltViewModel <methods>; }
+-keep @dagger.hilt.android.AndroidEntryPoint class *
 
-# Kotlin Coroutines
+# --- Lottie ---
+-keep class com.airbnb.lottie.** { *; }
+
+# --- Kotlin Coroutines ---
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
 -keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 -keepnames class kotlinx.coroutines.android.AndroidExceptionPreHandler {}
 -keepnames class kotlinx.coroutines.android.AndroidDispatcherFactory {}
 -keepclassmembernames class kotlinx.coroutines.android.HandlerContext {}
 
-# Preserve line numbers for better crash reports
--keepattributes SourceFile,LineNumberTable
--renamesourcefileattribute SourceFile
+# --- Jetpack Compose ---
+-keep class androidx.compose.runtime.** { *; }
+-dontwarn androidx.compose.ui.platform.AndroidComposeView

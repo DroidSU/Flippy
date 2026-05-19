@@ -1,0 +1,24 @@
+package com.fliq.game_engine
+
+import com.fliq.game_engine.repository.GamePreferencesRepository
+import com.fliq.game_engine.repository.GamePreferencesRepositoryImpl
+import com.fliq.game_engine.repository.SoundRepository
+import com.fliq.game_engine.repository.SoundRepositoryImpl
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class GameEngineModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindSoundRepository(impl: SoundRepositoryImpl): SoundRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGamePreferencesRepository(impl: GamePreferencesRepositoryImpl): GamePreferencesRepository
+}

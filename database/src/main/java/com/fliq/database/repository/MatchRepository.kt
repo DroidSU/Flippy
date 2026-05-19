@@ -1,0 +1,13 @@
+package com.fliq.database.repository
+
+import com.fliq.database.MatchHistory
+import kotlinx.coroutines.flow.Flow
+
+interface MatchRepository {
+    suspend fun saveMatch(match: MatchHistory)
+    suspend fun saveMatches(matchList: List<MatchHistory>)
+    fun getTopThreeScores(playerId: String): Flow<List<MatchHistory>>
+    fun getMatchHistory(): Flow<List<MatchHistory>>
+    suspend fun getMatchHistorySync(playerId: String): List<MatchHistory>
+    suspend fun getPendingMatches(): List<MatchHistory>
+}

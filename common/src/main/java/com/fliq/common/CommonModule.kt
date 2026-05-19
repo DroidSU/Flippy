@@ -1,0 +1,30 @@
+package com.fliq.common
+
+import com.fliq.common.repository.ProfileRepository
+import com.fliq.common.repository.ProfileRepositoryImpl
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class CommonModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindNetworkRepository(impl: NetworkRepositoryImpl): NetworkRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileRepository(impl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAnalyticsRepository(impl: AnalyticsRepositoryImpl): AnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAdManager(impl: AdManagerImpl): AdManager
+}

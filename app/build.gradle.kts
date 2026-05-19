@@ -33,6 +33,15 @@ android {
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(localProperties.getProperty("signing.storeFile") ?: "keystore.jks")
+            storePassword = localProperties.getProperty("signing.storePassword") ?: ""
+            keyAlias = localProperties.getProperty("signing.keyAlias") ?: ""
+            keyPassword = localProperties.getProperty("signing.keyPassword") ?: ""
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -41,6 +50,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Test AdMob IDs
+            manifestPlaceholders["admob_app_id"] = "ca-app-pub-3940256099942544/5354046379"
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/5354046379\"")
         }
         release {
             isMinifyEnabled = true
@@ -49,6 +61,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Real AdMob IDs from local.properties
+            manifestPlaceholders["admob_app_id"] = localProperties.getProperty("admob.app.id") ?: ""
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"${localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: ""}\"")
         }
     }
     compileOptions {
