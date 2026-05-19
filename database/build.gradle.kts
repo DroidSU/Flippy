@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.flippy.database"
+    namespace = "com.fliq.database"
     compileSdk = 36
 
     defaultConfig {

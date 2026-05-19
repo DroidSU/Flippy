@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.flippy.core"
+    namespace = "com.fliq.core"
     compileSdk = 36
 
     defaultConfig {

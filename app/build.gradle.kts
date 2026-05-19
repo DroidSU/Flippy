@@ -18,15 +18,15 @@ if (localPropertiesFile.exists()) {
 val googleWebClientId: String = localProperties.getProperty("google.web.client.id") ?: ""
 
 android {
-    namespace = "com.sujoy.flippy"
+    namespace = "com.fliq"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.sujoy.flippy"
+        applicationId = "com.fliq"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0-beta02"
+        versionName = "1.0-rc01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -35,8 +35,8 @@ android {
 
     buildTypes {
         debug {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

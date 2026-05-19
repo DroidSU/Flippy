@@ -5,11 +5,11 @@
 -keep class com.google.android.gms.** { *; }
 
 # Keep data models used by Firebase and Room
--keepclassmembers class com.sujoy.flippy.core.models.** { *; }
--keepclassmembers class com.sujoy.flippy.database.** { *; }
--keep class com.sujoy.flippy.core.models.** { *; }
--keep class com.sujoy.flippy.database.** { *; }
--keep class com.sujoy.flippy.common.LeaderboardModel { *; }
+-keepclassmembers class com.fliq.core.models.** { *; }
+-keepclassmembers class com.fliq.database.** { *; }
+-keep class com.fliq.core.models.** { *; }
+-keep class com.fliq.database.** { *; }
+-keep class com.fliq.common.LeaderboardModel { *; }
 
 # Room specific rules
 -keep class * extends androidx.room.RoomDatabase
@@ -20,8 +20,8 @@
 
 # Hilt rules
 -keep class dagger.hilt.** { *; }
--keep class com.sujoy.flippy.**_HiltComponents* { *; }
--keep class com.sujoy.flippy.Hilt_* { *; }
+-keep class com.fliq.**_HiltComponents* { *; }
+-keep class com.fliq.Hilt_* { *; }
 
 # Kotlin Coroutines
 -keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}

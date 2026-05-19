@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.leaderboard"
+    namespace = "com.fliq.leaderboard"
     compileSdk = 36
 
     defaultConfig {

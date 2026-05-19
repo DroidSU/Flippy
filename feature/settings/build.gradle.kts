@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.settings"
+    namespace = "com.fliq.settings"
     compileSdk = 36
 
     defaultConfig {

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.flippy.game_engine"
+    namespace = "com.fliq.game_engine"
     compileSdk = 36
 
     defaultConfig {

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.sujoy.flippy.auth"
+    namespace = "com.fliq.auth"
     compileSdk = 36
 
     defaultConfig {
