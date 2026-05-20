@@ -23,6 +23,8 @@
 # --- AdMob Rules ---
 -keep class com.google.android.gms.ads.** { *; }
 -keep class com.google.ads.** { *; }
+-keep class com.fliq.common.BuildConfig { *; }
+-keep class com.fliq.BuildConfig { *; }
 
 # --- Hilt & Dagger ---
 -keep class dagger.hilt.** { *; }

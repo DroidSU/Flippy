@@ -126,7 +126,7 @@ fun FlippyRulesDialog(
                     RuleItemRow(
                         iconVector = Icons.Default.Favorite,
                         title = "Vital Focus",
-                        description = "Missing 2 coins in a row will also cost a heart.",
+                        description = "Missing 3 coins (2 in Hard mode) will cost a heart.",
                         tintColor = MaterialTheme.colorScheme.primary,
                         isVector = true
                     )

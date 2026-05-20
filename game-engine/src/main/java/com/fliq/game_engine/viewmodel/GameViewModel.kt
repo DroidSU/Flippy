@@ -120,21 +120,26 @@ class GameViewModel @Inject constructor(
     private var coinsMissedConsecutively = 0
     private var lastStartTime = 0L
     private var accumulatedTime = 0L
-    private var tileRevealTime = 0L
     private var totalReflexTime = 0L
     private var bestReactionTime = Long.MAX_VALUE
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
-    private var visibleDuration = 500L
-
-    init {
-        visibleDuration = when (_difficulty.value) {
-            Difficulty.EASY -> 700L
-            Difficulty.NORMAL -> 500L
-            Difficulty.HARD -> 250L
+    private val visibleDurationRange: LongRange
+        get() = when (_difficulty.value) {
+            Difficulty.EASY -> 900L..1100L
+            Difficulty.NORMAL -> 550L..750L
+            Difficulty.HARD -> 380L..450L
         }
 
+    private val pauseDuration: Long
+        get() = when (_difficulty.value) {
+            Difficulty.EASY -> 1000L
+            Difficulty.NORMAL -> 800L
+            Difficulty.HARD -> 500L
+        }
+
+    init {
         getUserData()
         getTopThreeScores()
         checkRulesVisibility()
@@ -162,12 +167,6 @@ class GameViewModel @Inject constructor(
     fun setDifficulty(difficulty: Difficulty) {
         if (_status.value == GameStatus.READY) {
             _difficulty.value = difficulty
-
-            visibleDuration = when (_difficulty.value) {
-                Difficulty.EASY -> 1200L
-                Difficulty.NORMAL -> 1000L
-                Difficulty.HARD -> 800L
-            }
         }
     }
 
@@ -253,8 +252,6 @@ class GameViewModel @Inject constructor(
     fun pauseGameTemporarily() {
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
 
-        val pauseDuration = if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) 1000L else 500L
-
         _isGamePaused.value = true
         soundRepository.playBombSound()
         accumulatedTime += System.currentTimeMillis() - lastStartTime
@@ -276,11 +273,7 @@ class GameViewModel @Inject constructor(
     private suspend fun gameLoop() {
         while (_status.value == GameStatus.PLAYING) {
             if (_isGamePaused.value) {
-                if (_difficulty.value == Difficulty.EASY || _difficulty.value == Difficulty.NORMAL) {
-                    delay(300L)
-                } else {
-                    delay(800L)
-                }
+                delay(100L)
                 continue
             }
 
@@ -300,14 +293,20 @@ class GameViewModel @Inject constructor(
 
     private fun revealAndHideTile(tileId: Int) {
         scope.launch {
+            val currentVisibleDuration = Random.nextLong(visibleDurationRange.first, visibleDurationRange.last + 1)
             val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
-            tileRevealTime = System.currentTimeMillis()
+            val revealTime = System.currentTimeMillis()
             updateTile(tileId) {
-                it.copy(isRevealed = true, type = newType)
+                it.copy(
+                    isRevealed = true,
+                    type = newType,
+                    lastRevealTime = revealTime,
+                    currentDuration = currentVisibleDuration
+                )
             }
 
             var elapsed = 0L
-            while (elapsed < visibleDuration) {
+            while (elapsed < currentVisibleDuration) {
                 if (!_isGamePaused.value) {
                     elapsed += 50L
                 }
@@ -330,9 +329,9 @@ class GameViewModel @Inject constructor(
 
     private fun handleMissedCoin() {
         val threshold = when (_difficulty.value) {
-            Difficulty.EASY -> 2
-            Difficulty.NORMAL -> 2
-            Difficulty.HARD -> 3
+            Difficulty.EASY -> 3
+            Difficulty.NORMAL -> 3
+            Difficulty.HARD -> 2
         }
 
         if (_status.value != GameStatus.PLAYING) return
@@ -513,7 +512,10 @@ class GameViewModel @Inject constructor(
         // Every tap on a tile area during gameplay counts towards total taps (accuracy)
         _totalTaps.update { it + 1 }
 
-        if (!tile.isRevealed) return
+        // Grace period: allow tap if it's revealed OR if it just disappeared within 100ms
+        val isRecentlyHidden = !tile.isRevealed && (System.currentTimeMillis() - (tile.lastRevealTime + tile.currentDuration)) < 100
+        
+        if (!tile.isRevealed && !isRecentlyHidden) return
 
         updateTile(tileId) { it.copy(isRevealed = false) }
 
@@ -528,7 +530,7 @@ class GameViewModel @Inject constructor(
                     coinsMissedConsecutively = 0
                     _correctTaps.update { it + 1 }
                     _streak.update { it + 1 }
-                    val reactionTime = System.currentTimeMillis() - tileRevealTime
+                    val reactionTime = System.currentTimeMillis() - tile.lastRevealTime
                     _lastReactionTime.value = reactionTime
                     totalReflexTime += reactionTime
                     bestReactionTime = minOf(bestReactionTime, reactionTime)
@@ -595,6 +597,7 @@ class GameViewModel @Inject constructor(
             onRewardEarned = {
                 rewardEarned = true
                 _lives.value = 1
+                clutchStartTime = System.currentTimeMillis()
                 _isAdRewardAvailable.value = false
                 analyticsRepository.logEvent("rewarded_ad_watched", mapOf("score" to _score.value))
             },

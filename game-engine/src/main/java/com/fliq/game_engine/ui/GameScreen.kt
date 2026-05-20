@@ -224,7 +224,7 @@ fun GameScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .verticalScroll(scrollState)
+                    .verticalScroll(scrollState, enabled = status != GameStatus.PLAYING)
                     .blur(if (showGameOverOverlay || showRules || showAdRewardDialog || isMenuVisible) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

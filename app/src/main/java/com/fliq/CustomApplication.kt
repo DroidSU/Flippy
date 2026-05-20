@@ -10,9 +10,6 @@ import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -36,9 +33,7 @@ class CustomApplication : Application(), Configuration.Provider {
 
         FirebaseApp.initializeApp(this)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            MobileAds.initialize(this@CustomApplication) {}
-        }
+        MobileAds.initialize(this@CustomApplication) {}
 
         val firebaseAppCheck = FirebaseAppCheck.getInstance()
 

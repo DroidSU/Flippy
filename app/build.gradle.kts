@@ -26,7 +26,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0-rc01"
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -51,7 +51,7 @@ android {
                 "proguard-rules.pro"
             )
             // Test AdMob IDs
-            manifestPlaceholders["admob_app_id"] = "ca-app-pub-3940256099942544/5354046379"
+            manifestPlaceholders["admob_app_id"] = "ca-app-pub-3940256099942544~3347511713"
             buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/5354046379\"")
         }
         release {
@@ -63,9 +63,12 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             
-            // Real AdMob IDs from local.properties
-            manifestPlaceholders["admob_app_id"] = localProperties.getProperty("admob.app.id") ?: ""
-            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"${localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: ""}\"")
+            // Fallback to test IDs if not provided in local.properties
+            val appId = localProperties.getProperty("admob.app.id") ?: "ca-app-pub-3940256099942544~3347511713"
+            val adUnitId = localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: "ca-app-pub-3940256099942544/5354046379"
+            
+            manifestPlaceholders["admob_app_id"] = appId
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$adUnitId\"")
         }
     }
     compileOptions {

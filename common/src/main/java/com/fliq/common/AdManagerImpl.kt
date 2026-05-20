@@ -25,41 +25,31 @@ class AdManagerImpl @Inject constructor(
     private val adUnitId = BuildConfig.ADMOB_REWARDED_INTERSTITIAL_ID
 
     override fun loadRewardedAd(onAdLoaded: () -> Unit, onAdFailed: () -> Unit) {
-        if (rewardedInterstitialAd != null || isLoading) return
+        if (rewardedInterstitialAd != null) {
+            Log.d("AdManager", "Ad already loaded.")
+            onAdLoaded()
+            return
+        }
+        if (isLoading) {
+            Log.d("AdManager", "Ad is already loading.")
+            return
+        }
 
         isLoading = true
         val adRequest = AdRequest.Builder().build()
+        Log.d("AdManager", "Loading Rewarded Interstitial Ad with ID: $adUnitId")
         
-        /* 
-        // Loading Rewarded Ad
-        RewardedAd.load(context, "ca-app-pub-3940256099942544/5224354917", adRequest, object : RewardedAdLoadCallback() {
-            override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.d("AdManager", "Rewarded Ad failed to load: ${adError.message}")
-                rewardedAd = null
-                isLoading = false
-                onAdFailed()
-            }
-
-            override fun onAdLoaded(ad: RewardedAd) {
-                Log.d("AdManager", "Rewarded Ad was loaded.")
-                rewardedAd = ad
-                isLoading = false
-                onAdLoaded()
-            }
-        })
-        */
-
         // Loading Rewarded Interstitial Ad
         RewardedInterstitialAd.load(context, adUnitId, adRequest, object : RewardedInterstitialAdLoadCallback() {
             override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.d("AdManager", "Rewarded Interstitial failed to load: ${adError.message}")
+                Log.e("AdManager", "Rewarded Interstitial failed to load: ${adError.message} (Code: ${adError.code})")
                 rewardedInterstitialAd = null
                 isLoading = false
                 onAdFailed()
             }
 
             override fun onAdLoaded(ad: RewardedInterstitialAd) {
-                Log.d("AdManager", "Rewarded Interstitial was loaded.")
+                Log.d("AdManager", "Rewarded Interstitial was loaded successfully.")
                 rewardedInterstitialAd = ad
                 isLoading = false
                 onAdLoaded()
@@ -72,29 +62,6 @@ class AdManagerImpl @Inject constructor(
         onRewardEarned: () -> Unit,
         onAdClosed: () -> Unit
     ) {
-        /*
-        // Showing Rewarded Ad
-        rewardedAd?.let { ad ->
-            ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() {
-                    rewardedAd = null
-                    onAdClosed()
-                    loadRewardedAd({}, {})
-                }
-
-                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    rewardedAd = null
-                    onAdClosed()
-                    loadRewardedAd({}, {})
-                }
-            }
-            ad.show(activity) { onRewardEarned() }
-        } ?: run {
-            onAdClosed()
-            loadRewardedAd({}, {})
-        }
-        */
-
         // Showing Rewarded Interstitial Ad
         rewardedInterstitialAd?.let { ad ->
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -106,7 +73,7 @@ class AdManagerImpl @Inject constructor(
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    Log.d("AdManager", "Ad failed to show: ${adError.message}")
+                    Log.e("AdManager", "Ad failed to show: ${adError.message} (Code: ${adError.code})")
                     rewardedInterstitialAd = null
                     onAdClosed()
                     loadRewardedAd({}, {})
@@ -118,7 +85,7 @@ class AdManagerImpl @Inject constructor(
                 onRewardEarned()
             }
         } ?: run {
-            Log.d("AdManager", "The rewarded interstitial ad wasn't ready yet.")
+            Log.w("AdManager", "The rewarded interstitial ad wasn't ready yet.")
             onAdClosed()
             loadRewardedAd({}, {})
         }
