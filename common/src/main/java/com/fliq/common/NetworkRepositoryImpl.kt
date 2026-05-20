@@ -45,14 +45,16 @@ class NetworkRepositoryImpl @Inject constructor(
         val userId = auth.currentUser?.uid ?: return@withContext
 
         try {
-            val matchMap = mutableMapOf<String, Any>()
+            val rootUpdates = mutableMapOf<String, Any>()
             val matchIds = matchList.map { it.id }
 
             matchList.forEach { match ->
-                matchMap[match.id] = match.toMap()
+                // New format: {Challenge_Name_Table}/{userId}/{matchId}
+                val path = "${match.challengeName}/$userId/${match.id}"
+                rootUpdates[path] = match.toMap()
             }
 
-            database.child("matches").child(userId).updateChildren(matchMap).await()
+            database.updateChildren(rootUpdates).await()
             matchDAO.markMatchesAsBackedUp(matchIds)
         } catch (e: Exception) {
             Log.e(ConstantsManager.APP_TAG, "Error storing match data: ${e.message}")

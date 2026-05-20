@@ -444,7 +444,7 @@ class GameViewModel @Inject constructor(
     private fun saveMatchResult() {
         val currentScore = _score.value
         val currentTime = _gameTime.value
-        val currentDifficulty = _selectedChallenge.value.name
+        val currentChallengeName = _selectedChallenge.value.name
         val timestamp = System.currentTimeMillis()
 
         // Capture snapshot of metrics to avoid race conditions if a new game starts immediately
@@ -460,7 +460,7 @@ class GameViewModel @Inject constructor(
                 id = "${playerId}_$timestamp",
                 playerId = playerId,
                 score = currentScore,
-                difficulty = currentDifficulty,
+                difficulty = "LEGACY",
                 gameDuration = currentTime,
                 timestamp = timestamp,
                 correctTaps = currentCorrectTaps,
@@ -470,7 +470,8 @@ class GameViewModel @Inject constructor(
                 isBackedUp = false,
                 username = _currentUsername,
                 avatarId = _currentAvatarId,
-                levelReached = 0
+                levelReached = 1,
+                challengeName = currentChallengeName
             )
             matchRepository.saveMatch(match)
 

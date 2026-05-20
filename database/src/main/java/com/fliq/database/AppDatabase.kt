@@ -6,7 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fliq.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 10)
+@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 11)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun matchDao(): MatchDAO
@@ -14,6 +14,12 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun badgeDao(): BadgeDAO
 
     companion object {
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` ADD COLUMN `challengeName` TEXT NOT NULL DEFAULT 'UNKNOWN'")
+            }
+        }
+
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` ADD COLUMN `levelReached` INTEGER NOT NULL DEFAULT 1")

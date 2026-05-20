@@ -260,19 +260,6 @@ fun GameScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                AnimatedVisibility(
-                    visible = status == GameStatus.READY,
-                    enter = fadeIn() + slideInHorizontally(),
-                    exit = fadeOut()
-                ) {
-                    ChallengeSelector(
-                        selectedChallenge = currentChallenge,
-                        onChallengeChange = onChallengeChange
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(if (status == GameStatus.PLAYING) 24.dp else 0.dp))
-
                 GameGrid(
                     tiles = tiles,
                     onTileTapped = onTileTapped,
@@ -922,100 +909,6 @@ private fun LeaderboardSection(
     }
 }
 
-@Composable
-fun ChallengeSelector(
-    selectedChallenge: Challenge,
-    onChallengeChange: (Challenge) -> Unit
-) {
-    val challenges = Challenge.entries
-    val isLightTheme = MaterialTheme.colorScheme.onSurface.run { red < 0.5f && green < 0.5f && blue < 0.5f }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-    ) {
-        Text(
-            text = "SELECT CHALLENGE",
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            challenges.forEach { challenge ->
-                val isSelected = selectedChallenge == challenge
-                val targetColor = if (isSelected) MaterialTheme.colorScheme.primary 
-                                  else if (isLightTheme) Color.White.copy(alpha = 0.9f)
-                                  else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(if (isLightTheme && !isSelected) 4.dp else 0.dp, RoundedCornerShape(20.dp))
-                        .clickable { onChallengeChange(challenge) },
-                    shape = RoundedCornerShape(20.dp),
-                    color = targetColor,
-                    border = BorderStroke(
-                        1.dp,
-                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                             Icon(
-                                imageVector = when(challenge) {
-                                    Challenge.SPEED_RUN -> Icons.Default.Timer
-                                    Challenge.MIRAGE -> Icons.Default.Person // Placeholder
-                                    Challenge.MINEFIELD -> Icons.Default.Favorite // Placeholder
-                                    Challenge.BLACKOUT -> Icons.Default.Menu // Placeholder
-                                    Challenge.FRENZY -> Icons.Default.EmojiEvents // Placeholder
-                                },
-                                contentDescription = null,
-                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Column {
-                            Text(
-                                text = challenge.title,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.sp
-                                ),
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = challenge.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                maxLines = 1
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun GameHeader(
