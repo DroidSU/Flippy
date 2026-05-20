@@ -8,7 +8,6 @@ import com.fliq.common.AchievementManager
 import com.fliq.common.AdManager
 import com.fliq.common.AnalyticsRepository
 import com.fliq.common.Badge
-import com.fliq.common.Difficulty
 import com.fliq.common.NetworkRepository
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.models.UserData
@@ -16,6 +15,7 @@ import com.fliq.database.MatchHistory
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
 import com.fliq.game_engine.models.CardType
+import com.fliq.game_engine.models.Challenge
 import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.GameEffect.Particle
 import com.fliq.game_engine.models.GameStatus
@@ -74,8 +74,8 @@ class GameViewModel @Inject constructor(
     private val _status = MutableStateFlow<GameStatus>(GameStatus.READY)
     val status = _status.asStateFlow()
 
-    private val _difficulty = MutableStateFlow(Difficulty.NORMAL)
-    val difficulty = _difficulty.asStateFlow()
+    private val _selectedChallenge = MutableStateFlow(Challenge.SPEED_RUN)
+    val selectedChallenge = _selectedChallenge.asStateFlow()
 
     private val _gameTime = MutableStateFlow(0L)
     val gameTime = _gameTime.asStateFlow()
@@ -125,18 +125,24 @@ class GameViewModel @Inject constructor(
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
+    private val progressionInterval = 15000L // Scale every 10 seconds
+
     private val visibleDurationRange: LongRange
-        get() = when (_difficulty.value) {
-            Difficulty.EASY -> 900L..1100L
-            Difficulty.NORMAL -> 550L..750L
-            Difficulty.HARD -> 380L..450L
+        get() {
+            val tiers = _gameTime.value / progressionInterval
+            val min = maxOf(300L, 600L - tiers * 50L)
+            val max = maxOf(400L, 800L - tiers * 50L)
+            return min..max
         }
 
-    private val pauseDuration: Long
-        get() = when (_difficulty.value) {
-            Difficulty.EASY -> 1000L
-            Difficulty.NORMAL -> 800L
-            Difficulty.HARD -> 500L
+    private val pauseDuration: Long = 800L
+
+    private val spawnIntervalRange: LongRange
+        get() {
+            val tiers = _gameTime.value / progressionInterval
+            val min = maxOf(300L, 1200L - tiers * 45L)
+            val max = maxOf(500L, 2000L - tiers * 75L)
+            return min..max
         }
 
     init {
@@ -164,15 +170,15 @@ class GameViewModel @Inject constructor(
         preferencesRepository.setRulesShownOnce(true)
     }
 
-    fun setDifficulty(difficulty: Difficulty) {
+    fun setChallenge(challenge: Challenge) {
         if (_status.value == GameStatus.READY) {
-            _difficulty.value = difficulty
+            _selectedChallenge.value = challenge
         }
     }
 
     fun startGame() {
         _score.value = 0
-        _lives.value = 3
+        _lives.value = if (_selectedChallenge.value == Challenge.MINEFIELD) 1 else 3
         _gameTime.value = 0L
         accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
@@ -195,7 +201,7 @@ class GameViewModel @Inject constructor(
 
         soundRepository.startBackgroundMusic()
 
-        analyticsRepository.logEvent("game_started", mapOf("difficulty" to _difficulty.value.label))
+        analyticsRepository.logEvent("game_started", mapOf("mode" to "challenge"))
         analyticsRepository.logScreenView("GameScreen")
 
         startTimer()
@@ -237,7 +243,15 @@ class GameViewModel @Inject constructor(
         timerJob = scope.launch {
             while (_status.value == GameStatus.PLAYING) {
                 if (!_isGamePaused.value) {
-                    _gameTime.value = accumulatedTime + (System.currentTimeMillis() - lastStartTime)
+                    val currentTime = accumulatedTime + (System.currentTimeMillis() - lastStartTime)
+                    _gameTime.value = currentTime
+                    
+                    // Progression logic: haptic feedback on speed up
+                    val oldTiers = (_gameTime.value - 100L) / progressionInterval
+                    val currentTiers = currentTime / progressionInterval
+                    if (currentTiers > oldTiers && currentTiers > 0) {
+                        _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    }
                 }
                 delay(100L)
             }
@@ -277,28 +291,43 @@ class GameViewModel @Inject constructor(
                 continue
             }
 
-            val currentDiff = _difficulty.value
-            val randomInterval = Random.nextLong(currentDiff.minInterval, currentDiff.maxInterval)
+            val randomInterval = Random.nextLong(spawnIntervalRange.first, spawnIntervalRange.last + 1)
             delay(randomInterval)
 
             if (_status.value != GameStatus.PLAYING || _isGamePaused.value) continue
 
             val hiddenTiles = _tiles.value.filter { !it.isRevealed }
             if (hiddenTiles.isNotEmpty()) {
+                val challenge = _selectedChallenge.value
                 val tileToReveal = hiddenTiles.random()
-                revealAndHideTile(tileToReveal.id)
+                
+                if (challenge == Challenge.FRENZY) {
+                    revealAndHideTile(tileToReveal.id)
+                } else if (challenge == Challenge.MINEFIELD) {
+                    revealAndHideTile(tileToReveal.id)
+                } else {
+                    revealAndHideTile(tileToReveal.id)
+                }
             }
         }
     }
 
     private fun revealAndHideTile(tileId: Int) {
         scope.launch {
+            val challenge = _selectedChallenge.value
             val currentVisibleDuration = Random.nextLong(visibleDurationRange.first, visibleDurationRange.last + 1)
-            val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
+            
+            val newType = when (challenge) {
+                Challenge.FRENZY -> CardType.COIN
+                Challenge.MINEFIELD -> if (Random.nextFloat() > 0.5f) CardType.COIN else CardType.BOMB
+                else -> if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
+            }
+
             val revealTime = System.currentTimeMillis()
             updateTile(tileId) {
                 it.copy(
                     isRevealed = true,
+                    isIconVisible = true,
                     type = newType,
                     lastRevealTime = revealTime,
                     currentDuration = currentVisibleDuration
@@ -309,6 +338,21 @@ class GameViewModel @Inject constructor(
             while (elapsed < currentVisibleDuration) {
                 if (!_isGamePaused.value) {
                     elapsed += 50L
+                    
+                    // MIRAGE logic: transform Coin to Bomb at 80% duration
+                    if (challenge == Challenge.MIRAGE && 
+                        newType == CardType.COIN && 
+                        elapsed >= currentVisibleDuration * 0.8f && 
+                        elapsed < currentVisibleDuration * 0.8f + 50L) {
+                        if (Random.nextFloat() < 0.2f) {
+                            updateTile(tileId) { it.copy(type = CardType.BOMB) }
+                        }
+                    }
+
+                    // BLACKOUT logic: hide icon after 150ms
+                    if (challenge == Challenge.BLACKOUT && elapsed >= 150L && elapsed < 200L) {
+                        updateTile(tileId) { it.copy(isIconVisible = false) }
+                    }
                 }
                 delay(50L)
                 if (_status.value != GameStatus.PLAYING) return@launch
@@ -328,11 +372,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun handleMissedCoin() {
-        val threshold = when (_difficulty.value) {
-            Difficulty.EASY -> 3
-            Difficulty.NORMAL -> 3
-            Difficulty.HARD -> 2
-        }
+        val threshold = if (_selectedChallenge.value == Challenge.FRENZY) 1 else 3
 
         if (_status.value != GameStatus.PLAYING) return
 
@@ -394,7 +434,7 @@ class GameViewModel @Inject constructor(
         analyticsRepository.logEvent("game_over", mapOf(
             "score" to _score.value,
             "duration" to _gameTime.value,
-            "difficulty" to _difficulty.value.label,
+            "challenge" to _selectedChallenge.value.name,
             "accuracy" to if (_totalTaps.value > 0) (_correctTaps.value.toDouble() / _totalTaps.value) else 0.0
         ))
 
@@ -404,7 +444,7 @@ class GameViewModel @Inject constructor(
     private fun saveMatchResult() {
         val currentScore = _score.value
         val currentTime = _gameTime.value
-        val currentDifficulty = _difficulty.value.label
+        val currentDifficulty = _selectedChallenge.value.name
         val timestamp = System.currentTimeMillis()
 
         // Capture snapshot of metrics to avoid race conditions if a new game starts immediately
@@ -429,7 +469,8 @@ class GameViewModel @Inject constructor(
                 perfectStreak = currentPerfectStreak,
                 isBackedUp = false,
                 username = _currentUsername,
-                avatarId = _currentAvatarId
+                avatarId = _currentAvatarId,
+                levelReached = 0
             )
             matchRepository.saveMatch(match)
 

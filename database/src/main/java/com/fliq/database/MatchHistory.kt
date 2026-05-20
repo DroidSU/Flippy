@@ -26,7 +26,9 @@ data class MatchHistory(
     @ColumnInfo(defaultValue = "Anonymous")
     val username: String = "",
     @ColumnInfo(defaultValue = "1")
-    val avatarId : Int = 1
+    val avatarId : Int = 1,
+    @ColumnInfo(defaultValue = "1")
+    val levelReached: Int = 1
 )
 
 fun MatchHistory.toMap(): Map<String, Any?> {
@@ -43,6 +45,7 @@ fun MatchHistory.toMap(): Map<String, Any?> {
         "perfectStreak" to perfectStreak,
         "isBackedUp" to isBackedUp,
         "username" to username,
-        "avatarId" to avatarId
+        "avatarId" to avatarId,
+        "levelReached" to levelReached
     )
 }

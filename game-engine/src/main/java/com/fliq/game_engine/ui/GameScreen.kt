@@ -88,13 +88,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
-import com.fliq.common.Difficulty
 import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.HeartRed
 import com.fliq.core.theme.gameColors
 import com.fliq.database.MatchHistory
+import com.fliq.game_engine.models.Challenge
 import com.fliq.game_engine.models.EffectState
 import com.fliq.game_engine.models.EffectType
 import com.fliq.game_engine.models.GameEffect
@@ -115,7 +115,7 @@ fun GameScreen(
     score: Int,
     lives: Int,
     status: GameStatus,
-    difficulty: Difficulty,
+    currentChallenge: Challenge,
     gameTime: Long,
     leaderboard: List<MatchHistory>,
     showRules: Boolean,
@@ -124,7 +124,7 @@ fun GameScreen(
     onTileTapped: (Int, Offset?) -> Unit,
     onPlayClick: () -> Unit,
     onResetGame: () -> Unit,
-    onDifficultyChange: (Difficulty) -> Unit,
+    onChallengeChange: (Challenge) -> Unit,
     onRulesDismissed: (Boolean) -> Unit,
     onWatchAdClick: () -> Unit,
     onSkipAdClick: () -> Unit,
@@ -265,14 +265,13 @@ fun GameScreen(
                     enter = fadeIn() + slideInHorizontally(),
                     exit = fadeOut()
                 ) {
-                    DifficultySelector(
-                        currentDifficulty = difficulty,
-                        onDifficultyChange = onDifficultyChange,
-                        enabled = true
+                    ChallengeSelector(
+                        selectedChallenge = currentChallenge,
+                        onChallengeChange = onChallengeChange
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(if (status == GameStatus.PLAYING) 24.dp else 0.dp))
 
                 GameGrid(
                     tiles = tiles,
@@ -924,48 +923,94 @@ private fun LeaderboardSection(
 }
 
 @Composable
-fun DifficultySelector(
-    currentDifficulty: Difficulty,
-    onDifficultyChange: (Difficulty) -> Unit,
-    enabled: Boolean
+fun ChallengeSelector(
+    selectedChallenge: Challenge,
+    onChallengeChange: (Challenge) -> Unit
 ) {
+    val challenges = Challenge.entries
     val isLightTheme = MaterialTheme.colorScheme.onSurface.run { red < 0.5f && green < 0.5f && blue < 0.5f }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .alpha(if (enabled) 1f else 0.5f),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Difficulty.entries.forEach { diff ->
-            val isSelected = currentDifficulty == diff
-            val targetColor = if (isSelected) MaterialTheme.colorScheme.primary 
-                              else if (isLightTheme) Color.White.copy(alpha = 0.9f)
-                              else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-            
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
-                    .shadow(if (isLightTheme && !isSelected) 4.dp else 0.dp, RoundedCornerShape(16.dp))
-                    .clickable(enabled = enabled) { onDifficultyChange(diff) },
-                shape = RoundedCornerShape(16.dp),
-                color = targetColor,
-                border = BorderStroke(
-                    1.dp,
-                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = diff.label.uppercase(),
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.5.sp
-                        ),
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        Text(
+            text = "SELECT CHALLENGE",
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            challenges.forEach { challenge ->
+                val isSelected = selectedChallenge == challenge
+                val targetColor = if (isSelected) MaterialTheme.colorScheme.primary 
+                                  else if (isLightTheme) Color.White.copy(alpha = 0.9f)
+                                  else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(if (isLightTheme && !isSelected) 4.dp else 0.dp, RoundedCornerShape(20.dp))
+                        .clickable { onChallengeChange(challenge) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = targetColor,
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                             Icon(
+                                imageVector = when(challenge) {
+                                    Challenge.SPEED_RUN -> Icons.Default.Timer
+                                    Challenge.MIRAGE -> Icons.Default.Person // Placeholder
+                                    Challenge.MINEFIELD -> Icons.Default.Favorite // Placeholder
+                                    Challenge.BLACKOUT -> Icons.Default.Menu // Placeholder
+                                    Challenge.FRENZY -> Icons.Default.EmojiEvents // Placeholder
+                                },
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column {
+                            Text(
+                                text = challenge.title,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = challenge.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1114,6 +1159,7 @@ private fun GameGrid(
                         GameCard(
                             isRevealed = tile.isRevealed,
                             type = tile.type,
+                            isIconVisible = tile.isIconVisible,
                             onClick = { onTileTapped(tile.id, tileCenter) },
                             modifier = Modifier
                                 .weight(1f)
@@ -1145,7 +1191,7 @@ fun GameScreenPreview() {
             score = 10,
             lives = 3,
             status = GameStatus.PLAYING,
-            difficulty = Difficulty.NORMAL,
+            currentChallenge = Challenge.SPEED_RUN,
             gameTime = 1,
             leaderboard = emptyList(),
             showRules = false,
@@ -1153,7 +1199,7 @@ fun GameScreenPreview() {
             onTileTapped = { _, _ -> },
             onPlayClick = {},
             onResetGame = {},
-            onDifficultyChange = {},
+            onChallengeChange = {},
             onRulesDismissed = {},
             onHelpClick = {},
             onSignOutClick = {},

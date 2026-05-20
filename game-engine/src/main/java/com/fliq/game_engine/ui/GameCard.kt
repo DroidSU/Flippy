@@ -37,7 +37,8 @@ fun GameCard(
     isRevealed: Boolean,
     type: CardType,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isIconVisible: Boolean = true
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -153,10 +154,12 @@ fun GameCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        ImageContent(
-                            drawableId = if (type == CardType.COIN) R.drawable.ic_coin else R.drawable.ic_bomb,
-                            description = type.name
-                        )
+                        if (isIconVisible) {
+                            ImageContent(
+                                drawableId = if (type == CardType.COIN) R.drawable.ic_coin else R.drawable.ic_bomb,
+                                description = type.name
+                            )
+                        }
                     }
                 }
             }

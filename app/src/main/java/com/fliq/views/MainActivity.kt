@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 val score by gameViewModel.score.collectAsState()
                 val lives by gameViewModel.lives.collectAsState()
                 val status by gameViewModel.status.collectAsState()
-                val difficulty by gameViewModel.difficulty.collectAsState()
+                val selectedChallenge by gameViewModel.selectedChallenge.collectAsState()
                 val gameTime by gameViewModel.gameTime.collectAsState()
                 val topThreeScores by gameViewModel.topThreeScores.collectAsState()
                 val showRules by gameViewModel.showRules.collectAsState()
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                     score = score,
                     lives = lives,
                     status = status,
-                    difficulty = difficulty,
+                    currentChallenge = selectedChallenge,
                     gameTime = gameTime,
                     leaderboard = topThreeScores,
                     showRules = showRules,
@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
                     onTileTapped = gameViewModel::onTileTapped,
                     onPlayClick = gameViewModel::startGame,
                     onResetGame = gameViewModel::resetGame,
-                    onDifficultyChange = gameViewModel::setDifficulty,
+                    onChallengeChange = gameViewModel::setChallenge,
                     onRulesDismissed = gameViewModel::onRulesDismissed,
                     onWatchAdClick = { gameViewModel.onWatchAdClicked(this@MainActivity) },
                     onSkipAdClick = gameViewModel::onSkipAdClicked,
