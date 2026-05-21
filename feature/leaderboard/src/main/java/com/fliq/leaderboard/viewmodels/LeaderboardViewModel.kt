@@ -3,20 +3,22 @@ package com.fliq.leaderboard.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fliq.common.AppUIState
-import com.fliq.common.Difficulty
 import com.fliq.common.LeaderboardModel
-import com.fliq.database.MatchHistory
+import com.fliq.game_engine.models.Challenge
 import com.fliq.leaderboard.repository.LeaderboardRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LeaderboardViewModel @Inject constructor(
-    private val leaderboardRepository: LeaderboardRepository
+    private val leaderboardRepository: LeaderboardRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
@@ -25,63 +27,27 @@ class LeaderboardViewModel @Inject constructor(
     private val _leaderboard = MutableStateFlow<List<LeaderboardModel>>(emptyList())
     val leaderboard = _leaderboard.asStateFlow()
 
-    private val _myScores = MutableStateFlow<List<MatchHistory>>(emptyList())
-    val myScores = _myScores.asStateFlow()
+    private val _selectedChallenge = MutableStateFlow(Challenge.SPEED_RUN)
+    val selectedChallenge = _selectedChallenge.asStateFlow()
 
-    private val _selectedTabIndex = MutableStateFlow(1)
-    val selectedTabIndex = _selectedTabIndex.asStateFlow()
-
-    private val _selectedDifficulty: MutableStateFlow<String> =
-        MutableStateFlow(Difficulty.NORMAL.label)
-    val selectedDifficulty = _selectedDifficulty.asStateFlow()
+    val currentUserId: String get() = auth.currentUser?.uid ?: ""
 
     init {
-        if(_selectedTabIndex.value == 1){
-            getLeaderboardData()
-        }
-        else {
-            getMyScores()
-        }
+        getLeaderboardData()
+    }
+
+    fun selectChallenge(challenge: Challenge) {
+        _selectedChallenge.value = challenge
+        getLeaderboardData()
     }
 
     private fun getLeaderboardData() {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            leaderboardRepository.getLeaderBoard(selectedDifficulty.value).collect {
-                _leaderboard.value = it
-                _uiState.value = AppUIState.Success
+            leaderboardRepository.getLeaderBoard(_selectedChallenge.value.name).collect { data ->
+                _leaderboard.value = data
+                _uiState.update { AppUIState.Success }
             }
-        }
-    }
-
-    fun filterWithDifficulty(difficulty: String) {
-        _selectedDifficulty.value = difficulty
-        getLeaderboardData()
-    }
-
-    fun getMyScores() {
-        _uiState.value = AppUIState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                leaderboardRepository.getMyScores().collect {
-                    _myScores.value = it
-                    _uiState.value = AppUIState.Success
-                }
-            }
-            catch(ex : Exception) {
-                _uiState.value = AppUIState.Error(ex.message ?: "Something went wrong")
-            }
-        }
-    }
-
-    fun onSwitchTab(index: Int) {
-        _selectedTabIndex.value = index
-
-        if(index == 0) {
-            getMyScores()
-        }
-        else {
-            getLeaderboardData()
         }
     }
 }

@@ -347,7 +347,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 100,
                     avatarId = 1,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
                 LeaderboardModel(
                     playerId = "player2",
@@ -355,7 +355,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 90,
                     avatarId = 2,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
                 LeaderboardModel(
                     playerId = "player3",
@@ -363,7 +363,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 80,
                     avatarId = 3,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
 
                 LeaderboardModel(
@@ -372,7 +372,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 75,
                     avatarId = 4,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
 
                 LeaderboardModel(
@@ -381,7 +381,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 60,
                     avatarId = 5,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
 
                 LeaderboardModel(
@@ -390,7 +390,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 80,
                     avatarId = 3,
                     lastUpdated = 0,
-                    difficulty = Difficulty.NORMAL.label
+                    challengeName = Difficulty.NORMAL.label
                 ),
 
             ),

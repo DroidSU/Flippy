@@ -28,21 +28,15 @@ class LeaderboardActivity : ComponentActivity() {
             FliqTheme(settingsRepository = settingsRepository) {
                 val leaderboardList by viewModel.leaderboard.collectAsState()
                 val uiState by viewModel.uiState.collectAsState()
-                val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
-                val myScoresList by viewModel.myScores.collectAsState(emptyList())
+                val selectedChallenge by viewModel.selectedChallenge.collectAsState()
 
                 LeaderboardScreen(
                     uiState = uiState,
-                    leaderboardList = leaderboardList,
-                    myScores = myScoresList,
-                    onSwitchDifficulty = {
-                        viewModel.filterWithDifficulty(it)
-                    },
-                    onBackClick = { finish() },
-                    selectedTabIndex = selectedTabIndex,
-                    onSwitchTab = {
-                        viewModel.onSwitchTab(it)
-                    }
+                    leaderboard = leaderboardList,
+                    selectedChallenge = selectedChallenge,
+                    currentUserId = viewModel.currentUserId,
+                    onChallengeSelected = { viewModel.selectChallenge(it) },
+                    onBackClick = { finish() }
                 )
             }
         }

@@ -9,7 +9,7 @@ interface NetworkRepository {
     fun isInternetAvailable(): Boolean
     suspend fun storeMatchData(matchList: List<MatchHistory>)
     suspend fun storeBadgeData(badgeList: List<BadgeEntity>)
-    fun getLeaderBoard(difficulty: String) : Flow<List<LeaderboardModel>>
+    fun getLeaderBoard(challengeName: String) : Flow<List<LeaderboardModel>>
     fun fetchUserData(userId: String): Flow<Result<UserData?>>
     suspend fun updateUserName(username: String, avatarId: Int, oldUsername: String? = null): Result<Unit>
     suspend fun uploadUserData(userData: UserData): Result<Unit>

@@ -12,8 +12,8 @@ class LeaderboardRepositoryImpl @Inject constructor(
     private val matchRepository: MatchRepository,
 ) : LeaderboardRepository {
 
-    override fun getLeaderBoard(difficulty: String): Flow<List<LeaderboardModel>> {
-        return networkRepository.getLeaderBoard(difficulty)
+    override fun getLeaderBoard(challengeName: String): Flow<List<LeaderboardModel>> {
+        return networkRepository.getLeaderBoard(challengeName)
     }
 
     override fun getMyScores(): Flow<List<MatchHistory>> {

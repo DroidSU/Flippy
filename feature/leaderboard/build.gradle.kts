@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":database"))
     implementation(project(":core"))
+    implementation(project(":game-engine"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -49,6 +50,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 
     // Hilt
     implementation(libs.hilt.android)
