@@ -1,4 +1,4 @@
-package com.fliq.speed_run.ui
+package com.fliq.minefield.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -83,8 +83,8 @@ import com.fliq.game_engine.ui.CriticalVignette
 import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.PlayButtonComponent
 import com.fliq.game_engine.ui.SparkleEffect
-import com.fliq.speed_run.ui.components.SpeedRunGameOverDialog
-import com.fliq.speed_run.ui.components.SpeedRunRulesDialog
+import com.fliq.minefield.ui.components.MinefieldGameOverDialog
+import com.fliq.minefield.ui.components.MinefieldRulesDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -92,7 +92,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun SpeedRunScreen(
+fun MinefieldScreen(
     tiles: List<Tile>,
     score: Int,
     lives: Int,
@@ -168,13 +168,13 @@ fun SpeedRunScreen(
                     .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SpeedRunTopBar(
+                MinefieldTopBar(
                     isPaused = isPaused,
                     onBackClick = onBackClick,
                     onHelpClick = onHelpClick
                 )
 
-                SpeedRunStats(
+                MinefieldStats(
                     score = score,
                     lives = lives,
                     gameTime = gameTime
@@ -190,6 +190,7 @@ fun SpeedRunScreen(
                 )
             }
 
+            // Effects
             activeEffects.toList().forEach { effect ->
                 key(effect.id) {
                     when (effect.type) {
@@ -210,10 +211,10 @@ fun SpeedRunScreen(
                 )
             }
 
-            if (showRules) SpeedRunRulesDialog(onDismiss = onRulesDismissed)
+            if (showRules) MinefieldRulesDialog(onDismiss = onRulesDismissed)
             if (showAdRewardDialog) AdRewardDialog(onWatchAd = onWatchAdClick, onSkip = onSkipAdClick)
 
-            SpeedRunGameOverDialog(
+            MinefieldGameOverDialog(
                 visible = status == GameStatus.GAME_OVER,
                 score = score,
                 gameTime = gameTime,
@@ -227,7 +228,7 @@ fun SpeedRunScreen(
 }
 
 @Composable
-fun SpeedRunTopBar(
+fun MinefieldTopBar(
     isPaused: Boolean,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit
@@ -237,11 +238,11 @@ fun SpeedRunTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        KineticIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
+        MinefieldIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "SPEED RUN",
+                text = "MINEFIELD",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black, 
                     letterSpacing = 1.sp,
@@ -250,18 +251,18 @@ fun SpeedRunTopBar(
                 color = Color.White
             )
             Text(
-                text = if (isPaused) "PAUSED" else "GO!",
+                text = if (isPaused) "PAUSED" else "WATCH YOUR STEP!",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                color = if (isPaused) Color(0xFFFACC15) else Color(0xFF22D3EE)
+                color = if (isPaused) Color(0xFFFACC15) else Color(0xFFF43F5E)
             )
         }
 
-        KineticIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
+        MinefieldIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
     }
 }
 
 @Composable
-fun SpeedRunStats(
+fun MinefieldStats(
     score: Int,
     lives: Int,
     gameTime: Long
@@ -289,18 +290,18 @@ fun SpeedRunStats(
                 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "LIVES",
+                        text = "STABILITY",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
                     Row(modifier = Modifier.padding(top = 4.dp)) {
-                        repeat(3) { index ->
+                        repeat(1) { // Only 1 life visually in stats for Minefield
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = null,
-                                tint = if (index < lives) HeartRed else Color.White.copy(alpha = 0.1f),
+                                tint = if (lives > 0) HeartRed else Color.White.copy(alpha = 0.1f),
                                 modifier = Modifier.size(20.dp).padding(horizontal = 1.dp).graphicsLayer {
-                                    if (index < lives) {
+                                    if (lives > 0) {
                                         shadowElevation = 8f
                                         translationY = -2f
                                     }
@@ -352,7 +353,7 @@ fun GameGrid(
                     if (index < tiles.size) {
                         val tile = tiles[index]
                         var tileCenter by remember { mutableStateOf(Offset.Zero) }
-                        KineticTile(
+                        MinefieldTile(
                             tile = tile,
                             onClick = { onTileTapped(tile.id, tileCenter) },
                             modifier = Modifier.weight(1f).aspectRatio(1f).onGloballyPositioned { coords ->
@@ -369,7 +370,7 @@ fun GameGrid(
 }
 
 @Composable
-fun KineticTile(
+fun MinefieldTile(
     tile: Tile,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -421,9 +422,7 @@ fun KineticTile(
                             Image(
                                 painter = painterResource(id = if (tile.type == CardType.COIN) R.drawable.ic_coin else R.drawable.ic_bomb),
                                 contentDescription = null,
-                                modifier = Modifier.size(38.dp).graphicsLayer { 
-                                    translationY = -2f
-                                }
+                                modifier = Modifier.size(36.dp)
                             )
                         }
                     }
@@ -434,7 +433,7 @@ fun KineticTile(
 }
 
 @Composable
-fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
+fun MinefieldIconButton(icon: ImageVector, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     Surface(
@@ -442,9 +441,8 @@ fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
         interactionSource = interactionSource,
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.05f),
-        modifier = Modifier.size(46.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-        shadowElevation = if (isPressed) 2.dp else 8.dp
+        modifier = Modifier.size(44.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -477,7 +475,7 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
     }
     Text(
         text = effect.text,
-        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.6f), offset = Offset(0f, 6f), blurRadius = 12f)),
+        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 8f)),
         color = Color(0xFFFACC15),
         modifier = Modifier.offset { IntOffset(effect.position.x.roundToInt() - 50, (effect.position.y + offsetY.value).roundToInt() - 50) }.scale(scale.value).alpha(alpha.value)
     )

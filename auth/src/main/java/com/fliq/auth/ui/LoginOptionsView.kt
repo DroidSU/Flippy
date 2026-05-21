@@ -1,19 +1,14 @@
 package com.fliq.auth.ui
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,9 +27,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChangeHistory
+import androidx.compose.material.icons.filled.Hexagon
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,186 +44,175 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.fliq.auth.R
-import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.gameColors
+import com.fliq.core.util.ChamferedCornerShape
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 @Composable
 fun LoginOptionsView(
     isLoading: Boolean,
     onGoogleSignIn: () -> Unit
 ) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        visible = true
-    }
-
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_welcome))
-
+    val gameColors = MaterialTheme.gameColors
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(Brush.verticalGradient(gameColors.backgroundGradient)),
         contentAlignment = Alignment.Center
     ) {
-        // Decorative Background Glows
-        BackgroundGlows()
+        // Static mesh background
+        Box(modifier = Modifier.fillMaxSize().alpha(0.05f)) {
+            val meshColor = MaterialTheme.colorScheme.primary
+            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                val step = 40.dp.toPx()
+                for (x in 0..size.width.toInt() step step.toInt()) {
+                    drawLine(meshColor, Offset(x.toFloat(), 0f), Offset(x.toFloat(), size.height), strokeWidth = 1.dp.toPx())
+                }
+                for (y in 0..size.height.toInt() step step.toInt()) {
+                    drawLine(meshColor, Offset(0f, y.toFloat()), Offset(size.width, y.toFloat()), strokeWidth = 1.dp.toPx())
+                }
+            }
+        }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier.padding(32.dp)
         ) {
-            // Hero Lottie Animation Section
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(1000)) + scaleIn(spring(Spring.DampingRatioMediumBouncy))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(320.dp)
-                        .graphicsLayer {
-                            translationY = -20.dp.toPx()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Soft shadow for the animation
-                    Box(
-                        modifier = Modifier
-                            .size(200.dp)
-                            .blur(60.dp)
-                            .alpha(0.15f)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    )
-                    
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Branding Section
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(800, 300)) + slideInVertically(initialOffsetY = { 20 })
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Flippy",
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            fontSize = 68.sp,
-                            letterSpacing = (-2).sp
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    
-                    Text(
-                        text = "The ultimate reflex challenge",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp)
-                    )
-                }
-            }
-
+            GeometricHero()
+            Spacer(modifier = Modifier.height(48.dp))
+            BrandingHeader()
             Spacer(modifier = Modifier.height(80.dp))
+            GoogleKineticButton(
+                onClick = onGoogleSignIn,
+                isLoading = isLoading
+            )
+        }
+    }
+}
 
-            // Action Section
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(1000, 600)) + slideInVertically(initialOffsetY = { 40 })
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    GoogleButton(
-                        onClick = onGoogleSignIn,
-                        isLoading = isLoading
-                    )
-                }
+@Composable
+fun GeometricHero() {
+    val infiniteTransition = rememberInfiniteTransition(label = "hero")
+    
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing)),
+        label = "rot"
+    )
+
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(tween(4000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "scale"
+    )
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(160.dp)
+            .scale(scale)
+            .graphicsLayer { rotationZ = rotation }
+    ) {
+        Icon(
+            imageVector = Icons.Default.Hexagon,
+            contentDescription = null,
+            modifier = Modifier.size(160.dp).alpha(0.1f),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Icon(
+            imageVector = Icons.Default.ChangeHistory,
+            contentDescription = null,
+            modifier = Modifier.size(100.dp).alpha(0.2f).graphicsLayer { rotationZ = -rotation * 2 },
+            tint = MaterialTheme.colorScheme.tertiary
+        )
+        Surface(
+            modifier = Modifier.size(72.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = Color.White.copy(alpha = 0.1f),
+            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.6f), Color.Transparent))),
+            shadowElevation = 32.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(id = com.fliq.core.R.drawable.app_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    alpha = 0.95f
+                )
             }
         }
     }
 }
 
 @Composable
-fun BackgroundGlows() {
-    val infiniteTransition = rememberInfiniteTransition(label = "glows")
-    val alphaAnim by infiniteTransition.animateFloat(
-        initialValue = 0.05f,
-        targetValue = 0.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
+fun BrandingHeader() {
+    var displayTitle by remember { mutableStateOf("") }
+    val fullTitle = "FLIQ"
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Top Left Glow
-        Box(
-            modifier = Modifier
-                .size(400.dp)
-                .offset(x = (-150).dp, y = (-100).dp)
-                .blur(100.dp)
-                .alpha(alphaAnim)
-                .background(MaterialTheme.colorScheme.primary, CircleShape)
+    LaunchedEffect(Unit) {
+        delay(500)
+        fullTitle.forEach { char ->
+            delay(Random.nextLong(50, 150))
+            displayTitle += char
+        }
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = displayTitle,
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontWeight = FontWeight.Black,
+                fontSize = 72.sp,
+                letterSpacing = 4.sp,
+                shadow = Shadow(Color.Black.copy(alpha = 0.5f), offset = Offset(0f, 8.dp.value), blurRadius = 16f)
+            ),
+            color = Color.White
         )
-
-        // Bottom Right Glow
-        Box(
-            modifier = Modifier
-                .size(350.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 100.dp, y = 100.dp)
-                .blur(80.dp)
-                .alpha(alphaAnim)
-                .background(MaterialTheme.colorScheme.secondary, CircleShape)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "ARCADE REFLEX CHALLENGE",
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
         )
     }
 }
 
 @Composable
-fun GoogleButton(
+fun GoogleKineticButton(
     onClick: () -> Unit,
     isLoading: Boolean
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, spring(stiffness = Spring.StiffnessLow), label = "scale")
-
-    val shadowHeight by animateDpAsState(
-        targetValue = if (isPressed) 2.dp else 8.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "shadowHeight"
-    )
+    val scale by animateFloatAsState(if (isPressed) 0.94f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "scale")
+    val zOffset by animateFloatAsState(if (isPressed) 0f else 6.dp.value, label = "z")
 
     Box(
         modifier = Modifier
-            .padding(start = 20.dp, end = 20.dp)
-            .fillMaxWidth()
-            .height(72.dp)
+            .fillMaxWidth(0.7f)
+            .height(56.dp)
             .scale(scale)
             .clickable(
                 interactionSource = interactionSource,
@@ -236,36 +222,31 @@ fun GoogleButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Shadow/Base layer
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 8.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.1f),
-                            Color.Black.copy(alpha = 0.2f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                )
-        )
-
-        // Main Button Surface
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = shadowHeight),
-            shape = RoundedCornerShape(24.dp),
+                .offset(y = 6.dp)
+                .alpha(0.4f),
+            shape = ChamferedCornerShape(16.dp),
+            color = Color.Black
+        ) {}
+
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { translationY = -zOffset },
+            shape = ChamferedCornerShape(16.dp),
             color = Color.White,
-            border = BorderStroke(2.dp, Color(0xFFF1F1F1))
+            border = BorderStroke(
+                1.5.dp, 
+                Brush.linearGradient(listOf(Color.White, Color(0xFFE2E8F0)))
+            )
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(28.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                        color = Color(0xFF0F172A),
                         strokeWidth = 3.dp
                     )
                 } else {
@@ -276,28 +257,21 @@ fun GoogleButton(
                         Image(
                             painter = painterResource(id = R.drawable.google_logo),
                             contentDescription = null,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Continue with Google",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF202124),
-                                fontSize = 18.sp
+                            text = "SIGN IN WITH GOOGLE",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF0F172A),
+                                letterSpacing = 1.sp,
+                                fontFamily = FontFamily.Monospace
                             )
                         )
                     }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun LoginOptionsViewPreview() {
-    FliqTheme {
-        LoginOptionsView(isLoading = false, onGoogleSignIn = {})
     }
 }

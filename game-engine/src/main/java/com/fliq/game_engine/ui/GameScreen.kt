@@ -308,7 +308,7 @@ fun GameScreen(
             }
 
             if (showRules) {
-                FlippyRulesDialog(onDismiss = onRulesDismissed)
+                FliqRulesDialog(onDismiss = onRulesDismissed)
             }
 
             if (showAdRewardDialog) {
@@ -637,7 +637,7 @@ private fun SideNavigationMenu(
                     Spacer(modifier = Modifier.height(64.dp))
 
                     Text(
-                        text = "FLIPPY",
+                        text = "FLIQ",
                         style = MaterialTheme.typography.displaySmall.copy(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 6.sp,

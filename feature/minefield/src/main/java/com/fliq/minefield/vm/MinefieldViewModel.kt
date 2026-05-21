@@ -1,4 +1,4 @@
-package com.fliq.speed_run.vm
+package com.fliq.minefield.vm
 
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
@@ -41,7 +41,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
-class SpeedRunViewModel @Inject constructor(
+class MinefieldViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,
@@ -54,7 +54,7 @@ class SpeedRunViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.e("SpeedRunViewModel", "Coroutine exception: ${throwable.localizedMessage}", throwable)
+        Log.e("MinefieldViewModel", "Coroutine exception: ${throwable.localizedMessage}", throwable)
     }
 
     private val scope = viewModelScope + exceptionHandler
@@ -67,7 +67,7 @@ class SpeedRunViewModel @Inject constructor(
     private val _score = MutableStateFlow(0)
     val score = _score.asStateFlow()
 
-    private val _lives = MutableStateFlow(3)
+    private val _lives = MutableStateFlow(1) // Only 1 life in Minefield
     val lives = _lives.asStateFlow()
 
     private val _status = MutableStateFlow<GameStatus>(GameStatus.READY)
@@ -119,7 +119,8 @@ class SpeedRunViewModel @Inject constructor(
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
-    private val progressionInterval = 10000L // 10 seconds scaling for Speed Run
+    
+    private val progressionInterval = 10000L // Fast scaling for Minefield
 
     private val visibleDurationRange: LongRange
         get() {
@@ -147,7 +148,6 @@ class SpeedRunViewModel @Inject constructor(
     private fun checkRulesVisibility() {
         val showOnStartup = preferencesRepository.shouldShowRulesOnStartup()
         val shownOnce = preferencesRepository.hasShownRulesOnce()
-
         if (showOnStartup || !shownOnce) {
             _showRules.value = true
         }
@@ -168,7 +168,7 @@ class SpeedRunViewModel @Inject constructor(
         gameLoopJob?.cancel()
 
         _score.value = 0
-        _lives.value = 3
+        _lives.value = 1
         _gameTime.value = 0L
         accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
@@ -182,7 +182,7 @@ class SpeedRunViewModel @Inject constructor(
         totalReflexTime = 0L
         bestReactionTime = Long.MAX_VALUE
         clutchTime = 0L
-        clutchStartTime = 0L
+        clutchStartTime = System.currentTimeMillis() // Always in clutch in Minefield
         perfectStreak = 0
         _isAdRewardAvailable.value = true
         _showAdRewardDialog.value = false
@@ -190,10 +190,7 @@ class SpeedRunViewModel @Inject constructor(
         adManager.loadRewardedAd()
 
         soundRepository.startBackgroundMusic()
-
-        analyticsRepository.logEvent("game_started", mapOf("challenge" to "SPEED_RUN"))
-        analyticsRepository.logScreenView("SpeedRunScreen")
-
+        analyticsRepository.logEvent("game_started", mapOf("challenge" to "MINEFIELD"))
         startTimer()
 
         gameLoopJob = scope.launch {
@@ -204,26 +201,17 @@ class SpeedRunViewModel @Inject constructor(
     fun resetGame() {
         stopTimer()
         gameLoopJob?.cancel()
-        _score.value = 0
-        _lives.value = 3
+        _status.value = GameStatus.READY
         _gameTime.value = 0L
         accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
-        _status.value = GameStatus.READY
-        coinsMissedConsecutively = 0
-        _isGamePaused.value = false
+        _lives.value = 1
+        _score.value = 0
         _streak.value = 0
-        _lastReactionTime.value = 0L
         _totalTaps.value = 0
         _correctTaps.value = 0
         totalReflexTime = 0L
-        bestReactionTime = Long.MAX_VALUE
-        clutchTime = 0L
-        clutchStartTime = 0L
         perfectStreak = 0
-        _isAdRewardAvailable.value = true
-        _showAdRewardDialog.value = false
-        _newlyUnlockedBadges.value = emptyList()
         adManager.loadRewardedAd()
         soundRepository.startBackgroundMusic()
     }
@@ -249,19 +237,13 @@ class SpeedRunViewModel @Inject constructor(
 
     fun pauseGameTemporarily() {
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
-
         _isGamePaused.value = true
         soundRepository.playBombSound()
         accumulatedTime += System.currentTimeMillis() - lastStartTime
-
         scope.launch {
             soundRepository.pauseBackgroundMusic()
             delay(pauseDuration)
-
-            if (_status.value == GameStatus.PLAYING) {
-                soundRepository.startBackgroundMusic()
-            }
-            
+            if (_status.value == GameStatus.PLAYING) soundRepository.startBackgroundMusic()
             _isGamePaused.value = false
             lastStartTime = System.currentTimeMillis()
         }
@@ -273,16 +255,12 @@ class SpeedRunViewModel @Inject constructor(
                 delay(100L)
                 continue
             }
-
             val randomInterval = Random.nextLong(spawnIntervalRange.first, spawnIntervalRange.last + 1)
             delay(randomInterval)
-
             if (_status.value != GameStatus.PLAYING || _isGamePaused.value) continue
-
             val hiddenTiles = _tiles.value.filter { !it.isRevealed }
             if (hiddenTiles.isNotEmpty()) {
-                val tileToReveal = hiddenTiles.random()
-                revealAndHideTile(tileToReveal.id)
+                revealAndHideTile(hiddenTiles.random().id)
             }
         }
     }
@@ -291,8 +269,8 @@ class SpeedRunViewModel @Inject constructor(
         val parentJob = gameLoopJob ?: return
         scope.launch(parentJob) {
             val currentVisibleDuration = Random.nextLong(visibleDurationRange.first, visibleDurationRange.last + 1)
-            
-            val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
+            // 50% Bombs in Minefield
+            val newType = if (Random.nextFloat() > 0.5f) CardType.COIN else CardType.BOMB
 
             val revealTime = System.currentTimeMillis()
             updateTile(tileId) {
@@ -315,50 +293,28 @@ class SpeedRunViewModel @Inject constructor(
             }
 
             val tile = _tiles.value.find { it.id == tileId }
-            if (tile?.isRevealed == true && tile.lastRevealTime == revealTime) {
+            if (tile?.isRevealed == true) {
                 if (tile.type == CardType.COIN) {
                     handleMissedCoin()
                 }
-
-                updateTile(tileId) {
-                    it.copy(isRevealed = false)
-                }
+                updateTile(tileId) { it.copy(isRevealed = false) }
             }
         }
     }
 
     private fun handleMissedCoin() {
-        val threshold = 3
-
+        val threshold = 1 // Any miss is critical in Minefield
         if (_status.value != GameStatus.PLAYING) return
-
         coinsMissedConsecutively++
-        if (perfectStreak < _streak.value) {
-            perfectStreak = _streak.value
-        }
+        if (perfectStreak < _streak.value) perfectStreak = _streak.value
         _streak.value = 0
         if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0
-
-            if (_lives.value == 1) {
-                clutchStartTime = System.currentTimeMillis()
-            } else if (_lives.value == 0) {
-                if (clutchStartTime > 0) {
-                    clutchTime += System.currentTimeMillis() - clutchStartTime
-                    clutchStartTime = 0
-                }
-            }
-
             if (_lives.value <= 0) {
-                if (_isAdRewardAvailable.value && adManager.isAdLoaded()) {
-                    pauseForAdReward()
-                } else {
-                    endGame()
-                }
-            } else {
-                pauseGameTemporarily()
-            }
+                if (_isAdRewardAvailable.value && adManager.isAdLoaded()) pauseForAdReward()
+                else endGame()
+            } else pauseGameTemporarily()
         }
     }
 
@@ -374,24 +330,19 @@ class SpeedRunViewModel @Inject constructor(
         _isGamePaused.value = false
         stopTimer()
         soundRepository.playGameOverSound()
-
         _newlyUnlockedBadges.value = emptyList()
-        if (clutchStartTime > 0) {
-            clutchTime += System.currentTimeMillis() - clutchStartTime
-            clutchStartTime = 0
-        }
-
-        if (perfectStreak < _streak.value) {
-            perfectStreak = _streak.value
-        }
-
+        
+        clutchTime += System.currentTimeMillis() - clutchStartTime
+        clutchStartTime = 0
+        
+        if (perfectStreak < _streak.value) perfectStreak = _streak.value
+        
         analyticsRepository.logEvent("game_over", mapOf(
             "score" to _score.value,
             "duration" to _gameTime.value,
-            "challenge" to "SPEED_RUN",
+            "challenge" to "MINEFIELD",
             "accuracy" to if (_totalTaps.value > 0) (_correctTaps.value.toDouble() / _totalTaps.value) else 0.0
         ))
-
         saveMatchResult()
     }
 
@@ -399,7 +350,6 @@ class SpeedRunViewModel @Inject constructor(
         val currentScore = _score.value
         val currentTime = _gameTime.value
         val timestamp = System.currentTimeMillis()
-
         val currentCorrectTaps = _correctTaps.value
         val currentTotalTaps = _totalTaps.value
         val currentTotalReflexTime = totalReflexTime
@@ -423,58 +373,30 @@ class SpeedRunViewModel @Inject constructor(
                 username = _currentUsername,
                 avatarId = _currentAvatarId,
                 levelReached = 1,
-                challengeName = "SPEED_RUN"
+                challengeName = "MINEFIELD"
             )
             matchRepository.saveMatch(match)
-
             try {
-                if (networkRepository.isInternetAvailable()) {
-                    networkRepository.storeMatchData(listOf(match))
-                }
-            } catch (e: Exception) {
-                Log.e("SpeedRunViewModel", "Failed to sync match result: ${e.message}")
-            }
-
+                if (networkRepository.isInternetAvailable()) networkRepository.storeMatchData(listOf(match))
+            } catch (e: Exception) { Log.e("MinefieldViewModel", "Failed to sync: ${e.message}") }
             updateUserStats(match)
             checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
         }
     }
 
-    private suspend fun checkAndAwardBadges(
-        match: MatchHistory,
-        bestReactionTime: Long,
-        clutchTime: Long
-    ) {
+    private suspend fun checkAndAwardBadges(match: MatchHistory, bestReactionTime: Long, clutchTime: Long) {
         val userId = playerId
         val allMatches = matchRepository.getMatchHistorySync(userId)
         val userData = profileRepository.getUserDataSync(userId)
         val existingBadges = badgeRepository.getBadgesForUser(userId).firstOrNull() ?: emptyList()
-        val existingBadgeIds = existingBadges.asSequence().map { it.badgeId }.toSet()
-
-        val newlyUnlocked = AchievementManager.checkBadges(
-            match = match,
-            allMatches = allMatches,
-            userData = userData,
-            bestReactionTime = bestReactionTime,
-            clutchTime = clutchTime
-        ).filter { it.id !in existingBadgeIds }
-
+        val existingBadgeIds = existingBadges.map { it.badgeId }.toSet()
+        val newlyUnlocked = AchievementManager.checkBadges(match, allMatches, userData, bestReactionTime, clutchTime).filter { it.id !in existingBadgeIds }
         _newlyUnlockedBadges.value = newlyUnlocked
-
-        if (newlyUnlocked.isNotEmpty()) {
-            newlyUnlocked.forEach { badge ->
-                badgeRepository.saveBadge(badge.id, userId)
-            }
-        }
+        if (newlyUnlocked.isNotEmpty()) newlyUnlocked.forEach { badgeRepository.saveBadge(it.id, userId) }
     }
 
     private suspend fun updateUserStats(match: MatchHistory) {
-        val currentStats = profileRepository.getUserDataSync(playerId) ?: UserData(
-            userId = playerId,
-            username = _currentUsername,
-            avatarId = _currentAvatarId
-        )
-
+        val currentStats = profileRepository.getUserDataSync(playerId) ?: UserData(userId = playerId, username = _currentUsername, avatarId = _currentAvatarId)
         val updatedStats = currentStats.copy(
             totalMatches = currentStats.totalMatches + 1,
             highestScore = maxOf(currentStats.highestScore, match.score),
@@ -484,37 +406,23 @@ class SpeedRunViewModel @Inject constructor(
             totalReflexTime = currentStats.totalReflexTime + match.totalReflexTime,
             bestPerfectStreak = maxOf(currentStats.bestPerfectStreak, match.perfectStreak)
         )
-
         profileRepository.saveUserData(updatedStats)
-
-        if (networkRepository.isInternetAvailable()) {
-            networkRepository.uploadUserData(updatedStats)
-        }
+        if (networkRepository.isInternetAvailable()) networkRepository.uploadUserData(updatedStats)
     }
 
     private fun updateTile(tileId: Int, updateAction: (Tile) -> Tile) {
-        _tiles.update { currentTiles ->
-            currentTiles.map { if (it.id == tileId) updateAction(it) else it }
-        }
+        _tiles.update { currentTiles -> currentTiles.map { if (it.id == tileId) updateAction(it) else it } }
     }
 
     fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
-
         _totalTaps.update { it + 1 }
-
         val isRecentlyHidden = !tile.isRevealed && (System.currentTimeMillis() - (tile.lastRevealTime + tile.currentDuration)) < 100
-        
         if (!tile.isRevealed && !isRecentlyHidden) return
-
         updateTile(tileId) { it.copy(isRevealed = false) }
-
         scope.launch {
-            tapPosition?.let {
-                _effects.emit(GameEffect.BackgroundRipple(it))
-            }
-            
+            tapPosition?.let { _effects.emit(GameEffect.BackgroundRipple(it)) }
             when (tile.type) {
                 CardType.COIN -> {
                     _score.update { it + 1 }
@@ -525,47 +433,20 @@ class SpeedRunViewModel @Inject constructor(
                     _lastReactionTime.value = reactionTime
                     totalReflexTime += reactionTime
                     bestReactionTime = minOf(bestReactionTime, reactionTime)
-
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
                 }
-
                 CardType.BOMB -> {
-                    val oldLives = _lives.value
                     _lives.update { (it - 1).coerceAtLeast(0) }
-                    
-                    if (_lives.value == 1 && oldLives > 1) {
-                        clutchStartTime = System.currentTimeMillis()
-                    } else if (_lives.value == 0 && clutchStartTime > 0) {
-                        clutchTime += System.currentTimeMillis() - clutchStartTime
-                        clutchStartTime = 0
-                    }
-
-                    analyticsRepository.logEvent("bomb_hit", mapOf(
-                        "score_at_hit" to _score.value,
-                        "lives_remaining" to _lives.value
-                    ))
-
-                    if (perfectStreak < _streak.value)
-                        perfectStreak = _streak.value
-
                     _streak.value = 0
-
                     _effects.emit(Particle(tileId, ParticleType.BOMB))
                     _effects.emit(GameEffect.Vibration(VibrationType.LONG))
-
                     if (_lives.value <= 0) {
-                        if (_isAdRewardAvailable.value && adManager.isAdLoaded()) {
-                            pauseForAdReward()
-                        } else {
-                            endGame()
-                        }
-                    } else {
-                        pauseGameTemporarily()
-                    }
+                        if (_isAdRewardAvailable.value && adManager.isAdLoaded()) pauseForAdReward()
+                        else endGame()
+                    } else pauseGameTemporarily()
                 }
-
                 else -> {}
             }
         }
@@ -574,26 +455,18 @@ class SpeedRunViewModel @Inject constructor(
     fun onWatchAdClicked(activity: android.app.Activity) {
         _showAdRewardDialog.value = false
         var rewardEarned = false
-
-        adManager.showRewardedAd(
-            activity = activity,
-            onRewardEarned = {
-                rewardEarned = true
-                _lives.value = 1
-                clutchStartTime = System.currentTimeMillis()
-                _isAdRewardAvailable.value = false
-                analyticsRepository.logEvent("rewarded_ad_watched", mapOf("score" to _score.value))
-            },
-            onAdClosed = {
-                if (rewardEarned) {
-                    _isGamePaused.value = false
-                    lastStartTime = System.currentTimeMillis()
-                    soundRepository.startBackgroundMusic()
-                } else {
-                    endGame()
-                }
-            }
-        )
+        adManager.showRewardedAd(activity, onRewardEarned = {
+            rewardEarned = true
+            _lives.value = 1
+            clutchStartTime = System.currentTimeMillis()
+            _isAdRewardAvailable.value = false
+        }, onAdClosed = {
+            if (rewardEarned) {
+                _isGamePaused.value = false
+                lastStartTime = System.currentTimeMillis()
+                soundRepository.startBackgroundMusic()
+            } else endGame()
+        })
     }
 
     fun onSkipAdClicked() {
@@ -602,12 +475,7 @@ class SpeedRunViewModel @Inject constructor(
         endGame()
     }
 
-    fun signOut() {
-        scope.launch {
-            profileRepository.clearLocalData()
-            auth.signOut()
-        }
-    }
+    fun signOut() { scope.launch { profileRepository.clearLocalData(); auth.signOut() } }
 
     private fun getUserData() {
         _currentUsername = profileRepository.getUsername()

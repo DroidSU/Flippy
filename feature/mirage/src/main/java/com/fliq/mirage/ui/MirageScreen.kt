@@ -1,4 +1,4 @@
-package com.fliq.speed_run.ui
+package com.fliq.mirage.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -83,8 +83,8 @@ import com.fliq.game_engine.ui.CriticalVignette
 import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.PlayButtonComponent
 import com.fliq.game_engine.ui.SparkleEffect
-import com.fliq.speed_run.ui.components.SpeedRunGameOverDialog
-import com.fliq.speed_run.ui.components.SpeedRunRulesDialog
+import com.fliq.mirage.ui.components.MirageGameOverDialog
+import com.fliq.mirage.ui.components.MirageRulesDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -92,7 +92,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun SpeedRunScreen(
+fun MirageScreen(
     tiles: List<Tile>,
     score: Int,
     lives: Int,
@@ -168,13 +168,13 @@ fun SpeedRunScreen(
                     .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SpeedRunTopBar(
+                MirageTopBar(
                     isPaused = isPaused,
                     onBackClick = onBackClick,
                     onHelpClick = onHelpClick
                 )
 
-                SpeedRunStats(
+                MirageStats(
                     score = score,
                     lives = lives,
                     gameTime = gameTime
@@ -210,10 +210,10 @@ fun SpeedRunScreen(
                 )
             }
 
-            if (showRules) SpeedRunRulesDialog(onDismiss = onRulesDismissed)
+            if (showRules) MirageRulesDialog(onDismiss = onRulesDismissed)
             if (showAdRewardDialog) AdRewardDialog(onWatchAd = onWatchAdClick, onSkip = onSkipAdClick)
 
-            SpeedRunGameOverDialog(
+            MirageGameOverDialog(
                 visible = status == GameStatus.GAME_OVER,
                 score = score,
                 gameTime = gameTime,
@@ -227,7 +227,7 @@ fun SpeedRunScreen(
 }
 
 @Composable
-fun SpeedRunTopBar(
+fun MirageTopBar(
     isPaused: Boolean,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit
@@ -237,11 +237,11 @@ fun SpeedRunTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        KineticIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
+        MirageIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "SPEED RUN",
+                text = "THE MIRAGE",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black, 
                     letterSpacing = 1.sp,
@@ -250,18 +250,18 @@ fun SpeedRunTopBar(
                 color = Color.White
             )
             Text(
-                text = if (isPaused) "PAUSED" else "GO!",
+                text = if (isPaused) "PAUSED" else "WATCH CLOSELY!",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                color = if (isPaused) Color(0xFFFACC15) else Color(0xFF22D3EE)
+                color = if (isPaused) Color(0xFFFACC15) else Color(0xFF8B5CF6)
             )
         }
 
-        KineticIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
+        MirageIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
     }
 }
 
 @Composable
-fun SpeedRunStats(
+fun MirageStats(
     score: Int,
     lives: Int,
     gameTime: Long
@@ -352,7 +352,7 @@ fun GameGrid(
                     if (index < tiles.size) {
                         val tile = tiles[index]
                         var tileCenter by remember { mutableStateOf(Offset.Zero) }
-                        KineticTile(
+                        MirageTile(
                             tile = tile,
                             onClick = { onTileTapped(tile.id, tileCenter) },
                             modifier = Modifier.weight(1f).aspectRatio(1f).onGloballyPositioned { coords ->
@@ -369,7 +369,7 @@ fun GameGrid(
 }
 
 @Composable
-fun KineticTile(
+fun MirageTile(
     tile: Tile,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -414,6 +414,7 @@ fun KineticTile(
                     modifier = Modifier.fillMaxSize(),
                     shape = ChamferedCornerShape(12.dp),
                     color = Color(0xFF0F172A),
+                    shadowElevation = 12.dp,
                     border = BorderStroke(2.dp, if (tile.type == CardType.COIN) Color(0xFFFACC15) else Color(0xFFF43F5E))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -434,7 +435,7 @@ fun KineticTile(
 }
 
 @Composable
-fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
+fun MirageIconButton(icon: ImageVector, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     Surface(
@@ -442,8 +443,8 @@ fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
         interactionSource = interactionSource,
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.05f),
-        modifier = Modifier.size(46.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+        modifier = Modifier.size(44.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
         shadowElevation = if (isPressed) 2.dp else 8.dp
     ) {
         Box(contentAlignment = Alignment.Center) {

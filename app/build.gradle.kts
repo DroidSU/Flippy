@@ -102,6 +102,9 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:leaderboard"))
     implementation(project(":feature:speed-run"))
+    implementation(project(":feature:mirage"))
+    implementation(project(":feature:minefield"))
+    implementation(project(":feature:frenzy"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

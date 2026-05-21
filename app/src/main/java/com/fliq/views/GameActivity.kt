@@ -16,12 +16,18 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
+import com.fliq.frenzy.ui.FrenzyScreen
+import com.fliq.frenzy.vm.FrenzyViewModel
 import com.fliq.game_engine.models.Challenge
 import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.VibrationType
 import com.fliq.game_engine.repository.SoundRepository
 import com.fliq.game_engine.ui.GameScreen
 import com.fliq.game_engine.viewmodel.GameViewModel
+import com.fliq.minefield.ui.MinefieldScreen
+import com.fliq.minefield.vm.MinefieldViewModel
+import com.fliq.mirage.ui.MirageScreen
+import com.fliq.mirage.vm.MirageViewModel
 import com.fliq.speed_run.ui.SpeedRunScreen
 import com.fliq.speed_run.vm.SpeedRunViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -75,6 +81,159 @@ class GameActivity : ComponentActivity() {
                     }
 
                     SpeedRunScreen(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        showRules = showRules,
+                        showAdRewardDialog = showAdRewardDialog,
+                        onTileTapped = viewModel::onTileTapped,
+                        onPlayClick = viewModel::startGame,
+                        onResetGame = viewModel::resetGame,
+                        onRulesDismissed = viewModel::onRulesDismissed,
+                        onWatchAdClick = { viewModel.onWatchAdClicked(this@GameActivity) },
+                        onSkipAdClick = viewModel::onSkipAdClicked,
+                        onHelpClick = viewModel::showRulesDialog,
+                        onBackClick = { finish() },
+                        isPaused = isPaused,
+                        streak = streak,
+                        reactionTime = reactionTime,
+                        accuracy = accuracy,
+                        newBadges = newlyUnlockedBadges,
+                        effects = viewModel.effects
+                    )
+                } else if (challenge == Challenge.MIRAGE) {
+                    val viewModel: MirageViewModel = hiltViewModel()
+                    
+                    val tiles by viewModel.tiles.collectAsState()
+                    val score by viewModel.score.collectAsState()
+                    val lives by viewModel.lives.collectAsState()
+                    val status by viewModel.status.collectAsState()
+                    val gameTime by viewModel.gameTime.collectAsState()
+                    val showRules by viewModel.showRules.collectAsState()
+                    val showAdRewardDialog by viewModel.showAdRewardDialog.collectAsState()
+                    val isPaused by viewModel.isGamePaused.collectAsState()
+                    val streak by viewModel.streak.collectAsState()
+                    val reactionTime by viewModel.lastReactionTime.collectAsState()
+                    val newlyUnlockedBadges by viewModel.newlyUnlockedBadges.collectAsState()
+                    val totalTaps by viewModel.totalTaps.collectAsState()
+                    val correctTaps by viewModel.correctTaps.collectAsState()
+                    val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
+
+                    LaunchedEffect(Unit) {
+                        viewModel.effects.collectLatest { effect ->
+                            if (effect is GameEffect.Vibration) {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                        }
+                    }
+
+                    MirageScreen(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        showRules = showRules,
+                        showAdRewardDialog = showAdRewardDialog,
+                        onTileTapped = viewModel::onTileTapped,
+                        onPlayClick = viewModel::startGame,
+                        onResetGame = viewModel::resetGame,
+                        onRulesDismissed = viewModel::onRulesDismissed,
+                        onWatchAdClick = { viewModel.onWatchAdClicked(this@GameActivity) },
+                        onSkipAdClick = viewModel::onSkipAdClicked,
+                        onHelpClick = viewModel::showRulesDialog,
+                        onBackClick = { finish() },
+                        isPaused = isPaused,
+                        streak = streak,
+                        reactionTime = reactionTime,
+                        accuracy = accuracy,
+                        newBadges = newlyUnlockedBadges,
+                        effects = viewModel.effects
+                    )
+                } else if (challenge == Challenge.MINEFIELD) {
+                    val viewModel: MinefieldViewModel = hiltViewModel()
+                    
+                    val tiles by viewModel.tiles.collectAsState()
+                    val score by viewModel.score.collectAsState()
+                    val lives by viewModel.lives.collectAsState()
+                    val status by viewModel.status.collectAsState()
+                    val gameTime by viewModel.gameTime.collectAsState()
+                    val showRules by viewModel.showRules.collectAsState()
+                    val showAdRewardDialog by viewModel.showAdRewardDialog.collectAsState()
+                    val isPaused by viewModel.isGamePaused.collectAsState()
+                    val streak by viewModel.streak.collectAsState()
+                    val reactionTime by viewModel.lastReactionTime.collectAsState()
+                    val newlyUnlockedBadges by viewModel.newlyUnlockedBadges.collectAsState()
+                    val totalTaps by viewModel.totalTaps.collectAsState()
+                    val correctTaps by viewModel.correctTaps.collectAsState()
+                    val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
+
+                    LaunchedEffect(Unit) {
+                        viewModel.effects.collectLatest { effect ->
+                            if (effect is GameEffect.Vibration) {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                        }
+                    }
+
+                    MinefieldScreen(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        showRules = showRules,
+                        showAdRewardDialog = showAdRewardDialog,
+                        onTileTapped = viewModel::onTileTapped,
+                        onPlayClick = viewModel::startGame,
+                        onResetGame = viewModel::resetGame,
+                        onRulesDismissed = viewModel::onRulesDismissed,
+                        onWatchAdClick = { viewModel.onWatchAdClicked(this@GameActivity) },
+                        onSkipAdClick = viewModel::onSkipAdClicked,
+                        onHelpClick = viewModel::showRulesDialog,
+                        onBackClick = { finish() },
+                        isPaused = isPaused,
+                        streak = streak,
+                        reactionTime = reactionTime,
+                        accuracy = accuracy,
+                        newBadges = newlyUnlockedBadges,
+                        effects = viewModel.effects
+                    )
+                } else if (challenge == Challenge.FRENZY) {
+                    val viewModel: FrenzyViewModel = hiltViewModel()
+                    
+                    val tiles by viewModel.tiles.collectAsState()
+                    val score by viewModel.score.collectAsState()
+                    val lives by viewModel.lives.collectAsState()
+                    val status by viewModel.status.collectAsState()
+                    val gameTime by viewModel.gameTime.collectAsState()
+                    val showRules by viewModel.showRules.collectAsState()
+                    val showAdRewardDialog by viewModel.showAdRewardDialog.collectAsState()
+                    val isPaused by viewModel.isGamePaused.collectAsState()
+                    val streak by viewModel.streak.collectAsState()
+                    val reactionTime by viewModel.lastReactionTime.collectAsState()
+                    val newlyUnlockedBadges by viewModel.newlyUnlockedBadges.collectAsState()
+                    val totalTaps by viewModel.totalTaps.collectAsState()
+                    val correctTaps by viewModel.correctTaps.collectAsState()
+                    val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
+
+                    LaunchedEffect(Unit) {
+                        viewModel.effects.collectLatest { effect ->
+                            if (effect is GameEffect.Vibration) {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                        }
+                    }
+
+                    FrenzyScreen(
                         tiles = tiles,
                         score = score,
                         lives = lives,

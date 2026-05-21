@@ -1,4 +1,4 @@
-package com.fliq.speed_run.ui.components
+package com.fliq.mirage.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,11 +50,11 @@ import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.R
 
 @Composable
-fun SpeedRunRulesDialog(
+fun MirageRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
-    val accentColor = Color(0xFF22D3EE)
+    val accentColor = Color(0xFF8B5CF6) // Purple for Mirage
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
@@ -89,7 +89,7 @@ fun SpeedRunRulesDialog(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Default.Bolt,
+                                imageVector = Icons.Default.VisibilityOff,
                                 contentDescription = null,
                                 tint = accentColor,
                                 modifier = Modifier.size(28.dp)
@@ -100,7 +100,7 @@ fun SpeedRunRulesDialog(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "SPEED RUN",
+                        text = "THE MIRAGE",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
@@ -111,20 +111,20 @@ fun SpeedRunRulesDialog(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SpeedRunRuleItem(
+                        MirageRuleItem(
                             iconRes = R.drawable.ic_coin,
-                            title = "STAY QUICK",
-                            description = "Tiles disappear faster every 10 seconds. Keep your focus sharp.",
+                            title = "DECEPTIVE TILES",
+                            description = "Coins might transform into Bombs at the last second. Be patient.",
                             accent = accentColor
                         )
-                        SpeedRunRuleItem(
+                        MirageRuleItem(
                             iconVector = Icons.Default.Favorite,
                             title = "KEEP HEARTS",
                             description = "Missing 3 coins in a row will cost you a heart.",
                             accent = Color(0xFFF43F5E),
                             isVector = true
                         )
-                        SpeedRunRuleItem(
+                        MirageRuleItem(
                             iconRes = R.drawable.ic_bomb,
                             title = "WATCH FOR BOMBS",
                             description = "Bombs are dangerous. Don't tap them or you'll lose a heart.",
@@ -143,9 +143,7 @@ fun SpeedRunRulesDialog(
                             .fillMaxWidth()
                             .height(60.dp)
                             .scale(btnScale)
-                            .graphicsLayer { 
-                                shadowElevation = if (isPressed) 4f else 12f
-                            }
+                            .graphicsLayer { shadowElevation = 12f }
                             .clip(ChamferedCornerShape(16.dp))
                             .background(accentColor)
                             .clickable(interactionSource = interactionSource, indication = null) { onDismiss(showOnStartup) },
@@ -157,7 +155,7 @@ fun SpeedRunRulesDialog(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 2.sp
                             ),
-                            color = Color(0xFF0F172A)
+                            color = Color.White
                         )
                     }
                 }
@@ -167,7 +165,7 @@ fun SpeedRunRulesDialog(
 }
 
 @Composable
-private fun SpeedRunRuleItem(
+private fun MirageRuleItem(
     iconRes: Int = 0,
     iconVector: ImageVector? = null,
     title: String,

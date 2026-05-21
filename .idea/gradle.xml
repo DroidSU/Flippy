@@ -16,7 +16,10 @@
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/database" />
             <option value="$PROJECT_DIR$/feature" />
+            <option value="$PROJECT_DIR$/feature/frenzy" />
             <option value="$PROJECT_DIR$/feature/leaderboard" />
+            <option value="$PROJECT_DIR$/feature/minefield" />
+            <option value="$PROJECT_DIR$/feature/mirage" />
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/speed-run" />

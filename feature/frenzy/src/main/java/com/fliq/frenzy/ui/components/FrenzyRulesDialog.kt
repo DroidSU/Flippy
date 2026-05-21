@@ -1,4 +1,4 @@
-package com.fliq.speed_run.ui.components
+package com.fliq.frenzy.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,11 +50,11 @@ import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.R
 
 @Composable
-fun SpeedRunRulesDialog(
+fun FrenzyRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
-    val accentColor = Color(0xFF22D3EE)
+    val accentColor = Color(0xFFFACC15) // Gold/Yellow for Frenzy
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
@@ -63,7 +63,7 @@ fun SpeedRunRulesDialog(
         Box(modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight()) {
             // Shadow Layer
             Surface(
-                modifier = Modifier.fillMaxWidth().height(440.dp).graphicsLayer { 
+                modifier = Modifier.fillMaxWidth().height(380.dp).graphicsLayer { 
                     translationY = 8.dp.toPx()
                     alpha = 0.4f
                 },
@@ -89,7 +89,7 @@ fun SpeedRunRulesDialog(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Default.Bolt,
+                                imageVector = Icons.Default.PlayArrow,
                                 contentDescription = null,
                                 tint = accentColor,
                                 modifier = Modifier.size(28.dp)
@@ -100,7 +100,7 @@ fun SpeedRunRulesDialog(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "SPEED RUN",
+                        text = "FRENZY",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
@@ -111,24 +111,25 @@ fun SpeedRunRulesDialog(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SpeedRunRuleItem(
+                        FrenzyRuleItem(
                             iconRes = R.drawable.ic_coin,
-                            title = "STAY QUICK",
-                            description = "Tiles disappear faster every 10 seconds. Keep your focus sharp.",
+                            title = "PURE GOLD",
+                            description = "No bombs here. Only coins. Tap them all as fast as you can!",
                             accent = accentColor
                         )
-                        SpeedRunRuleItem(
-                            iconVector = Icons.Default.Favorite,
-                            title = "KEEP HEARTS",
-                            description = "Missing 3 coins in a row will cost you a heart.",
+                        FrenzyRuleItem(
+                            iconVector = Icons.Default.Warning,
+                            title = "ZERO TOLERANCE",
+                            description = "Missing even a single coin ends your run immediately.",
                             accent = Color(0xFFF43F5E),
                             isVector = true
                         )
-                        SpeedRunRuleItem(
-                            iconRes = R.drawable.ic_bomb,
-                            title = "WATCH FOR BOMBS",
-                            description = "Bombs are dangerous. Don't tap them or you'll lose a heart.",
-                            accent = Color(0xFFFB923C)
+                        FrenzyRuleItem(
+                            iconVector = Icons.Default.PlayArrow,
+                            title = "BLITZ SPEED",
+                            description = "Visible duration is locked at a brutal 350ms. No warming up.",
+                            accent = Color(0xFF22D3EE),
+                            isVector = true
                         )
                     }
 
@@ -143,16 +144,14 @@ fun SpeedRunRulesDialog(
                             .fillMaxWidth()
                             .height(60.dp)
                             .scale(btnScale)
-                            .graphicsLayer { 
-                                shadowElevation = if (isPressed) 4f else 12f
-                            }
+                            .graphicsLayer { shadowElevation = 12f }
                             .clip(ChamferedCornerShape(16.dp))
                             .background(accentColor)
                             .clickable(interactionSource = interactionSource, indication = null) { onDismiss(showOnStartup) },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "PLAY NOW",
+                            text = "START BLITZ",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 2.sp
@@ -167,7 +166,7 @@ fun SpeedRunRulesDialog(
 }
 
 @Composable
-private fun SpeedRunRuleItem(
+private fun FrenzyRuleItem(
     iconRes: Int = 0,
     iconVector: ImageVector? = null,
     title: String,

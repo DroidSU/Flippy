@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.fliq.common.AppUIState
 import com.fliq.core.models.UserData
-import com.fliq.profile.components.EditDialog
 
 @Composable
 fun AuthenticationScreen(
@@ -38,29 +37,23 @@ fun AuthenticationScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        LoginOptionsView(
-            isLoading = uiState is AppUIState.Loading,
-            onGoogleSignIn = onGoogleSignIn
-        )
-
         if (showProfileDialog) {
-            EditDialog(
+            ProfileSetupScreen(
                 username = userData?.username ?: "",
                 avatarId = userData?.avatarId ?: 1,
                 isLoading = uiState is AppUIState.Loading,
-                isUsernameEditable = true,
-                onUserNameChanged = {
-                    onUsernameChanged(it)
-                },
-                onAvatarChanged = {
-                    onAvatarChanged(it)
-                },
-                onSave = { u, a ->
-                    onSaveUser(u, a)
-                },
-                onDismiss = {
-                    // During initial sign-in, we might not want to allow dismiss
+                onUsernameChanged = onUsernameChanged,
+                onAvatarChanged = onAvatarChanged,
+                onSave = {
+                    userData?.let {
+                        onSaveUser(it.username, it.avatarId)
+                    }
                 }
+            )
+        } else {
+            LoginOptionsView(
+                isLoading = uiState is AppUIState.Loading,
+                onGoogleSignIn = onGoogleSignIn
             )
         }
     }

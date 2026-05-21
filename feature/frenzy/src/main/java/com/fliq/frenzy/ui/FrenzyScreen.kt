@@ -1,4 +1,4 @@
-package com.fliq.speed_run.ui
+package com.fliq.frenzy.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -25,11 +25,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -65,11 +66,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
-import com.fliq.core.theme.HeartRed
 import com.fliq.core.theme.gameColors
 import com.fliq.core.util.ChamferedCornerShape
+import com.fliq.frenzy.ui.components.FrenzyGameOverDialog
+import com.fliq.frenzy.ui.components.FrenzyRulesDialog
 import com.fliq.game_engine.R
-import com.fliq.game_engine.models.CardType
 import com.fliq.game_engine.models.EffectState
 import com.fliq.game_engine.models.EffectType
 import com.fliq.game_engine.models.GameEffect
@@ -83,8 +84,6 @@ import com.fliq.game_engine.ui.CriticalVignette
 import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.PlayButtonComponent
 import com.fliq.game_engine.ui.SparkleEffect
-import com.fliq.speed_run.ui.components.SpeedRunGameOverDialog
-import com.fliq.speed_run.ui.components.SpeedRunRulesDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -92,7 +91,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun SpeedRunScreen(
+fun FrenzyScreen(
     tiles: List<Tile>,
     score: Int,
     lives: Int,
@@ -157,7 +156,7 @@ fun SpeedRunScreen(
                 }
             }
 
-            if (lives == 1 && isPlaying) CriticalVignette()
+            if (lives == 0 && isPlaying) CriticalVignette()
 
             if (isPaused) Box(modifier = Modifier.fillMaxSize().background(gameColors.pauseDim).zIndex(5f))
 
@@ -168,15 +167,14 @@ fun SpeedRunScreen(
                     .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SpeedRunTopBar(
+                FrenzyTopBar(
                     isPaused = isPaused,
                     onBackClick = onBackClick,
                     onHelpClick = onHelpClick
                 )
 
-                SpeedRunStats(
+                FrenzyStats(
                     score = score,
-                    lives = lives,
                     gameTime = gameTime
                 )
 
@@ -190,6 +188,7 @@ fun SpeedRunScreen(
                 )
             }
 
+            // Effects
             activeEffects.toList().forEach { effect ->
                 key(effect.id) {
                     when (effect.type) {
@@ -210,10 +209,10 @@ fun SpeedRunScreen(
                 )
             }
 
-            if (showRules) SpeedRunRulesDialog(onDismiss = onRulesDismissed)
+            if (showRules) FrenzyRulesDialog(onDismiss = onRulesDismissed)
             if (showAdRewardDialog) AdRewardDialog(onWatchAd = onWatchAdClick, onSkip = onSkipAdClick)
 
-            SpeedRunGameOverDialog(
+            FrenzyGameOverDialog(
                 visible = status == GameStatus.GAME_OVER,
                 score = score,
                 gameTime = gameTime,
@@ -227,7 +226,7 @@ fun SpeedRunScreen(
 }
 
 @Composable
-fun SpeedRunTopBar(
+fun FrenzyTopBar(
     isPaused: Boolean,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit
@@ -237,11 +236,11 @@ fun SpeedRunTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        KineticIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
+        FrenzyIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
         
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "SPEED RUN",
+                text = "FRENZY",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Black, 
                     letterSpacing = 1.sp,
@@ -250,20 +249,19 @@ fun SpeedRunTopBar(
                 color = Color.White
             )
             Text(
-                text = if (isPaused) "PAUSED" else "GO!",
+                text = if (isPaused) "PAUSED" else "GO FOR GOLD!",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
                 color = if (isPaused) Color(0xFFFACC15) else Color(0xFF22D3EE)
             )
         }
 
-        KineticIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
+        FrenzyIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
     }
 }
 
 @Composable
-fun SpeedRunStats(
+fun FrenzyStats(
     score: Int,
-    lives: Int,
     gameTime: Long
 ) {
     Box(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -281,33 +279,29 @@ fun SpeedRunStats(
         ) {
             Row(
                 modifier = Modifier.padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
+                StatBlock(label = "STREAK", value = score.toString().padStart(3, '0'))
+                Box(modifier = Modifier.width(1.dp).height(32.dp).background(Color.White.copy(alpha = 0.1f)))
                 StatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
+                Box(modifier = Modifier.width(1.dp).height(32.dp).background(Color.White.copy(alpha = 0.1f)))
                 
-                Column(horizontalAlignment = Alignment.End) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "LIVES",
+                        text = "RANK",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
-                    Row(modifier = Modifier.padding(top = 4.dp)) {
-                        repeat(3) { index ->
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = if (index < lives) HeartRed else Color.White.copy(alpha = 0.1f),
-                                modifier = Modifier.size(20.dp).padding(horizontal = 1.dp).graphicsLayer {
-                                    if (index < lives) {
-                                        shadowElevation = 8f
-                                        translationY = -2f
-                                    }
-                                }
-                            )
+                    Icon(
+                        imageVector = Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = Color(0xFFFACC15),
+                        modifier = Modifier.size(24.dp).graphicsLayer { 
+                            shadowElevation = 8f
+                            translationY = -2f
                         }
-                    }
+                    )
                 }
             }
         }
@@ -316,7 +310,7 @@ fun SpeedRunStats(
 
 @Composable
 fun StatBlock(label: String, value: String) {
-    Column {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
@@ -352,7 +346,7 @@ fun GameGrid(
                     if (index < tiles.size) {
                         val tile = tiles[index]
                         var tileCenter by remember { mutableStateOf(Offset.Zero) }
-                        KineticTile(
+                        FrenzyTile(
                             tile = tile,
                             onClick = { onTileTapped(tile.id, tileCenter) },
                             modifier = Modifier.weight(1f).aspectRatio(1f).onGloballyPositioned { coords ->
@@ -369,7 +363,7 @@ fun GameGrid(
 }
 
 @Composable
-fun KineticTile(
+fun FrenzyTile(
     tile: Tile,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -414,18 +408,16 @@ fun KineticTile(
                     modifier = Modifier.fillMaxSize(),
                     shape = ChamferedCornerShape(12.dp),
                     color = Color(0xFF0F172A),
-                    border = BorderStroke(2.dp, if (tile.type == CardType.COIN) Color(0xFFFACC15) else Color(0xFFF43F5E))
+                    border = BorderStroke(2.dp, Color(0xFFFACC15))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        if (tile.isIconVisible) {
-                            Image(
-                                painter = painterResource(id = if (tile.type == CardType.COIN) R.drawable.ic_coin else R.drawable.ic_bomb),
-                                contentDescription = null,
-                                modifier = Modifier.size(38.dp).graphicsLayer { 
-                                    translationY = -2f
-                                }
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_coin),
+                            contentDescription = null,
+                            modifier = Modifier.size(38.dp).graphicsLayer { 
+                                translationY = -2f
+                            }
+                        )
                     }
                 }
             }
@@ -434,7 +426,7 @@ fun KineticTile(
 }
 
 @Composable
-fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
+fun FrenzyIconButton(icon: ImageVector, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     Surface(
@@ -443,7 +435,7 @@ fun KineticIconButton(icon: ImageVector, onClick: () -> Unit) {
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.05f),
         modifier = Modifier.size(46.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
         shadowElevation = if (isPressed) 2.dp else 8.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
