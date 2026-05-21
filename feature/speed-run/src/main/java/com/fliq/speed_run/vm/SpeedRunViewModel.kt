@@ -422,7 +422,7 @@ class SpeedRunViewModel @Inject constructor(
                 isBackedUp = false,
                 username = _currentUsername,
                 avatarId = _currentAvatarId,
-                levelReached = 1,
+                levelReached = (currentTime / progressionInterval).toInt() + 1,
                 challengeName = "SPEED_RUN"
             )
             matchRepository.saveMatch(match)
@@ -464,6 +464,17 @@ class SpeedRunViewModel @Inject constructor(
         if (newlyUnlocked.isNotEmpty()) {
             newlyUnlocked.forEach { badge ->
                 badgeRepository.saveBadge(badge.id, userId)
+            }
+            
+            // Sync with UserData's badges list as well
+            userData?.let {
+                val updatedBadges = it.badges.toMutableList()
+                newlyUnlocked.forEach { badge -> updatedBadges.add(badge.id) }
+                val updatedUserData = it.copy(badges = updatedBadges)
+                profileRepository.saveUserData(updatedUserData)
+                if (networkRepository.isInternetAvailable()) {
+                    networkRepository.uploadUserData(updatedUserData)
+                }
             }
         }
     }

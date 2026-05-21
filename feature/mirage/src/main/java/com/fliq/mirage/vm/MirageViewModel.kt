@@ -403,8 +403,23 @@ class MirageViewModel @Inject constructor(
         val existingBadges = badgeRepository.getBadgesForUser(userId).firstOrNull() ?: emptyList()
         val existingBadgeIds = existingBadges.map { it.badgeId }.toSet()
         val newlyUnlocked = AchievementManager.checkBadges(match, allMatches, userData, bestReactionTime, clutchTime).filter { it.id !in existingBadgeIds }
+        
         _newlyUnlockedBadges.value = newlyUnlocked
-        if (newlyUnlocked.isNotEmpty()) newlyUnlocked.forEach { badgeRepository.saveBadge(it.id, userId) }
+        
+        if (newlyUnlocked.isNotEmpty()) {
+            newlyUnlocked.forEach { badgeRepository.saveBadge(it.id, userId) }
+            
+            // Sync with UserData's badges list as well
+            userData?.let {
+                val updatedBadges = it.badges.toMutableList()
+                newlyUnlocked.forEach { badge -> updatedBadges.add(badge.id) }
+                val updatedUserData = it.copy(badges = updatedBadges)
+                profileRepository.saveUserData(updatedUserData)
+                if (networkRepository.isInternetAvailable()) {
+                    networkRepository.uploadUserData(updatedUserData)
+                }
+            }
+        }
     }
 
     private suspend fun updateUserStats(match: MatchHistory) {

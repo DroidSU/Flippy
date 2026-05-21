@@ -74,6 +74,9 @@ class AuthViewModel @Inject constructor(
                             // Existing user with data
                             _userData.value = fetchedData
                             _showEditDialog.value = false
+                            
+                            // Save to local Room DB
+                            profileRepository.saveUserData(fetchedData)
 
                             fetchMatchHistorySync(userId)
                             _uiState.update { AppUIState.Success }

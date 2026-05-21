@@ -15,7 +15,8 @@ data class UserEntity(
     val totalCorrectTaps: Int,
     val totalTaps: Int,
     val totalReflexTime: Long,
-    val bestPerfectStreak: Int
+    val bestPerfectStreak: Int,
+    val badges: List<String>
 )
 
 fun UserEntity.toUserData() = UserData(
@@ -28,7 +29,8 @@ fun UserEntity.toUserData() = UserData(
     totalCorrectTaps = totalCorrectTaps,
     totalTaps = totalTaps,
     totalReflexTime = totalReflexTime,
-    bestPerfectStreak = bestPerfectStreak
+    bestPerfectStreak = bestPerfectStreak,
+    badges = badges
 )
 
 fun UserData.toUserEntity() = UserEntity(
@@ -41,5 +43,6 @@ fun UserData.toUserEntity() = UserEntity(
     totalCorrectTaps = totalCorrectTaps,
     totalTaps = totalTaps,
     totalReflexTime = totalReflexTime,
-    bestPerfectStreak = bestPerfectStreak
+    bestPerfectStreak = bestPerfectStreak,
+    badges = badges
 )

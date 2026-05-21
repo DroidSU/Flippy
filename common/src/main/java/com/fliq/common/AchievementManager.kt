@@ -44,6 +44,23 @@ object AchievementManager {
         if (allMatches.size <= 1) unlockedBadges.add(Badge.FIRST_STEPS)
         if (allMatches.size >= 100) unlockedBadges.add(Badge.FLIQ_ADDICT)
 
+        // Challenge Specific
+        if (match.challengeName == "SPEED_RUN" && match.levelReached >= 5) {
+            unlockedBadges.add(Badge.SPEED_DEMON)
+        }
+        
+        if (match.challengeName == "MIRAGE" && match.score >= 30 && match.correctTaps == match.totalTaps) {
+            unlockedBadges.add(Badge.EAGLE_EYE)
+        }
+        
+        if (match.challengeName == "MINEFIELD" && match.score >= 50) {
+            unlockedBadges.add(Badge.UNTOUCHABLE)
+        }
+        
+        if (match.challengeName == "FRENZY" && match.score >= 100) {
+            unlockedBadges.add(Badge.GOLD_DIGGER)
+        }
+
         return unlockedBadges
     }
 }

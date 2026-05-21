@@ -49,8 +49,8 @@ class NetworkRepositoryImpl @Inject constructor(
             val matchIds = matchList.map { it.id }
 
             matchList.forEach { match ->
-                // New format: {Challenge_Name_Table}/{userId}/{matchId}
-                val path = "${match.challengeName}/$userId/${match.id}"
+                // New format: matches/{Challenge_Name}/{userId}/{matchId}
+                val path = "matches/${match.challengeName}/$userId/${match.id}"
                 rootUpdates[path] = match.toMap()
             }
 
@@ -155,11 +155,18 @@ class NetworkRepositoryImpl @Inject constructor(
 
     override fun fetchMatchHistory(userId: String): Flow<Result<List<MatchHistory>>> = flow {
         try {
-            val snapshot = database.child("matches").child(userId).get().await()
-            val matchHistory = snapshot.children.mapNotNull { child ->
-                child.getValue(MatchHistory::class.java)
+            val challengeTypes = listOf("SPEED_RUN", "MIRAGE", "MINEFIELD", "FRENZY", "BLACKOUT")
+            val allMatches = mutableListOf<MatchHistory>()
+            
+            for (type in challengeTypes) {
+                val snapshot = database.child("matches").child(type).child(userId).get().await()
+                val matches = snapshot.children.mapNotNull { child ->
+                    child.getValue(MatchHistory::class.java)
+                }
+                allMatches.addAll(matches)
             }
-            emit(Result.Success(matchHistory))
+            
+            emit(Result.Success(allMatches))
         } catch (e: Exception) {
             emit(Result.Failure(e.message ?: "Failed to fetch match history"))
         }

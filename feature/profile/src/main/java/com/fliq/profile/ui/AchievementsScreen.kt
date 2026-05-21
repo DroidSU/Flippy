@@ -1,7 +1,20 @@
 package com.fliq.profile.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,14 +23,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
@@ -27,18 +40,29 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.Badge
+import com.fliq.common.BadgeCategory
 import com.fliq.core.theme.FliqTheme
-import com.fliq.core.theme.Gold
 import com.fliq.core.theme.gameColors
+import com.fliq.core.util.ChamferedCornerShape
 
 @Composable
 fun AchievementsScreen(
@@ -46,13 +70,16 @@ fun AchievementsScreen(
     onBackClick: () -> Unit
 ) {
     val gameColors = MaterialTheme.gameColors
-    val allBadges = Badge.entries
+    val badgesByCategory = Badge.entries.groupBy { it.category }
+    val categories = BadgeCategory.entries
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(gameColors.backgroundGradient))
     ) {
+        MeshBackground()
+
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
@@ -64,12 +91,19 @@ fun AchievementsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(bottom = 32.dp)
             ) {
-                items(allBadges) { badge ->
-                    val isUnlocked = unlockedBadges.contains(badge)
-                    AchievementBadgeItem(badge = badge, isUnlocked = isUnlocked)
+                categories.forEach { category ->
+                    val categoryBadges = badgesByCategory[category] ?: emptyList()
+                    if (categoryBadges.isNotEmpty()) {
+                        item(key = category.name) {
+                            AchievementCategorySection(
+                                category = category,
+                                badges = categoryBadges,
+                                unlockedBadges = unlockedBadges
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -82,20 +116,21 @@ private fun AchievementsTopBar(onBackClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             onClick = onBackClick,
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-            modifier = Modifier.size(44.dp)
+            color = Color.White.copy(alpha = 0.05f),
+            modifier = Modifier.size(44.dp),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -103,78 +138,212 @@ private fun AchievementsTopBar(onBackClick: () -> Unit) {
         
         Spacer(modifier = Modifier.width(20.dp))
         
-        Text(
-            "ACHIEVEMENTS",
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column {
+            Text(
+                "TROPHY ROOM",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = Color.White
+            )
+            Text(
+                "MISSION ACHIEVEMENTS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                ),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            )
+        }
     }
 }
 
 @Composable
-private fun AchievementBadgeItem(badge: Badge, isUnlocked: Boolean) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = if (isUnlocked) MaterialTheme.colorScheme.surface.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(
-            1.dp,
-            if (isUnlocked) Gold.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-        )
+private fun AchievementCategorySection(
+    category: BadgeCategory,
+    badges: List<Badge>,
+    unlockedBadges: List<Badge>
+) {
+    val accentColor = when (category) {
+        BadgeCategory.GENERAL -> Color(0xFF22D3EE)
+        BadgeCategory.SPEED_RUN -> Color(0xFF22D3EE)
+        BadgeCategory.MIRAGE -> Color(0xFF8B5CF6)
+        BadgeCategory.MINEFIELD -> Color(0xFFF43F5E)
+        BadgeCategory.FRENZY -> Color(0xFFFACC15)
+        BadgeCategory.BLACKOUT -> Color(0xFF94A3B8)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
+        // Category Header
         Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = CircleShape,
-                color = if (isUnlocked) Gold.copy(alpha = 0.1f) else Color.Transparent,
-                border = if (isUnlocked) BorderStroke(2.dp, Gold) else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (isUnlocked) {
-                        Icon(
-                            imageVector = badge.icon,
-                            contentDescription = null,
-                            tint = Gold,
-                            modifier = Modifier.size(32.dp)
+            Box(
+                modifier = Modifier
+                    .size(4.dp, 20.dp)
+                    .clip(CircleShape)
+                    .background(accentColor)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = category.title,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = accentColor
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            val unlockedCount = badges.count { unlockedBadges.contains(it) }
+            Text(
+                text = "$unlockedCount/${badges.size}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = Color.White.copy(alpha = 0.4f)
+            )
+        }
+
+        // Grid of Badges
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            val chunks = badges.chunked(2)
+            chunks.forEach { rowBadges ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    rowBadges.forEach { badge ->
+                        AchievementGridItem(
+                            modifier = Modifier.weight(1f),
+                            badge = badge,
+                            isUnlocked = unlockedBadges.contains(badge),
+                            accentColor = accentColor
                         )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Locked",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                            modifier = Modifier.size(24.dp)
-                        )
+                    }
+                    if (rowBadges.size < 2) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.width(20.dp))
+@Composable
+private fun AchievementGridItem(
+    modifier: Modifier,
+    badge: Badge,
+    isUnlocked: Boolean,
+    accentColor: Color
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "s")
+    val zOffset by animateFloatAsState(if (isPressed) 0f else 4.dp.value, label = "z")
 
-            Column(modifier = Modifier.weight(1f)) {
+    Box(
+        modifier = modifier
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {}
+            )
+    ) {
+        // Physical Depth Shadow
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(115.dp)
+                .offset(y = 3.dp)
+                .alpha(0.3f),
+            shape = ChamferedCornerShape(16.dp),
+            color = Color.Black
+        ) {}
+
+        // Main Surface
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(115.dp)
+                .graphicsLayer { translationY = -zOffset },
+            shape = ChamferedCornerShape(16.dp),
+            color = if (isUnlocked) Color(0xFF1E293B).copy(alpha = 0.8f) else Color.White.copy(alpha = 0.03f),
+            border = BorderStroke(
+                1.dp,
+                if (isUnlocked) Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent))
+                else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent))
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Icon Container
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = CircleShape,
+                    color = if (isUnlocked) accentColor.copy(alpha = 0.1f) else Color.Transparent,
+                    border = BorderStroke(
+                        if (isUnlocked) 2.dp else 1.dp,
+                        if (isUnlocked) accentColor else Color.White.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (isUnlocked) {
+                            Icon(
+                                imageVector = badge.icon,
+                                contentDescription = null,
+                                tint = accentColor,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Locked",
+                                tint = Color.White.copy(alpha = 0.1f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = badge.title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    text = badge.title.uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp,
+                        fontSize = 9.sp,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    color = if (isUnlocked) Color.White else Color.White.copy(alpha = 0.3f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
+                
                 Text(
                     text = badge.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                )
-            }
-            
-            if (isUnlocked) {
-                Icon(
-                    imageVector = badge.icon, // Small secondary icon for visual flair
-                    contentDescription = null,
-                    tint = Gold.copy(alpha = 0.2f),
-                    modifier = Modifier.size(48.dp)
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 7.5.sp,
+                        lineHeight = 9.sp
+                    ),
+                    color = if (isUnlocked) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
@@ -188,6 +357,46 @@ private fun AchievementsScreenPreview() {
         AchievementsScreen(
             unlockedBadges = listOf(Badge.THE_FLASH, Badge.FIRST_STEPS),
             onBackClick = {}
+        )
+    }
+}
+
+@Composable
+private fun MeshBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "mesh")
+    
+    val xOffset by infiniteTransition.animateFloat(
+        initialValue = -150f,
+        targetValue = 150f,
+        animationSpec = infiniteRepeatable(tween(15000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "x"
+    )
+
+    val yOffset by infiniteTransition.animateFloat(
+        initialValue = -100f,
+        targetValue = 100f,
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "y"
+    )
+
+    val gameColors = MaterialTheme.gameColors
+    val isLightTheme = MaterialTheme.colorScheme.onSurface.run { (red < 0.5f) && (green < 0.5f) && (blue < 0.5f) }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .blur(100.dp)
+            .alpha(if (isLightTheme) 0.5f else 0.3f)
+    ) {
+        drawCircle(
+            color = gameColors.meshColor1.copy(alpha = 0.4f),
+            radius = size.width,
+            center = Offset(size.width / 2 + xOffset, size.height / 3 + yOffset)
+        )
+        drawCircle(
+            color = gameColors.meshColor2.copy(alpha = 0.3f),
+            radius = size.width * 0.8f,
+            center = Offset(size.width / 4 - xOffset, size.height / 1.5f - yOffset)
         )
     }
 }

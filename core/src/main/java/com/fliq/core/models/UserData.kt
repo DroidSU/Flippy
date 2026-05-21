@@ -10,7 +10,8 @@ data class UserData(
     val totalCorrectTaps: Int = 0,
     val totalTaps: Int = 0,
     val totalReflexTime: Long = 0,
-    val bestPerfectStreak: Int = 0
+    val bestPerfectStreak: Int = 0,
+    val badges: List<String> = emptyList()
 )
 
 fun UserData.toMap(): Map<String, Any?> {
@@ -24,6 +25,7 @@ fun UserData.toMap(): Map<String, Any?> {
         "totalCorrectTaps" to totalCorrectTaps,
         "totalTaps" to totalTaps,
         "totalReflexTime" to totalReflexTime,
-        "bestPerfectStreak" to bestPerfectStreak
+        "bestPerfectStreak" to bestPerfectStreak,
+        "badges" to badges
     )
 }

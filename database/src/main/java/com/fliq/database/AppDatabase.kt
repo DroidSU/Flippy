@@ -2,11 +2,13 @@ package com.fliq.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fliq.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 11)
+@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 12)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun matchDao(): MatchDAO
@@ -14,6 +16,12 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun badgeDao(): BadgeDAO
 
     companion object {
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `badges` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `${ConstantsManager.TABLE_NAME_MATCH_HISTORY}` ADD COLUMN `challengeName` TEXT NOT NULL DEFAULT 'UNKNOWN'")
