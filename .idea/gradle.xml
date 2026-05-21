@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/feature/leaderboard" />
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/settings" />
+            <option value="$PROJECT_DIR$/feature/speed-run" />
             <option value="$PROJECT_DIR$/game-engine" />
           </set>
         </option>

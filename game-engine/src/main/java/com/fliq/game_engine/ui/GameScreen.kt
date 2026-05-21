@@ -37,17 +37,15 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Leaderboard
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -141,14 +139,12 @@ fun GameScreen(
     effects: SharedFlow<GameEffect>? = null
 ) {
     var showGameOverOverlay by remember { mutableStateOf(false) }
-    var isMenuVisible by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
-
+    val tilePositions = remember { mutableMapOf<Int, Offset>() }
     val activeEffects = remember { mutableStateListOf<EffectState>() }
     val ripples = remember { mutableStateListOf<RippleState>() }
-    val tilePositions = remember { mutableMapOf<Int, Offset>() }
-
     val gameColors = MaterialTheme.gameColors
+
+    val isPlaying = status == GameStatus.PLAYING
 
     LaunchedEffect(effects) {
         effects?.collectLatest { effect ->
@@ -224,11 +220,10 @@ fun GameScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .verticalScroll(scrollState, enabled = status != GameStatus.PLAYING)
-                    .blur(if (showGameOverOverlay || showRules || showAdRewardDialog || isMenuVisible) 16.dp else 0.dp),
+                    .blur(if (showGameOverOverlay || showRules || showAdRewardDialog) 16.dp else 0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Custom Top Bar - Frosted Glass
+                // Top Bar
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -236,15 +231,16 @@ fun GameScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(icon = Icons.Default.Menu, onClick = { isMenuVisible = true })
+                    // Back button to return to dashboard
+                    IconButton(icon = Icons.Default.ArrowBack, onClick = { onResetGame(); /* This should navigate back in GameActivity */ })
                     
                     Text(
-                        text = "FLIPPY",
-                        style = MaterialTheme.typography.headlineSmall.copy(
+                        text = currentChallenge.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp,
-                            brush = Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
-                        )
+                            letterSpacing = 1.sp
+                        ),
+                        color = Color.White
                     )
 
                     IconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
@@ -311,19 +307,6 @@ fun GameScreen(
                 )
             }
 
-            SideNavigationMenu(
-                isVisible = isMenuVisible,
-                onDismiss = { isMenuVisible = false },
-                onSignOutClick = {
-                    isMenuVisible = false
-                    onSignOutClick()
-                },
-                onProfileIntentClicked = onProfileIntentClicked,
-                onLeaderboardIntentClicked = onLeaderboardIntentClicked,
-                onAchievementsIntentClicked = onAchievementsIntentClicked,
-                onPreferencesIntentClicked = onPreferencesIntentClicked
-            )
-
             if (showRules) {
                 FlippyRulesDialog(onDismiss = onRulesDismissed)
             }
@@ -352,18 +335,15 @@ fun GameScreen(
 
 @Composable
 private fun IconButton(icon: ImageVector, onClick: () -> Unit) {
-    val isLightTheme = MaterialTheme.colorScheme.onSurface.run { red < 0.5f && green < 0.5f && blue < 0.5f }
-    val bgColor = if (isLightTheme) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-    
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = bgColor,
-        modifier = Modifier.size(44.dp).shadow(if (isLightTheme) 4.dp else 0.dp, CircleShape),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
+        color = Color.White.copy(alpha = 0.05f),
+        modifier = Modifier.size(44.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -438,9 +418,9 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
         style = MaterialTheme.typography.headlineMedium.copy(
             fontWeight = FontWeight.Black,
             fontSize = 32.sp,
-            shadow = shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 8f)
+            shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 8f)
         ),
-        color = MaterialTheme.gameColors.scorePopup,
+        color = Color(0xFFFACC15),
         modifier = Modifier
             .offset {
                 IntOffset(
@@ -452,8 +432,6 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
             .alpha(alpha.value)
     )
 }
-
-private fun shadow(color: Color, blurRadius: Float) = androidx.compose.ui.graphics.Shadow(color, blurRadius = blurRadius)
 
 @Composable
 fun SparkleEffect(effect: EffectState, onComplete: () -> Unit) {
@@ -908,7 +886,6 @@ private fun LeaderboardSection(
         }
     }
 }
-
 
 @Composable
 private fun GameHeader(

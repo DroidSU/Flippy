@@ -101,6 +101,7 @@ dependencies {
     implementation(project(":feature:profile"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:leaderboard"))
+    implementation(project(":feature:speed-run"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -111,6 +112,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.hilt.navigation.compose)
     
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

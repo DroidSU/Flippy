@@ -1,4 +1,4 @@
-package com.fliq.game_engine.viewmodel
+package com.fliq.speed_run.vm
 
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
@@ -15,7 +15,6 @@ import com.fliq.database.MatchHistory
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
 import com.fliq.game_engine.models.CardType
-import com.fliq.game_engine.models.Challenge
 import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.GameEffect.Particle
 import com.fliq.game_engine.models.GameStatus
@@ -42,7 +41,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
-class GameViewModel @Inject constructor(
+class SpeedRunViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val soundRepository: SoundRepository,
     private val matchRepository: MatchRepository,
@@ -55,7 +54,7 @@ class GameViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.e("GameViewModel", "Coroutine exception: ${throwable.localizedMessage}", throwable)
+        Log.e("SpeedRunViewModel", "Coroutine exception: ${throwable.localizedMessage}", throwable)
     }
 
     private val scope = viewModelScope + exceptionHandler
@@ -74,17 +73,8 @@ class GameViewModel @Inject constructor(
     private val _status = MutableStateFlow<GameStatus>(GameStatus.READY)
     val status = _status.asStateFlow()
 
-    private val _selectedChallenge = MutableStateFlow(Challenge.SPEED_RUN)
-    val selectedChallenge = _selectedChallenge.asStateFlow()
-
     private val _gameTime = MutableStateFlow(0L)
     val gameTime = _gameTime.asStateFlow()
-
-    private val _topThreeScores = MutableStateFlow<List<MatchHistory>>(emptyList())
-    val topThreeScores = _topThreeScores.asStateFlow()
-
-    private val _showRules = MutableStateFlow(value = false)
-    val showRules = _showRules.asStateFlow()
 
     private val _showAdRewardDialog = MutableStateFlow(false)
     val showAdRewardDialog = _showAdRewardDialog.asStateFlow()
@@ -103,6 +93,9 @@ class GameViewModel @Inject constructor(
 
     private val _newlyUnlockedBadges = MutableStateFlow<List<Badge>>(emptyList())
     val newlyUnlockedBadges = _newlyUnlockedBadges.asStateFlow()
+
+    private val _showRules = MutableStateFlow(false)
+    val showRules = _showRules.asStateFlow()
 
     private val _effects = MutableSharedFlow<GameEffect>()
     val effects = _effects.asSharedFlow()
@@ -125,7 +118,7 @@ class GameViewModel @Inject constructor(
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
-    private val progressionInterval = 15000L // Scale every 10 seconds
+    private val progressionInterval = 10000L // 10 seconds scaling for Speed Run
 
     private val visibleDurationRange: LongRange
         get() {
@@ -147,7 +140,6 @@ class GameViewModel @Inject constructor(
 
     init {
         getUserData()
-        getTopThreeScores()
         checkRulesVisibility()
     }
 
@@ -170,15 +162,9 @@ class GameViewModel @Inject constructor(
         preferencesRepository.setRulesShownOnce(true)
     }
 
-    fun setChallenge(challenge: Challenge) {
-        if (_status.value == GameStatus.READY) {
-            _selectedChallenge.value = challenge
-        }
-    }
-
     fun startGame() {
         _score.value = 0
-        _lives.value = if (_selectedChallenge.value == Challenge.MINEFIELD) 1 else 3
+        _lives.value = 3
         _gameTime.value = 0L
         accumulatedTime = 0L
         _tiles.value = List(16) { Tile(it) }
@@ -201,8 +187,8 @@ class GameViewModel @Inject constructor(
 
         soundRepository.startBackgroundMusic()
 
-        analyticsRepository.logEvent("game_started", mapOf("mode" to "challenge"))
-        analyticsRepository.logScreenView("GameScreen")
+        analyticsRepository.logEvent("game_started", mapOf("challenge" to "SPEED_RUN"))
+        analyticsRepository.logScreenView("SpeedRunScreen")
 
         startTimer()
 
@@ -245,13 +231,6 @@ class GameViewModel @Inject constructor(
                 if (!_isGamePaused.value) {
                     val currentTime = accumulatedTime + (System.currentTimeMillis() - lastStartTime)
                     _gameTime.value = currentTime
-                    
-                    // Progression logic: haptic feedback on speed up
-                    val oldTiers = (_gameTime.value - 100L) / progressionInterval
-                    val currentTiers = currentTime / progressionInterval
-                    if (currentTiers > oldTiers && currentTiers > 0) {
-                        // Vibration logic removed as per user request
-                    }
                 }
                 delay(100L)
             }
@@ -272,7 +251,6 @@ class GameViewModel @Inject constructor(
 
         scope.launch {
             soundRepository.pauseBackgroundMusic()
-            // Explicit delay ensures the pause lasts the intended duration even if sound is disabled
             delay(pauseDuration)
 
             if (_status.value == GameStatus.PLAYING) {
@@ -298,35 +276,17 @@ class GameViewModel @Inject constructor(
 
             val hiddenTiles = _tiles.value.filter { !it.isRevealed }
             if (hiddenTiles.isNotEmpty()) {
-                val challenge = _selectedChallenge.value
                 val tileToReveal = hiddenTiles.random()
-                
-                if (challenge == Challenge.FRENZY) {
-                    revealAndHideTile(tileToReveal.id)
-                } else if (challenge == Challenge.MINEFIELD) {
-                    revealAndHideTile(tileToReveal.id)
-                } else if (challenge == Challenge.SPEED_RUN) {
-                    // This logic is now handled in SpeedRun module, 
-                    // but we keep a basic version for backward compatibility if needed, 
-                    // or just let it fall through.
-                    revealAndHideTile(tileToReveal.id)
-                } else {
-                    revealAndHideTile(tileToReveal.id)
-                }
+                revealAndHideTile(tileToReveal.id)
             }
         }
     }
 
     private fun revealAndHideTile(tileId: Int) {
         scope.launch {
-            val challenge = _selectedChallenge.value
             val currentVisibleDuration = Random.nextLong(visibleDurationRange.first, visibleDurationRange.last + 1)
             
-            val newType = when (challenge) {
-                Challenge.FRENZY -> CardType.COIN
-                Challenge.MINEFIELD -> if (Random.nextFloat() > 0.5f) CardType.COIN else CardType.BOMB
-                else -> if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
-            }
+            val newType = if (Random.nextFloat() > 0.3f) CardType.COIN else CardType.BOMB
 
             val revealTime = System.currentTimeMillis()
             updateTile(tileId) {
@@ -343,21 +303,6 @@ class GameViewModel @Inject constructor(
             while (elapsed < currentVisibleDuration) {
                 if (!_isGamePaused.value) {
                     elapsed += 50L
-                    
-                    // MIRAGE logic: transform Coin to Bomb at 80% duration
-                    if (challenge == Challenge.MIRAGE && 
-                        newType == CardType.COIN && 
-                        elapsed >= currentVisibleDuration * 0.8f && 
-                        elapsed < currentVisibleDuration * 0.8f + 50L) {
-                        if (Random.nextFloat() < 0.2f) {
-                            updateTile(tileId) { it.copy(type = CardType.BOMB) }
-                        }
-                    }
-
-                    // BLACKOUT logic: hide icon after 150ms
-                    if (challenge == Challenge.BLACKOUT && elapsed >= 150L && elapsed < 200L) {
-                        updateTile(tileId) { it.copy(isIconVisible = false) }
-                    }
                 }
                 delay(50L)
                 if (_status.value != GameStatus.PLAYING) return@launch
@@ -377,7 +322,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun handleMissedCoin() {
-        val threshold = if (_selectedChallenge.value == Challenge.FRENZY) 1 else 3
+        val threshold = 3
 
         if (_status.value != GameStatus.PLAYING) return
 
@@ -424,14 +369,12 @@ class GameViewModel @Inject constructor(
         stopTimer()
         soundRepository.playGameOverSound()
 
-        // Clear badges immediately as game ends to avoid stale data from previous game
         _newlyUnlockedBadges.value = emptyList()
         if (clutchStartTime > 0) {
             clutchTime += System.currentTimeMillis() - clutchStartTime
             clutchStartTime = 0
         }
 
-        // Finalize perfect streak in case the game ended on a high streak
         if (perfectStreak < _streak.value) {
             perfectStreak = _streak.value
         }
@@ -439,7 +382,7 @@ class GameViewModel @Inject constructor(
         analyticsRepository.logEvent("game_over", mapOf(
             "score" to _score.value,
             "duration" to _gameTime.value,
-            "challenge" to _selectedChallenge.value.name,
+            "challenge" to "SPEED_RUN",
             "accuracy" to if (_totalTaps.value > 0) (_correctTaps.value.toDouble() / _totalTaps.value) else 0.0
         ))
 
@@ -449,10 +392,8 @@ class GameViewModel @Inject constructor(
     private fun saveMatchResult() {
         val currentScore = _score.value
         val currentTime = _gameTime.value
-        val currentChallengeName = _selectedChallenge.value.name
         val timestamp = System.currentTimeMillis()
 
-        // Capture snapshot of metrics to avoid race conditions if a new game starts immediately
         val currentCorrectTaps = _correctTaps.value
         val currentTotalTaps = _totalTaps.value
         val currentTotalReflexTime = totalReflexTime
@@ -476,7 +417,7 @@ class GameViewModel @Inject constructor(
                 username = _currentUsername,
                 avatarId = _currentAvatarId,
                 levelReached = 1,
-                challengeName = currentChallengeName
+                challengeName = "SPEED_RUN"
             )
             matchRepository.saveMatch(match)
 
@@ -485,7 +426,7 @@ class GameViewModel @Inject constructor(
                     networkRepository.storeMatchData(listOf(match))
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Failed to sync match result: ${e.message}")
+                Log.e("SpeedRunViewModel", "Failed to sync match result: ${e.message}")
             }
 
             updateUserStats(match)
@@ -512,7 +453,6 @@ class GameViewModel @Inject constructor(
             clutchTime = clutchTime
         ).filter { it.id !in existingBadgeIds }
 
-        // Update the state with ONLY the badges earned in this specific match
         _newlyUnlockedBadges.value = newlyUnlocked
 
         if (newlyUnlocked.isNotEmpty()) {
@@ -556,10 +496,8 @@ class GameViewModel @Inject constructor(
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
 
-        // Every tap on a tile area during gameplay counts towards total taps (accuracy)
         _totalTaps.update { it + 1 }
 
-        // Grace period: allow tap if it's revealed OR if it just disappeared within 100ms
         val isRecentlyHidden = !tile.isRevealed && (System.currentTimeMillis() - (tile.lastRevealTime + tile.currentDuration)) < 100
         
         if (!tile.isRevealed && !isRecentlyHidden) return
@@ -623,14 +561,6 @@ class GameViewModel @Inject constructor(
                 }
 
                 else -> {}
-            }
-        }
-    }
-
-    fun getTopThreeScores() {
-        scope.launch(Dispatchers.IO) {
-            matchRepository.getTopThreeScores(playerId).collect {
-                _topThreeScores.value = it
             }
         }
     }
