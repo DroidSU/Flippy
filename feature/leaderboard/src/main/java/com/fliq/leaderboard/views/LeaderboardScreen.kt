@@ -27,7 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -57,7 +57,6 @@ import com.fliq.core.theme.BgSlate
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
-import com.fliq.core.theme.InfoSlate
 import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.NeonPurple
 import com.fliq.core.theme.RankBronze
@@ -79,11 +78,11 @@ fun LeaderboardScreen(
 ) {
     val gameColors = MaterialTheme.gameColors
     val accentColor = when (selectedChallenge) {
+        Challenge.ZEN_MODE -> Color(0xFF2DD4BF)
         Challenge.SPEED_RUN -> NeonCyan
         Challenge.MIRAGE -> NeonPurple
         Challenge.MINEFIELD -> BombRed
         Challenge.FRENZY -> Gold
-        Challenge.BLACKOUT -> InfoSlate
     }
 
     Box(
@@ -126,8 +125,7 @@ fun LeaderboardScreen(
                         if (leaderboard.isNotEmpty()) {
                             item {
                                 ChampionsPodium(
-                                    topThree = leaderboard.take(3),
-                                    accentColor = accentColor
+                                    topThree = leaderboard.take(3)
                                 )
                             }
                         }
@@ -230,11 +228,11 @@ private fun ChallengeSelectorTabs(
         items(Challenge.entries.toTypedArray()) { challenge ->
             val isSelected = challenge == selectedChallenge
             val accentColor = when (challenge) {
+                Challenge.ZEN_MODE -> Color(0xFF2DD4BF)
                 Challenge.SPEED_RUN -> NeonCyan
                 Challenge.MIRAGE -> NeonPurple
                 Challenge.MINEFIELD -> BombRed
                 Challenge.FRENZY -> Gold
-                Challenge.BLACKOUT -> InfoSlate
             }
 
             Surface(
@@ -253,11 +251,11 @@ private fun ChallengeSelectorTabs(
                 ) {
                     Icon(
                         imageVector = when(challenge) {
+                            Challenge.ZEN_MODE -> Icons.Default.SelfImprovement
                             Challenge.SPEED_RUN -> Icons.Default.Bolt
                             Challenge.MIRAGE -> Icons.Default.VisibilityOff
                             Challenge.MINEFIELD -> Icons.Default.EmojiEvents
                             Challenge.FRENZY -> Icons.Default.EmojiEvents
-                            Challenge.BLACKOUT -> Icons.Default.Timer
                         },
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
@@ -280,8 +278,7 @@ private fun ChallengeSelectorTabs(
 
 @Composable
 private fun ChampionsPodium(
-    topThree: List<LeaderboardModel>,
-    accentColor: Color
+    topThree: List<LeaderboardModel>
 ) {
     Row(
         modifier = Modifier
@@ -324,8 +321,7 @@ private fun ChampionsPodium(
                 height = 140.dp,
                 accentColor = RankBronze
             )
-        }
-else {
+        } else {
             Spacer(modifier = Modifier.weight(1f))
         }
     }

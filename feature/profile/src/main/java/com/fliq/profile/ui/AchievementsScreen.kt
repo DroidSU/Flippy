@@ -64,7 +64,6 @@ import com.fliq.core.theme.BgSlate
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
-import com.fliq.core.theme.InfoSlate
 import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.NeonPurple
 import com.fliq.core.theme.gameColors
@@ -178,7 +177,7 @@ private fun AchievementCategorySection(
         BadgeCategory.MIRAGE -> NeonPurple
         BadgeCategory.MINEFIELD -> BombRed
         BadgeCategory.FRENZY -> Gold
-        BadgeCategory.BLACKOUT -> InfoSlate
+        BadgeCategory.ZEN_MODE -> Color(0xFF2DD4BF)
     }
 
     Column(

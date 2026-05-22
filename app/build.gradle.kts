@@ -105,6 +105,7 @@ dependencies {
     implementation(project(":feature:mirage"))
     implementation(project(":feature:minefield"))
     implementation(project(":feature:frenzy"))
+    implementation(project(":feature:zen-mode"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

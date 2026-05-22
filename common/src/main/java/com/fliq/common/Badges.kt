@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
@@ -20,7 +21,7 @@ enum class BadgeCategory(val title: String) {
     MIRAGE("THE MIRAGE"),
     MINEFIELD("MINEFIELD"),
     FRENZY("FRENZY"),
-    BLACKOUT("BLACKOUT")
+    ZEN_MODE("ZEN MODE")
 }
 
 enum class Badge(
@@ -146,6 +147,13 @@ enum class Badge(
         "Score 100 in Frenzy",
         Icons.Default.Savings,
         BadgeCategory.FRENZY
+    ),
+    ZEN_MASTER(
+        "zen_50",
+        "Zen Master",
+        "Score 50 in Zen Mode",
+        Icons.Default.SelfImprovement,
+        BadgeCategory.ZEN_MODE
     );
 
     companion object {

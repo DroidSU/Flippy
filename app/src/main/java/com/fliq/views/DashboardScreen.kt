@@ -35,8 +35,8 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -69,7 +69,6 @@ import com.fliq.core.theme.BgSlate
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
-import com.fliq.core.theme.InfoSlate
 import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.NeonPurple
 import com.fliq.core.theme.gameColors
@@ -121,9 +120,9 @@ fun DashboardScreen(
                 ) {
                     item {
                         ChallengeTile(
-                            challenge = Challenge.SPEED_RUN,
+                            challenge = Challenge.ZEN_MODE,
                             isFeatured = true,
-                            onClick = { onChallengeSelected(Challenge.SPEED_RUN) }
+                            onClick = { onChallengeSelected(Challenge.ZEN_MODE) }
                         )
                     }
 
@@ -133,14 +132,14 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             ChallengeTile(
+                                challenge = Challenge.SPEED_RUN,
+                                modifier = Modifier.weight(1f),
+                                onClick = { onChallengeSelected(Challenge.SPEED_RUN) }
+                            )
+                            ChallengeTile(
                                 challenge = Challenge.MIRAGE,
                                 modifier = Modifier.weight(1f),
                                 onClick = { onChallengeSelected(Challenge.MIRAGE) }
-                            )
-                            ChallengeTile(
-                                challenge = Challenge.BLACKOUT,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onChallengeSelected(Challenge.BLACKOUT) }
                             )
                         }
                     }
@@ -291,10 +290,10 @@ fun ChallengeTile(
     )
 
     val accentColor = when (challenge) {
+        Challenge.ZEN_MODE -> Color(0xFF2DD4BF)
         Challenge.SPEED_RUN -> NeonCyan
         Challenge.MIRAGE -> NeonPurple
         Challenge.MINEFIELD -> BombRed
-        Challenge.BLACKOUT -> InfoSlate
         Challenge.FRENZY -> Gold
     }
 
@@ -350,11 +349,11 @@ fun ChallengeTile(
             // Use Game Icons for a more authentic game feel
             Box(modifier = Modifier.size(if (isFeatured) 40.dp else 32.dp)) {
                 when (challenge) {
+                    Challenge.ZEN_MODE -> Icon(Icons.Default.SelfImprovement, null, tint = accentColor, modifier = Modifier.fillMaxSize())
                     Challenge.SPEED_RUN -> Icon(Icons.Default.Bolt, null, tint = accentColor, modifier = Modifier.fillMaxSize())
                     Challenge.MINEFIELD -> Image(painterResource(id = R.drawable.ic_bomb), null, modifier = Modifier.fillMaxSize())
                     Challenge.FRENZY -> Image(painterResource(id = R.drawable.ic_coin), null, modifier = Modifier.fillMaxSize())
                     Challenge.MIRAGE -> Icon(Icons.Default.VisibilityOff, null, tint = accentColor, modifier = Modifier.fillMaxSize())
-                    Challenge.BLACKOUT -> Icon(Icons.Default.Timer, null, tint = accentColor, modifier = Modifier.fillMaxSize())
                 }
             }
 

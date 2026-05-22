@@ -139,7 +139,7 @@ class NetworkRepositoryImpl @Inject constructor(
 
     override fun fetchMatchHistory(userId: String): Flow<Result<List<MatchHistory>>> = flow {
         try {
-            val challengeTypes = listOf("SPEED_RUN", "MIRAGE", "MINEFIELD", "FRENZY", "BLACKOUT")
+            val challengeTypes = listOf("SPEED_RUN", "MIRAGE", "MINEFIELD", "ZEN_MODE", "FRENZY")
             val allMatches = mutableListOf<MatchHistory>()
             
             for (type in challengeTypes) {

@@ -60,6 +60,10 @@ object AchievementManager {
         if (match.challengeName == "FRENZY" && match.score >= 100) {
             unlockedBadges.add(Badge.GOLD_DIGGER)
         }
+        
+        if (match.challengeName == "ZEN_MODE" && match.score >= 50) {
+            unlockedBadges.add(Badge.ZEN_MASTER)
+        }
 
         return unlockedBadges
     }

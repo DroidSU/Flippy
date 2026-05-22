@@ -2,7 +2,6 @@ package com.fliq.views
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
-import com.fliq.game_engine.models.Challenge
 import com.fliq.profile.vm.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -40,14 +38,10 @@ class MainActivity : ComponentActivity() {
                     accuracy = accuracy,
                     unlockedBadges = unlockedBadges,
                     onChallengeSelected = { challenge ->
-                        if (challenge == Challenge.BLACKOUT) {
-                            Toast.makeText(this, "Coming Soon", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val intent = Intent(this, GameActivity::class.java).apply {
-                                putExtra(GameActivity.EXTRA_CHALLENGE, challenge.name)
-                            }
-                            startActivity(intent)
+                        val intent = Intent(this, GameActivity::class.java).apply {
+                            putExtra(GameActivity.EXTRA_CHALLENGE, challenge.name)
                         }
+                        startActivity(intent)
                     },
                     onProfileClick = { startActivity(Intent(this, ProfileActivity::class.java)) },
                     onLeaderboardClick = { startActivity(Intent(this, LeaderboardActivity::class.java)) },

@@ -30,6 +30,8 @@ import com.fliq.mirage.ui.MirageScreen
 import com.fliq.mirage.vm.MirageViewModel
 import com.fliq.speed_run.ui.SpeedRunScreen
 import com.fliq.speed_run.vm.SpeedRunViewModel
+import com.fliq.zen_mode.ui.ZenScreen
+import com.fliq.zen_mode.vm.ZenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
@@ -98,7 +100,6 @@ class GameActivity : ComponentActivity() {
                         onBackClick = { finish() },
                         isPaused = isPaused,
                         streak = streak,
-                        reactionTime = reactionTime,
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
                         effects = viewModel.effects
@@ -149,7 +150,6 @@ class GameActivity : ComponentActivity() {
                         onBackClick = { finish() },
                         isPaused = isPaused,
                         streak = streak,
-                        reactionTime = reactionTime,
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
                         effects = viewModel.effects
@@ -200,7 +200,6 @@ class GameActivity : ComponentActivity() {
                         onBackClick = { finish() },
                         isPaused = isPaused,
                         streak = streak,
-                        reactionTime = reactionTime,
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
                         effects = viewModel.effects
@@ -251,7 +250,56 @@ class GameActivity : ComponentActivity() {
                         onBackClick = { finish() },
                         isPaused = isPaused,
                         streak = streak,
-                        reactionTime = reactionTime,
+                        accuracy = accuracy,
+                        newBadges = newlyUnlockedBadges,
+                        effects = viewModel.effects
+                    )
+                } else if (challenge == Challenge.ZEN_MODE) {
+                    val viewModel: ZenViewModel = hiltViewModel()
+                    
+                    val tiles by viewModel.tiles.collectAsState()
+                    val score by viewModel.score.collectAsState()
+                    val lives by viewModel.lives.collectAsState()
+                    val status by viewModel.status.collectAsState()
+                    val gameTime by viewModel.gameTime.collectAsState()
+                    val showRules by viewModel.showRules.collectAsState()
+                    val showAdRewardDialog by viewModel.showAdRewardDialog.collectAsState()
+                    val isPaused by viewModel.isGamePaused.collectAsState()
+                    val streak by viewModel.streak.collectAsState()
+                    val reactionTime by viewModel.lastReactionTime.collectAsState()
+                    val newlyUnlockedBadges by viewModel.newlyUnlockedBadges.collectAsState()
+                    val totalTaps by viewModel.totalTaps.collectAsState()
+                    val correctTaps by viewModel.correctTaps.collectAsState()
+                    val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
+
+                    LaunchedEffect(Unit) {
+                        viewModel.effects.collectLatest { effect ->
+                            if (effect is GameEffect.Vibration) {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                        }
+                    }
+
+                    ZenScreen(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        showRules = showRules,
+                        showAdRewardDialog = showAdRewardDialog,
+                        onTileTapped = viewModel::onTileTapped,
+                        onPlayClick = viewModel::startGame,
+                        onResetGame = viewModel::resetGame,
+                        onRulesDismissed = viewModel::onRulesDismissed,
+                        onWatchAdClick = { viewModel.onWatchAdClicked(this@GameActivity) },
+                        onSkipAdClick = viewModel::onSkipAdClicked,
+                        onHelpClick = viewModel::showRulesDialog,
+                        onBackClick = { finish() },
+                        isPaused = isPaused,
+                        streak = streak,
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
                         effects = viewModel.effects

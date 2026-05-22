@@ -16,9 +16,9 @@ enum class Challenge(
         "MINEFIELD",
         "High risk, high reward. 50% Bombs, 1 Life. Every tap counts."
     ),
-    BLACKOUT(
-        "BLACKOUT",
-        "Memory test. Icons reveal briefly and then vanish. Remember what's what."
+    ZEN_MODE(
+        "ZEN MODE",
+        "Maintain your flow. Constant speed, zero pressure. Perfect for focus."
     ),
     FRENZY(
         "FRENZY",
