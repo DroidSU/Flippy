@@ -25,7 +25,7 @@ android {
         applicationId = "com.fliq"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
+        versionCode = 2
         versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -63,12 +63,12 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             
-            // Fallback to test IDs if not provided in local.properties
-            val appId = localProperties.getProperty("admob.app.id") ?: "ca-app-pub-3940256099942544~3347511713"
-            val adUnitId = localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: "ca-app-pub-3940256099942544/5354046379"
+            // Forces use of Test IDs during Alpha testing
+            val testAppId = "ca-app-pub-3940256099942544~3347511713"
+            val testAdUnitId = "ca-app-pub-3940256099942544/5354046379"
             
-            manifestPlaceholders["admob_app_id"] = appId
-            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$adUnitId\"")
+            manifestPlaceholders["admob_app_id"] = testAppId
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$testAdUnitId\"")
         }
     }
     compileOptions {

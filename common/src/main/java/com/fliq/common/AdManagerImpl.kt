@@ -38,11 +38,10 @@ class AdManagerImpl @Inject constructor(
         isLoading = true
         val adRequest = AdRequest.Builder().build()
         Log.d("AdManager", "Loading Rewarded Interstitial Ad with ID: $adUnitId")
-        
-        // Loading Rewarded Interstitial Ad
+
         RewardedInterstitialAd.load(context, adUnitId, adRequest, object : RewardedInterstitialAdLoadCallback() {
             override fun onAdFailedToLoad(adError: LoadAdError) {
-                Log.e("AdManager", "Rewarded Interstitial failed to load: ${adError.message} (Code: ${adError.code})")
+                Log.e("AdManager", "Rewarded Interstitial failed to load: ${adError.message} (Code: ${adError.code}) Domain: ${adError.domain}")
                 rewardedInterstitialAd = null
                 isLoading = false
                 onAdFailed()

@@ -32,8 +32,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val adUnitId = localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: "ca-app-pub-3940256099942544/5354046379"
-            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$adUnitId\"")
+            // Forces use of Test Ad Unit ID during Alpha testing
+            val testAdUnitId = "ca-app-pub-3940256099942544/5354046379"
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$testAdUnitId\"")
         }
     }
     
