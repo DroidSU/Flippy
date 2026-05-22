@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.Hexagon
@@ -44,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -53,9 +55,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.auth.R
+import com.fliq.core.theme.BgDeepDark
+import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.LightBgSlate
 import com.fliq.core.theme.gameColors
 import com.fliq.core.util.ChamferedCornerShape
 import kotlinx.coroutines.delay
@@ -118,7 +124,7 @@ fun GeometricHero() {
 
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.1f,
+        targetValue = 1.08f,
         animationSpec = infiniteRepeatable(tween(4000, easing = LinearEasing), RepeatMode.Reverse),
         label = "scale"
     )
@@ -126,34 +132,36 @@ fun GeometricHero() {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(160.dp)
+            .size(170.dp)
             .scale(scale)
-            .graphicsLayer { rotationZ = rotation }
     ) {
+        // Rotating background icons
         Icon(
             imageVector = Icons.Default.Hexagon,
             contentDescription = null,
-            modifier = Modifier.size(160.dp).alpha(0.1f),
+            modifier = Modifier.size(170.dp).alpha(0.1f).graphicsLayer { rotationZ = rotation },
             tint = MaterialTheme.colorScheme.primary
         )
         Icon(
             imageVector = Icons.Default.ChangeHistory,
             contentDescription = null,
-            modifier = Modifier.size(100.dp).alpha(0.2f).graphicsLayer { rotationZ = -rotation * 2 },
+            modifier = Modifier.size(110.dp).alpha(0.2f).graphicsLayer { rotationZ = -rotation * 1.5f },
             tint = MaterialTheme.colorScheme.tertiary
         )
+
+        // The Nucleus - Using CircleShape to provide a stable hub for the logo
         Surface(
-            modifier = Modifier.size(72.dp),
-            shape = androidx.compose.foundation.shape.CircleShape,
-            color = Color.White.copy(alpha = 0.1f),
-            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.6f), Color.Transparent))),
-            shadowElevation = 32.dp
+            modifier = Modifier.size(80.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), Color.Transparent))),
+            shadowElevation = 0.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Image(
-                    painter = painterResource(id = com.fliq.core.R.drawable.app_logo),
+                    painter = painterResource(id = com.fliq.core.R.drawable.logo_short_rounded_white),
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(52.dp).clip(CircleShape),
                     alpha = 0.95f
                 )
             }
@@ -183,7 +191,7 @@ fun BrandingHeader() {
                 letterSpacing = 4.sp,
                 shadow = Shadow(Color.Black.copy(alpha = 0.5f), offset = Offset(0f, 8.dp.value), blurRadius = 16f)
             ),
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -236,17 +244,17 @@ fun GoogleKineticButton(
                 .fillMaxSize()
                 .graphicsLayer { translationY = -zOffset },
             shape = ChamferedCornerShape(16.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             border = BorderStroke(
                 1.5.dp, 
-                Brush.linearGradient(listOf(Color.White, Color(0xFFE2E8F0)))
+                Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface, LightBgSlate))
             )
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = Color(0xFF0F172A),
+                        color = BgDeepDark,
                         strokeWidth = 3.dp
                     )
                 } else {
@@ -264,7 +272,7 @@ fun GoogleKineticButton(
                             text = "SIGN IN WITH GOOGLE",
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Black,
-                                color = Color(0xFF0F172A),
+                                color = BgDeepDark,
                                 letterSpacing = 1.sp,
                                 fontFamily = FontFamily.Monospace
                             )
@@ -273,5 +281,16 @@ fun GoogleKineticButton(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginOptionsPreview() {
+    FliqTheme {
+        LoginOptionsView(
+            isLoading = false,
+            onGoogleSignIn = {}
+        )
     }
 }

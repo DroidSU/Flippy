@@ -1,5 +1,6 @@
 package com.fliq.views
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,6 +50,15 @@ class SettingsActivity : ComponentActivity() {
                     },
                     onHapticFeedbackChange = {
                         viewModel.onHapticFeedbackChanged(it)
+                    },
+                    onSignOut = {
+                        viewModel.signOut {
+                            val intent = Intent(this@SettingsActivity, SplashActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            startActivity(intent)
+                            finish()
+                        }
                     },
                     onBackClick = { finish() },
                 )

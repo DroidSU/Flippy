@@ -89,6 +89,7 @@ import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.Gold
 import com.fliq.core.theme.HeartRed
 import com.fliq.core.theme.gameColors
 import com.fliq.database.MatchHistory
@@ -240,7 +241,7 @@ fun GameScreen(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.sp
                         ),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
@@ -340,10 +341,10 @@ private fun IconButton(icon: ImageVector, onClick: () -> Unit) {
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.05f),
         modifier = Modifier.size(44.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -420,7 +421,7 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
             fontSize = 32.sp,
             shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 8f)
         ),
-        color = Color(0xFFFACC15),
+        color = Gold,
         modifier = Modifier
             .offset {
                 IntOffset(
@@ -771,7 +772,7 @@ fun PlayButtonComponent(
     val isPlaying = status == GameStatus.PLAYING
 
     val gradient = if (isPlaying) {
-        Brush.linearGradient(listOf(BombRed, Color(0xFFE11D48)))
+        Brush.linearGradient(listOf(BombRed, MaterialTheme.colorScheme.error))
     } else {
         Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
     }
@@ -807,7 +808,7 @@ fun PlayButtonComponent(
                 imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = if (isPlaying) Color.White else MaterialTheme.colorScheme.onPrimary
+                tint = if (isPlaying) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -819,7 +820,7 @@ private fun LeaderboardSection(
     modifier: Modifier = Modifier
 ) {
     val isLightTheme = MaterialTheme.colorScheme.onSurface.run { red < 0.5f && green < 0.5f && blue < 0.5f }
-    val bgColor = if (isLightTheme) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+    val bgColor = if (isLightTheme) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
 
     Column(
         modifier = modifier
@@ -912,7 +913,7 @@ private fun GameHeader(
             .padding(horizontal = 24.dp)
             .shadow(if (isLightTheme) 12.dp else 0.dp, RoundedCornerShape(32.dp)),
         shape = RoundedCornerShape(32.dp),
-        color = if (isLightTheme) Color.White.copy(alpha = 0.95f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        color = if (isLightTheme) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
     ) {
         Row(

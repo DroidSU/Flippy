@@ -46,6 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.fliq.core.theme.BgDeepDark
+import com.fliq.core.theme.BombOrange
+import com.fliq.core.theme.BombRed
+import com.fliq.core.theme.NeonPurple
 import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.R
 
@@ -54,7 +58,7 @@ fun MirageRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
-    val accentColor = Color(0xFF8B5CF6) // Purple for Mirage
+    val accentColor = NeonPurple // Purple for Mirage
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
@@ -74,7 +78,7 @@ fun MirageRulesDialog(
             Surface(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 shape = ChamferedCornerShape(32.dp),
-                color = Color(0xFF0F172A).copy(alpha = 0.98f),
+                color = BgDeepDark.copy(alpha = 0.98f),
                 border = BorderStroke(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent)))
             ) {
                 Column(
@@ -121,14 +125,14 @@ fun MirageRulesDialog(
                             iconVector = Icons.Default.Favorite,
                             title = "KEEP HEARTS",
                             description = "Missing 3 coins in a row will cost you a heart.",
-                            accent = Color(0xFFF43F5E),
+                            accent = BombRed,
                             isVector = true
                         )
                         MirageRuleItem(
                             iconRes = R.drawable.ic_bomb,
                             title = "WATCH FOR BOMBS",
                             description = "Bombs are dangerous. Don't tap them or you'll lose a heart.",
-                            accent = Color(0xFFFB923C)
+                            accent = BombOrange
                         )
                     }
 

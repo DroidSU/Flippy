@@ -23,6 +23,9 @@ interface BadgeDAO {
     @Query("SELECT * FROM badges WHERE isBackedUp = 0")
     suspend fun getPendingBadges(): List<BadgeEntity>
 
-    @Query("UPDATE badges SET isBackedUp = 1 WHERE badgeId IN (:badgeIds)")
-    suspend fun markAsBackedUp(badgeIds: List<String>)
+    @Query("UPDATE badges SET isBackedUp = 1 WHERE badgeId IN (:badgeIds) AND userId = :userId")
+    suspend fun markAsBackedUp(badgeIds: List<String>, userId: String)
+
+    @Query("DELETE FROM badges")
+    suspend fun clearAll()
 }

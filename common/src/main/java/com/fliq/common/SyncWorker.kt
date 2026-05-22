@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.fliq.common.repository.ProfileRepository
+import com.fliq.core.models.UserData
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -35,20 +36,27 @@ class SyncWorker @AssistedInject constructor(
                     networkRepository.storeMatchData(pendingMatches)
                 }
 
-                // Sync Badges
-                val pendingBadges = badgeRepository.getPendingBadges()
-                if (pendingBadges.isNotEmpty()) {
-                    Log.d("SyncWorker", "Syncing ${pendingBadges.size} badges")
-                    networkRepository.storeBadgeData(pendingBadges)
-                }
-
-                // Sync User Stats
+                // Sync User Stats & Badges
                 val userId = auth.currentUser?.uid
                 if (userId != null) {
                     val localStats = profileRepository.getUserDataSync(userId)
-                    if (localStats != null) {
-                        Log.d("SyncWorker", "Syncing user stats for $userId")
-                        networkRepository.uploadUserData(localStats)
+                    val pendingBadges = badgeRepository.getPendingBadges()
+                    
+                    if (localStats != null || pendingBadges.isNotEmpty()) {
+                        Log.d("SyncWorker", "Syncing user profile (including badges) for $userId")
+                        
+                        // Always include all local badges in the profile upload
+                        val allLocalBadges = badgeRepository.getBadgesForUserSync(userId)
+                        val statsToUpload = (localStats ?: UserData(userId = userId)).copy(
+                            badges = allLocalBadges.map { it.badgeId }
+                        )
+                        
+                        val result = networkRepository.uploadUserData(statsToUpload)
+                        if (result is com.fliq.common.Result.Success) {
+                            if (pendingBadges.isNotEmpty()) {
+                                badgeRepository.markBadgesAsBackedUp(pendingBadges.map { it.badgeId }, userId)
+                            }
+                        }
                     }
                 }
             }

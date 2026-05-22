@@ -26,7 +26,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
@@ -51,9 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
-import com.fliq.core.theme.Gold
-import com.fliq.core.theme.gameColors
-import com.fliq.core.util.ChamferedCornerShape
 
 @Composable
 fun SpeedRunGameOverDialog(
@@ -65,8 +65,7 @@ fun SpeedRunGameOverDialog(
     onRetry: () -> Unit,
     onBackToDashboard: () -> Unit
 ) {
-    val gameColors = MaterialTheme.gameColors
-    val accentColor = Color(0xFF22D3EE)
+    val accentColor = MaterialTheme.colorScheme.primary
 
     AnimatedVisibility(
         visible = visible,
@@ -76,100 +75,101 @@ fun SpeedRunGameOverDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f)),
+                .background(Color.Black.copy(alpha = 0.8f)),
             contentAlignment = Alignment.Center
         ) {
             AnimatedVisibility(
                 visible = visible,
-                enter = scaleIn(animationSpec = spring(Spring.DampingRatioMediumBouncy)) + fadeIn()
+                enter = scaleIn(animationSpec = spring(Spring.DampingRatioLowBouncy)) + fadeIn()
             ) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
+                        .fillMaxWidth(0.85f)
                         .wrapContentHeight(),
-                    shape = ChamferedCornerShape(40.dp),
-                    color = Color(0xFF0F172A),
-                    border = BorderStroke(1.dp, accentColor.copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, accentColor.copy(alpha = 0.15f))
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(20.dp)
                     ) {
                         Text(
                             text = "GAME OVER",
-                            style = MaterialTheme.typography.headlineMedium.copy(
+                            style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 2.sp
                             ),
-                            color = Color(0xFFF43F5E)
+                            color = MaterialTheme.colorScheme.error
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // Score Block
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = ChamferedCornerShape(24.dp),
-                            color = Color.White.copy(alpha = 0.03f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(24.dp)
+                                modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
                                     text = "SCORE",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        letterSpacing = 2.sp,
+                                        letterSpacing = 1.sp,
                                         fontFamily = FontFamily.Monospace
                                     ),
                                     color = accentColor.copy(alpha = 0.6f)
                                 )
                                 Text(
                                     text = score.toString().padStart(3, '0'),
-                                    style = MaterialTheme.typography.displayLarge.copy(
+                                    style = MaterialTheme.typography.displayMedium.copy(
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 72.sp,
                                         fontFamily = FontFamily.Monospace
                                     ),
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // Stats Row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            TelemetryStatItem(
+                            PerformanceStatItem(
                                 modifier = Modifier.weight(1f),
                                 label = "TIME",
                                 value = UtilityMethods.formatTime(gameTime),
                                 icon = Icons.Default.Timer,
                                 color = accentColor
                             )
-                            TelemetryStatItem(
+                            PerformanceStatItem(
                                 modifier = Modifier.weight(1f),
                                 label = "ACCURACY",
                                 value = "${(accuracy * 100).toInt()}%",
                                 icon = Icons.Default.TouchApp,
-                                color = Color(0xFF8B5CF6)
+                                color = MaterialTheme.colorScheme.tertiary
                             )
                         }
 
                         if (newBadges.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
                             BadgeUnlockSection(newBadges)
                         }
 
-                        Spacer(modifier = Modifier.height(40.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
                         // Actions
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             ActionRequestButton(
                                 text = "PLAY AGAIN",
                                 icon = Icons.Default.Refresh,
@@ -181,7 +181,7 @@ fun SpeedRunGameOverDialog(
                                 text = "MAIN MENU",
                                 icon = Icons.Default.Home,
                                 primary = false,
-                                accentColor = Color.White.copy(alpha = 0.6f),
+                                accentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                 onClick = onBackToDashboard
                             )
                         }
@@ -193,7 +193,7 @@ fun SpeedRunGameOverDialog(
 }
 
 @Composable
-private fun TelemetryStatItem(
+private fun PerformanceStatItem(
     label: String,
     value: String,
     icon: ImageVector,
@@ -202,28 +202,28 @@ private fun TelemetryStatItem(
 ) {
     Surface(
         modifier = modifier,
-        shape = ChamferedCornerShape(16.dp),
+        shape = RoundedCornerShape(16.dp),
         color = color.copy(alpha = 0.05f),
         border = BorderStroke(1.dp, color.copy(alpha = 0.1f))
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, null, modifier = Modifier.size(16.dp), tint = color.copy(alpha = 0.6f))
-            Spacer(modifier = Modifier.height(8.dp))
+            Icon(icon, null, modifier = Modifier.size(14.dp), tint = color.copy(alpha = 0.6f))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Black,
                     fontFamily = FontFamily.Monospace
                 ),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 8.sp),
-                color = Color.White.copy(alpha = 0.3f)
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 7.sp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }
     }
@@ -239,18 +239,18 @@ private fun ActionRequestButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "s")
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, label = "s")
 
     Surface(
         onClick = onClick,
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(50.dp)
             .scale(scale),
-        shape = ChamferedCornerShape(14.dp),
-        color = if (primary) accentColor else Color.White.copy(alpha = 0.05f),
-        border = if (primary) null else BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        shape = RoundedCornerShape(12.dp),
+        color = if (primary) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        border = if (primary) null else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -260,17 +260,17 @@ private fun ActionRequestButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (primary) Color(0xFF0F172A) else Color.White,
-                modifier = Modifier.size(20.dp)
+                tint = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.sp
                 ),
-                color = if (primary) Color(0xFF0F172A) else Color.White
+                color = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -281,18 +281,18 @@ private fun BadgeUnlockSection(badges: List<Badge>) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "NEW TROPHIES!",
-            style = MaterialTheme.typography.labelLarge.copy(
+            style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
             ),
-            color = Gold
+            color = MaterialTheme.colorScheme.secondary
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(badges) { badge ->
                 BadgeItem(badge)
@@ -305,23 +305,23 @@ private fun BadgeUnlockSection(badges: List<Badge>) {
 private fun BadgeItem(badge: Badge) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(80.dp)
+        modifier = Modifier.width(72.dp)
     ) {
         Surface(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(44.dp),
             shape = CircleShape,
-            color = Gold.copy(alpha = 0.1f),
-            border = BorderStroke(1.dp, Gold.copy(alpha = 0.5f))
+            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f))
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(badge.icon, null, tint = Gold, modifier = Modifier.size(24.dp))
+                Icon(badge.icon, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp))
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = badge.title.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
-            color = Color.White,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 1
         )

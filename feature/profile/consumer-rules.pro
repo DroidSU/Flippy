@@ -1,2 +1,2 @@
 # Profile module consumer rules
--keep class com.fliq.feature.profile.** { *; }
+-keep class com.fliq.profile.** { *; }

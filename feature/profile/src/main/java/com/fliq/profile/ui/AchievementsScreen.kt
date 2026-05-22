@@ -60,7 +60,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.Badge
 import com.fliq.common.BadgeCategory
+import com.fliq.core.theme.BgSlate
+import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.Gold
+import com.fliq.core.theme.InfoSlate
+import com.fliq.core.theme.NeonCyan
+import com.fliq.core.theme.NeonPurple
 import com.fliq.core.theme.gameColors
 import com.fliq.core.util.ChamferedCornerShape
 
@@ -122,15 +128,15 @@ private fun AchievementsTopBar(onBackClick: () -> Unit) {
         Surface(
             onClick = onBackClick,
             shape = CircleShape,
-            color = Color.White.copy(alpha = 0.05f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
             modifier = Modifier.size(44.dp),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -146,10 +152,10 @@ private fun AchievementsTopBar(onBackClick: () -> Unit) {
                     letterSpacing = 2.sp,
                     fontFamily = FontFamily.Monospace
                 ),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                "MISSION ACHIEVEMENTS",
+                "GAME ACHIEVEMENTS",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -167,12 +173,12 @@ private fun AchievementCategorySection(
     unlockedBadges: List<Badge>
 ) {
     val accentColor = when (category) {
-        BadgeCategory.GENERAL -> Color(0xFF22D3EE)
-        BadgeCategory.SPEED_RUN -> Color(0xFF22D3EE)
-        BadgeCategory.MIRAGE -> Color(0xFF8B5CF6)
-        BadgeCategory.MINEFIELD -> Color(0xFFF43F5E)
-        BadgeCategory.FRENZY -> Color(0xFFFACC15)
-        BadgeCategory.BLACKOUT -> Color(0xFF94A3B8)
+        BadgeCategory.GENERAL -> NeonCyan
+        BadgeCategory.SPEED_RUN -> NeonCyan
+        BadgeCategory.MIRAGE -> NeonPurple
+        BadgeCategory.MINEFIELD -> BombRed
+        BadgeCategory.FRENZY -> Gold
+        BadgeCategory.BLACKOUT -> InfoSlate
     }
 
     Column(
@@ -209,7 +215,7 @@ private fun AchievementCategorySection(
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 ),
-                color = Color.White.copy(alpha = 0.4f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
             )
         }
 
@@ -278,11 +284,11 @@ private fun AchievementGridItem(
                 .height(115.dp)
                 .graphicsLayer { translationY = -zOffset },
             shape = ChamferedCornerShape(16.dp),
-            color = if (isUnlocked) Color(0xFF1E293B).copy(alpha = 0.8f) else Color.White.copy(alpha = 0.03f),
+            color = if (isUnlocked) BgSlate.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
             border = BorderStroke(
                 1.dp,
                 if (isUnlocked) Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent))
-                else Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent))
+                else Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), Color.Transparent))
             )
         ) {
             Column(
@@ -297,7 +303,7 @@ private fun AchievementGridItem(
                     color = if (isUnlocked) accentColor.copy(alpha = 0.1f) else Color.Transparent,
                     border = BorderStroke(
                         if (isUnlocked) 2.dp else 1.dp,
-                        if (isUnlocked) accentColor else Color.White.copy(alpha = 0.1f)
+                        if (isUnlocked) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     )
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -312,7 +318,7 @@ private fun AchievementGridItem(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Locked",
-                                tint = Color.White.copy(alpha = 0.1f),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -329,7 +335,7 @@ private fun AchievementGridItem(
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace
                     ),
-                    color = if (isUnlocked) Color.White else Color.White.copy(alpha = 0.3f),
+                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -340,7 +346,7 @@ private fun AchievementGridItem(
                         fontSize = 7.5.sp,
                         lineHeight = 9.sp
                     ),
-                    color = if (isUnlocked) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.1f),
+                    color = if (isUnlocked) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                     textAlign = TextAlign.Center,
                     maxLines = 2,
                     modifier = Modifier.padding(top = 2.dp)

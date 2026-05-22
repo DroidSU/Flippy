@@ -19,6 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fliq.common.UtilityMethods
+import com.fliq.core.theme.RankBronze
+import com.fliq.core.theme.RankGold
+import com.fliq.core.theme.RankSilver
 import com.fliq.database.MatchHistory
 
 @Composable
@@ -34,9 +37,9 @@ fun LeaderboardItem(rank: Int, match: MatchHistory) {
             modifier = Modifier.size(28.dp),
             shape = CircleShape,
             color = when (rank) {
-                1 -> Color(0xFFFFD700) // Gold
-                2 -> Color(0xFFC0C0C0) // Silver
-                3 -> Color(0xFFCD7F32) // Bronze
+                1 -> RankGold // Gold
+                2 -> RankSilver // Silver
+                3 -> RankBronze // Bronze
                 else -> MaterialTheme.colorScheme.surfaceVariant
             }
         ) {

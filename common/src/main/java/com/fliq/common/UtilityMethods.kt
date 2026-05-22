@@ -53,6 +53,10 @@ class UtilityMethods {
                 6 -> R.drawable.user_avatar_6
                 7 -> R.drawable.user_avatar_7
                 8 -> R.drawable.user_avatar_8
+                9 -> R.drawable.user_avatar_9
+                10 -> R.drawable.user_avatar_10
+                11 -> R.drawable.user_avatar_11
+                12 -> R.drawable.user_avatar_12
                 else -> null
             }
         }

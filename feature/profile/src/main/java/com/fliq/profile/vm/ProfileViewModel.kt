@@ -103,15 +103,12 @@ class ProfileViewModel @Inject constructor(
                         if (userData != null) {
                             // Sync remote to local
                             profileRepository.saveUserData(userData)
+                            
+                            // Sync badges from UserData list
+                            userData.badges.forEach { badgeId ->
+                                badgeRepository.saveBadge(badgeId, userId, isBackedUp = true)
+                            }
                         }
-                    }
-                }
-            }
-
-            viewModelScope.launch {
-                networkRepository.fetchBadges(userId).collect { result ->
-                    if (result is Result.Success) {
-                        badgeRepository.syncBadgesFromServer(result.data)
                     }
                 }
             }

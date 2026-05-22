@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bolt
@@ -52,7 +53,16 @@ import androidx.compose.ui.unit.sp
 import com.fliq.common.AppUIState
 import com.fliq.common.LeaderboardModel
 import com.fliq.common.UtilityMethods
+import com.fliq.core.theme.BgSlate
+import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.Gold
+import com.fliq.core.theme.InfoSlate
+import com.fliq.core.theme.NeonCyan
+import com.fliq.core.theme.NeonPurple
+import com.fliq.core.theme.RankBronze
+import com.fliq.core.theme.RankGold
+import com.fliq.core.theme.RankSilver
 import com.fliq.core.theme.gameColors
 import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.models.Challenge
@@ -69,11 +79,11 @@ fun LeaderboardScreen(
 ) {
     val gameColors = MaterialTheme.gameColors
     val accentColor = when (selectedChallenge) {
-        Challenge.SPEED_RUN -> Color(0xFF22D3EE)
-        Challenge.MIRAGE -> Color(0xFF8B5CF6)
-        Challenge.MINEFIELD -> Color(0xFFF43F5E)
-        Challenge.FRENZY -> Color(0xFFFACC15)
-        Challenge.BLACKOUT -> Color(0xFF94A3B8)
+        Challenge.SPEED_RUN -> NeonCyan
+        Challenge.MIRAGE -> NeonPurple
+        Challenge.MINEFIELD -> BombRed
+        Challenge.FRENZY -> Gold
+        Challenge.BLACKOUT -> InfoSlate
     }
 
     Box(
@@ -220,20 +230,20 @@ private fun ChallengeSelectorTabs(
         items(Challenge.entries.toTypedArray()) { challenge ->
             val isSelected = challenge == selectedChallenge
             val accentColor = when (challenge) {
-                Challenge.SPEED_RUN -> Color(0xFF22D3EE)
-                Challenge.MIRAGE -> Color(0xFF8B5CF6)
-                Challenge.MINEFIELD -> Color(0xFFF43F5E)
-                Challenge.FRENZY -> Color(0xFFFACC15)
-                Challenge.BLACKOUT -> Color(0xFF94A3B8)
+                Challenge.SPEED_RUN -> NeonCyan
+                Challenge.MIRAGE -> NeonPurple
+                Challenge.MINEFIELD -> BombRed
+                Challenge.FRENZY -> Gold
+                Challenge.BLACKOUT -> InfoSlate
             }
 
             Surface(
                 onClick = { onChallengeSelected(challenge) },
-                shape = ChamferedCornerShape(12.dp),
-                color = if (isSelected) accentColor.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.03f),
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) accentColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
                 border = BorderStroke(
                     1.dp, 
-                    if (isSelected) accentColor.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f)
+                    if (isSelected) accentColor.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 ),
                 modifier = Modifier.height(48.dp)
             ) {
@@ -251,7 +261,7 @@ private fun ChallengeSelectorTabs(
                         },
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = if (isSelected) accentColor else Color.White.copy(alpha = 0.4f)
+                        tint = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -260,7 +270,7 @@ private fun ChallengeSelectorTabs(
                             fontWeight = FontWeight.Black,
                             fontFamily = FontFamily.Monospace
                         ),
-                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.4f)
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
                 }
             }
@@ -287,7 +297,7 @@ private fun ChampionsPodium(
                 rank = 2,
                 modifier = Modifier.weight(1f),
                 height = 160.dp,
-                accentColor = Color(0xFF94A3B8) // Silver
+                accentColor = RankSilver
             )
         } else {
             Spacer(modifier = Modifier.weight(1f))
@@ -300,7 +310,7 @@ private fun ChampionsPodium(
                 rank = 1,
                 modifier = Modifier.weight(1.2f),
                 height = 200.dp,
-                accentColor = Color(0xFFFACC15), // Gold
+                accentColor = RankGold,
                 isApex = true
             )
         }
@@ -312,9 +322,10 @@ private fun ChampionsPodium(
                 rank = 3,
                 modifier = Modifier.weight(1f),
                 height = 140.dp,
-                accentColor = Color(0xFFD97706) // Bronze
+                accentColor = RankBronze
             )
-        } else {
+        }
+else {
             Spacer(modifier = Modifier.weight(1f))
         }
     }
@@ -349,7 +360,7 @@ private fun PodiumCard(
             Surface(
                 modifier = Modifier.size(if (isApex) 72.dp else 56.dp),
                 shape = CircleShape,
-                color = Color.White.copy(alpha = 0.1f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                 border = BorderStroke(2.dp, accentColor)
             ) {
                 if (avatarRes != null) {
@@ -369,14 +380,14 @@ private fun PodiumCard(
             // 3D Base
             Surface(
                 modifier = Modifier.fillMaxSize().offset(y = 4.dp).alpha(0.3f),
-                shape = ChamferedCornerShape(16.dp),
-                color = Color.Black
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.scrim
             ) {}
             
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                shape = ChamferedCornerShape(16.dp),
-                color = Color(0xFF1E293B).copy(alpha = 0.9f),
+                shape = RoundedCornerShape(16.dp),
+                color = BgSlate.copy(alpha = 0.9f),
                 border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
             ) {
                 Column(
@@ -596,8 +607,8 @@ private fun EmptyLeaderboardState(accentColor: Color) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     shape = ChamferedCornerShape(24.dp),
-                    color = Color(0xFF1E293B).copy(alpha = 0.7f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                    color = BgSlate.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),

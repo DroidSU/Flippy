@@ -50,6 +50,10 @@ import com.fliq.common.Difficulty
 import com.fliq.common.LeaderboardModel
 import com.fliq.common.UtilityMethods.Companion.getAvatarResource
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.RankBronze
+import com.fliq.core.theme.RankGold
+import com.fliq.core.theme.RankSilver
+import com.fliq.game_engine.models.Challenge
 
 @Composable
 fun GlobalLeaderboardSection(
@@ -205,7 +209,7 @@ fun PodiumSection(scores: List<LeaderboardModel>) {
                 data = scores[1],
                 rank = 2,
                 height = 140.dp,
-                color = Color(0xFFC0C0C0),
+                color = RankSilver,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -218,7 +222,7 @@ fun PodiumSection(scores: List<LeaderboardModel>) {
                 data = scores[0],
                 rank = 1,
                 height = 180.dp,
-                color = Color(0xFFFFD700),
+                color = RankGold,
                 modifier = Modifier.weight(1.2f)
             )
         }
@@ -231,7 +235,7 @@ fun PodiumSection(scores: List<LeaderboardModel>) {
                 data = scores[2],
                 rank = 3,
                 height = 120.dp,
-                color = Color(0xFFCD7F32),
+                color = RankBronze,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -286,7 +290,7 @@ fun PodiumItem(
                     Text(
                         text = rank.toString(),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -347,7 +351,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 100,
                     avatarId = 1,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
                 LeaderboardModel(
                     playerId = "player2",
@@ -355,7 +359,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 90,
                     avatarId = 2,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
                 LeaderboardModel(
                     playerId = "player3",
@@ -363,7 +367,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 80,
                     avatarId = 3,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
 
                 LeaderboardModel(
@@ -372,7 +376,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 75,
                     avatarId = 4,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
 
                 LeaderboardModel(
@@ -381,7 +385,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 60,
                     avatarId = 5,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
 
                 LeaderboardModel(
@@ -390,7 +394,7 @@ private fun GlobalLeaderboardPreview() {
                     totalScore = 80,
                     avatarId = 3,
                     lastUpdated = 0,
-                    challengeName = Difficulty.NORMAL.label
+                    challengeName = Challenge.SPEED_RUN.title
                 ),
 
             ),

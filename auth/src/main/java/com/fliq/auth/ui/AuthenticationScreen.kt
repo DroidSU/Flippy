@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.fliq.common.AppUIState
 import com.fliq.core.models.UserData
+import com.fliq.core.theme.FliqTheme
 
 @Composable
 fun AuthenticationScreen(
@@ -56,5 +58,23 @@ fun AuthenticationScreen(
                 onGoogleSignIn = onGoogleSignIn
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AuthenticationScreenPreview() {
+    FliqTheme {
+        AuthenticationScreen(
+            uiState = AppUIState.Idle,
+            userData = null,
+            onGoogleSignIn = {},
+            onAuthSuccess = {},
+            onErrorShown = { _ -> },
+            onAvatarChanged = { _ -> },
+            onUsernameChanged = { _ -> },
+            showProfileDialog = false,
+            onSaveUser = { _, _ -> }
+        )
     }
 }

@@ -308,7 +308,7 @@ class FrenzyViewModel @Inject constructor(
         _status.value = GameStatus.GAME_OVER
         _isGamePaused.value = false
         stopTimer()
-        soundRepository.playGameOverSound()
+        soundRepository.stopBackgroundMusic()
         _newlyUnlockedBadges.value = emptyList()
         
         clutchTime += System.currentTimeMillis() - clutchStartTime
@@ -355,11 +355,17 @@ class FrenzyViewModel @Inject constructor(
                 challengeName = "FRENZY"
             )
             matchRepository.saveMatch(match)
-            try {
-                if (networkRepository.isInternetAvailable()) networkRepository.storeMatchData(listOf(match))
-            } catch (e: Exception) { Log.e("FrenzyViewModel", "Failed to sync: ${e.message}") }
-            updateUserStats(match)
+            
+            // Trigger UI critical logic immediately (Badges and Sound)
             checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
+
+            // Perform potentially slow network sync in background
+            launch {
+                updateUserStats(match)
+                try {
+                    if (networkRepository.isInternetAvailable()) networkRepository.storeMatchData(listOf(match))
+                } catch (e: Exception) { Log.e("FrenzyViewModel", "Failed to sync: ${e.message}") }
+            }
         }
     }
 
@@ -386,6 +392,9 @@ class FrenzyViewModel @Inject constructor(
                     networkRepository.uploadUserData(updatedUserData)
                 }
             }
+            soundRepository.playBonusSound()
+        } else {
+            soundRepository.playGameOverSound()
         }
     }
 

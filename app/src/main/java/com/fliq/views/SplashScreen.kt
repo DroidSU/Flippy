@@ -8,15 +8,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -25,21 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.Gold
 import com.fliq.core.theme.gameColors
-import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.ui.MeshBackground
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -96,27 +90,28 @@ fun SplashScreen(onTimeout: () -> Unit) {
         MeshBackground(streak = 0)
 
         // The Forge Area
-        Box(modifier = Modifier.size(240.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(height = 240.dp, width = 320.dp), contentAlignment = Alignment.Center) {
             
-            // 1. Ghostly Wireframe
+            // 1. Ghostly Wireframe (Rectangular to match full logo)
             Surface(
-                modifier = Modifier.size(100.dp).alpha(wireframeAlpha.value),
-                shape = ChamferedCornerShape(20.dp),
+                modifier = Modifier.size(width = 220.dp, height = 90.dp).alpha(wireframeAlpha.value),
+                shape = RoundedCornerShape(16.dp),
                 color = Color.Transparent,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
             ) {}
 
-            // 2. Flying Shards
-            val shardSize = 26.dp
-            val distance = 140f
+            // 2. Flying Shards (Adjusted for wider target)
+            val shardSize = 22.dp
+            val distH = 180f
+            val distV = 100f
             
             if (shardPos.value > 0.01f) {
                 // Top Left Shard
                 ShardPiece(
                     modifier = Modifier.offset { 
                         IntOffset(
-                            (-distance * shardPos.value).roundToInt(), 
-                            (-distance * shardPos.value).roundToInt()
+                            (-distH * shardPos.value).roundToInt(), 
+                            (-distV * shardPos.value).roundToInt()
                         ) 
                     },
                     size = shardSize,
@@ -127,8 +122,8 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 ShardPiece(
                     modifier = Modifier.offset { 
                         IntOffset(
-                            (distance * shardPos.value).roundToInt(), 
-                            (-distance * shardPos.value).roundToInt()
+                            (distH * shardPos.value).roundToInt(), 
+                            (-distV * shardPos.value).roundToInt()
                         ) 
                     },
                     size = shardSize,
@@ -139,20 +134,20 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 ShardPiece(
                     modifier = Modifier.offset { 
                         IntOffset(
-                            (-distance * shardPos.value).roundToInt(), 
-                            (distance * shardPos.value).roundToInt()
+                            (-distH * shardPos.value).roundToInt(), 
+                            (distV * shardPos.value).roundToInt()
                         ) 
                     },
                     size = shardSize,
-                    color = Color(0xFFFACC15)
+                    color = Gold
                 )
                 
                 // Bottom Right Shard
                 ShardPiece(
                     modifier = Modifier.offset { 
                         IntOffset(
-                            (distance * shardPos.value).roundToInt(), 
-                            (distance * shardPos.value).roundToInt()
+                            (distH * shardPos.value).roundToInt(), 
+                            (distV * shardPos.value).roundToInt()
                         ) 
                     },
                     size = shardSize,
@@ -163,6 +158,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
             // 3. Booted Logo
             Box(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .scale(logoScale.value)
                     .alpha(logoAlpha.value),
                 contentAlignment = Alignment.Center
@@ -170,64 +166,26 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 // Outer Glow
                 Box(
                     modifier = Modifier
-                        .size(150.dp)
-                        .blur(35.dp)
+                        .size(width = 300.dp, height = 140.dp)
+                        .blur(45.dp)
                         .alpha(glowAlpha.value)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
                 )
 
-                // Physical Stack Logo
-                Surface(
-                    modifier = Modifier.size(100.dp).offset(y = 8.dp).alpha(0.4f),
-                    shape = ChamferedCornerShape(24.dp),
-                    color = Color.Black
-                ) {}
-                
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = ChamferedCornerShape(24.dp),
-                    color = Color(0xFF1E293B),
-                    border = BorderStroke(2.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.6f), Color.Transparent)))
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(id = com.fliq.core.R.drawable.app_logo),
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp)
-                        )
-                    }
-                }
+                Image(
+                    painter = painterResource(id = com.fliq.core.R.drawable.logo_full_transparent),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .graphicsLayer {
+                            // subtle movement
+                            translationY = (1f - logoAlpha.value) * 10f
+                        }
+                )
             }
         }
 
-        // 4. Branding Reveal
-        Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 120.dp).graphicsLayer {
-                alpha = textAlpha.value
-                translationY = textY.value
-            },
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "FLIQ",
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 8.sp,
-                    fontFamily = FontFamily.Monospace,
-                    shadow = Shadow(Color.Black.copy(alpha = 0.5f), offset = Offset(0f, 8f), blurRadius = 16f)
-                ),
-                color = Color.White
-            )
-            Text(
-                text = "ARCADE CHALLENGE",
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 4.sp,
-                    fontFamily = FontFamily.Monospace
-                ),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-        }
+        // Logo is now the full branding, so we remove the extra text reveal
     }
 }
 
@@ -235,7 +193,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
 private fun ShardPiece(modifier: Modifier, size: androidx.compose.ui.unit.Dp, color: Color) {
     Surface(
         modifier = modifier.size(size),
-        shape = ChamferedCornerShape(size / 3),
+        shape = RoundedCornerShape(size / 3),
         color = color.copy(alpha = 0.8f),
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
     ) {}

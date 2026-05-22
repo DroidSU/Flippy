@@ -341,7 +341,7 @@ class MirageViewModel @Inject constructor(
         _status.value = GameStatus.GAME_OVER
         _isGamePaused.value = false
         stopTimer()
-        soundRepository.playGameOverSound()
+        soundRepository.stopBackgroundMusic()
         _newlyUnlockedBadges.value = emptyList()
         if (clutchStartTime > 0) {
             clutchTime += System.currentTimeMillis() - clutchStartTime
@@ -388,11 +388,17 @@ class MirageViewModel @Inject constructor(
                 challengeName = "MIRAGE"
             )
             matchRepository.saveMatch(match)
-            try {
-                if (networkRepository.isInternetAvailable()) networkRepository.storeMatchData(listOf(match))
-            } catch (e: Exception) { Log.e("MirageViewModel", "Failed to sync: ${e.message}") }
-            updateUserStats(match)
+
+            // Trigger UI critical logic immediately (Badges and Sound)
             checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
+
+            // Perform potentially slow network sync in background
+            launch {
+                updateUserStats(match)
+                try {
+                    if (networkRepository.isInternetAvailable()) networkRepository.storeMatchData(listOf(match))
+                } catch (e: Exception) { Log.e("MirageViewModel", "Failed to sync: ${e.message}") }
+            }
         }
     }
 
@@ -419,6 +425,9 @@ class MirageViewModel @Inject constructor(
                     networkRepository.uploadUserData(updatedUserData)
                 }
             }
+            soundRepository.playBonusSound()
+        } else {
+            soundRepository.playGameOverSound()
         }
     }
 

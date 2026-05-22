@@ -65,6 +65,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
+import com.fliq.core.theme.BgDeepDark
+import com.fliq.core.theme.BgSlate
+import com.fliq.core.theme.BombRed
+import com.fliq.core.theme.Gold
 import com.fliq.core.theme.HeartRed
 import com.fliq.core.theme.gameColors
 import com.fliq.core.util.ChamferedCornerShape
@@ -253,7 +257,7 @@ fun MinefieldTopBar(
             Text(
                 text = if (isPaused) "PAUSED" else "WATCH YOUR STEP!",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                color = if (isPaused) Color(0xFFFACC15) else Color(0xFFF43F5E)
+                color = if (isPaused) Gold else BombRed
             )
         }
 
@@ -277,7 +281,7 @@ fun MinefieldStats(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = ChamferedCornerShape(24.dp),
-            color = Color(0xFF1E293B).copy(alpha = 0.7f),
+            color = BgSlate.copy(alpha = 0.7f),
             border = BorderStroke(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.2f), Color.Transparent, Color.White.copy(alpha = 0.05f))))
         ) {
             Row(
@@ -401,7 +405,7 @@ fun MinefieldTile(
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     shape = ChamferedCornerShape(12.dp),
-                    color = Color(0xFF1E293B).copy(alpha = 0.9f),
+                    color = BgSlate.copy(alpha = 0.9f),
                     border = BorderStroke(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -414,8 +418,8 @@ fun MinefieldTile(
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     shape = ChamferedCornerShape(12.dp),
-                    color = Color(0xFF0F172A),
-                    border = BorderStroke(2.dp, if (tile.type == CardType.COIN) Color(0xFFFACC15) else Color(0xFFF43F5E))
+                    color = BgDeepDark,
+                    border = BorderStroke(2.dp, if (tile.type == CardType.COIN) Gold else BombRed)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (tile.isIconVisible) {
@@ -476,7 +480,7 @@ fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
     Text(
         text = effect.text,
         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.5f), blurRadius = 8f)),
-        color = Color(0xFFFACC15),
+        color = Gold,
         modifier = Modifier.offset { IntOffset(effect.position.x.roundToInt() - 50, (effect.position.y + offsetY.value).roundToInt() - 50) }.scale(scale.value).alpha(alpha.value)
     )
 }

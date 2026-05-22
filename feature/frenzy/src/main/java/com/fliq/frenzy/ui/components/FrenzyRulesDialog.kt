@@ -46,6 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.fliq.core.theme.BgDeepDark
+import com.fliq.core.theme.BombRed
+import com.fliq.core.theme.Gold
+import com.fliq.core.theme.NeonCyan
 import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.R
 
@@ -54,7 +58,7 @@ fun FrenzyRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
-    val accentColor = Color(0xFFFACC15) // Gold/Yellow for Frenzy
+    val accentColor = Gold // Gold/Yellow for Frenzy
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
@@ -74,7 +78,7 @@ fun FrenzyRulesDialog(
             Surface(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 shape = ChamferedCornerShape(32.dp),
-                color = Color(0xFF0F172A).copy(alpha = 0.98f),
+                color = BgDeepDark.copy(alpha = 0.98f),
                 border = BorderStroke(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent)))
             ) {
                 Column(
@@ -121,14 +125,14 @@ fun FrenzyRulesDialog(
                             iconVector = Icons.Default.Warning,
                             title = "ZERO TOLERANCE",
                             description = "Missing even a single coin ends your run immediately.",
-                            accent = Color(0xFFF43F5E),
+                            accent = BombRed,
                             isVector = true
                         )
                         FrenzyRuleItem(
                             iconVector = Icons.Default.PlayArrow,
                             title = "BLITZ SPEED",
                             description = "Visible duration is locked at a brutal 350ms. No warming up.",
-                            accent = Color(0xFF22D3EE),
+                            accent = NeonCyan,
                             isVector = true
                         )
                     }
@@ -156,7 +160,7 @@ fun FrenzyRulesDialog(
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 2.sp
                             ),
-                            color = Color(0xFF0F172A)
+                            color = BgDeepDark
                         )
                     }
                 }

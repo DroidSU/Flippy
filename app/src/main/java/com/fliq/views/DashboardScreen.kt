@@ -65,7 +65,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.Badge
+import com.fliq.core.theme.BgSlate
+import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.Gold
+import com.fliq.core.theme.InfoSlate
+import com.fliq.core.theme.NeonCyan
+import com.fliq.core.theme.NeonPurple
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.R
 import com.fliq.game_engine.models.Challenge
@@ -231,7 +237,7 @@ fun DashboardHeader(
                         letterSpacing = (-0.5).sp,
                         fontSize = 28.sp
                     ),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
@@ -244,15 +250,15 @@ fun DashboardHeader(
         Surface(
             onClick = onProfileClick,
             shape = CircleShape,
-            color = Color.White.copy(alpha = 0.08f),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
             modifier = Modifier.size(52.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(26.dp)
                 )
             }
@@ -285,11 +291,11 @@ fun ChallengeTile(
     )
 
     val accentColor = when (challenge) {
-        Challenge.SPEED_RUN -> Color(0xFF22D3EE)
-        Challenge.MIRAGE -> Color(0xFF8B5CF6)
-        Challenge.MINEFIELD -> Color(0xFFF43F5E)
-        Challenge.BLACKOUT -> Color(0xFF94A3B8)
-        Challenge.FRENZY -> Color(0xFFFACC15)
+        Challenge.SPEED_RUN -> NeonCyan
+        Challenge.MIRAGE -> NeonPurple
+        Challenge.MINEFIELD -> BombRed
+        Challenge.BLACKOUT -> InfoSlate
+        Challenge.FRENZY -> Gold
     }
 
     Box(
@@ -298,7 +304,7 @@ fun ChallengeTile(
             .height(if (isFeatured) 160.dp else 130.dp)
             .scale(scale)
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF1E293B).copy(alpha = 0.6f))
+            .background(BgSlate.copy(alpha = 0.6f))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -359,13 +365,13 @@ fun ChallengeTile(
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.5.sp
                     ),
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (isFeatured) {
                     Text(
                         text = challenge.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
@@ -386,8 +392,8 @@ fun DashboardNavBar(
             .padding(horizontal = 24.dp)
             .height(72.dp),
         shape = RoundedCornerShape(36.dp),
-        color = Color.White.copy(alpha = 0.05f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier
@@ -397,9 +403,9 @@ fun DashboardNavBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavBarItem(icon = Icons.Default.EmojiEvents, label = "TROPHIES", onClick = onAchievementsClick)
-            Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.1f)))
+            Box(modifier = Modifier.width(1.dp).height(24.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)))
             NavBarItem(icon = Icons.Default.Leaderboard, label = "RANKINGS", onClick = onLeaderboardClick)
-            Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.1f)))
+            Box(modifier = Modifier.width(1.dp).height(24.dp).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)))
             NavBarItem(icon = Icons.Default.Settings, label = "OPTIONS", onClick = onSettingsClick)
         }
     }
@@ -432,7 +438,7 @@ fun NavBarItem(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(22.dp),
-            tint = Color.White.copy(alpha = if (isPressed) 1f else 0.7f)
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isPressed) 1f else 0.7f)
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -442,7 +448,7 @@ fun NavBarItem(
                 fontSize = 9.sp,
                 letterSpacing = 1.sp
             ),
-            color = Color.White.copy(alpha = if (isPressed) 1f else 0.5f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isPressed) 1f else 0.5f)
         )
     }
 }

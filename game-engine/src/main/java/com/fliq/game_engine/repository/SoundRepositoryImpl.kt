@@ -25,6 +25,10 @@ class SoundRepositoryImpl @Inject constructor(
         soundPlayer.pauseBackgroundMusic()
     }
 
+    override fun stopBackgroundMusic() {
+        soundPlayer.stopBackgroundMusic()
+    }
+
     override fun setMusicAllowed(allowed: Boolean) {
         isMusicAllowed = allowed
     }
@@ -44,6 +48,12 @@ class SoundRepositoryImpl @Inject constructor(
     override fun playGameOverSound() {
         if (isSoundEnabled()) {
             soundPlayer.playGameOverSound()
+        }
+    }
+
+    override fun playBonusSound() {
+        if (isSoundEnabled()) {
+            soundPlayer.playBonusSound()
         }
     }
 

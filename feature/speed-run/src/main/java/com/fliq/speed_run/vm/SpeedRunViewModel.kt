@@ -373,7 +373,7 @@ class SpeedRunViewModel @Inject constructor(
         _status.value = GameStatus.GAME_OVER
         _isGamePaused.value = false
         stopTimer()
-        soundRepository.playGameOverSound()
+        soundRepository.stopBackgroundMusic()
 
         _newlyUnlockedBadges.value = emptyList()
         if (clutchStartTime > 0) {
@@ -427,16 +427,20 @@ class SpeedRunViewModel @Inject constructor(
             )
             matchRepository.saveMatch(match)
 
-            try {
-                if (networkRepository.isInternetAvailable()) {
-                    networkRepository.storeMatchData(listOf(match))
-                }
-            } catch (e: Exception) {
-                Log.e("SpeedRunViewModel", "Failed to sync match result: ${e.message}")
-            }
-
-            updateUserStats(match)
+            // Trigger UI critical logic immediately (Badges and Sound)
             checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
+
+            // Perform potentially slow network sync in background
+            launch {
+                updateUserStats(match)
+                try {
+                    if (networkRepository.isInternetAvailable()) {
+                        networkRepository.storeMatchData(listOf(match))
+                    }
+                } catch (e: Exception) {
+                    Log.e("SpeedRunViewModel", "Failed to sync match result: ${e.message}")
+                }
+            }
         }
     }
 
@@ -476,6 +480,9 @@ class SpeedRunViewModel @Inject constructor(
                     networkRepository.uploadUserData(updatedUserData)
                 }
             }
+            soundRepository.playBonusSound()
+        } else {
+            soundRepository.playGameOverSound()
         }
     }
 

@@ -55,7 +55,7 @@ fun EditDialog(
     onDismiss: () -> Unit,
 ) {
 
-    val avatarList = listOf(1, 2, 3, 4, 5, 6, 7, 8)
+    val avatarList = (1..12).toList()
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -114,7 +114,7 @@ fun EditDialog(
 
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(4),
-                        modifier = Modifier.height(160.dp),
+                        modifier = Modifier.height(240.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {

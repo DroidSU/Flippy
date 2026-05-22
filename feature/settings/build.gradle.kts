@@ -38,6 +38,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":common"))
+    implementation(project(":database"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -50,6 +51,10 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.material.icons.extended)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

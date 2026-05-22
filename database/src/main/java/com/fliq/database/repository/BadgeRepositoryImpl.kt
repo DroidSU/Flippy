@@ -14,7 +14,11 @@ class BadgeRepositoryImpl @Inject constructor(
         return badgeDao.getBadgesForUser(userId)
     }
 
-    override suspend fun saveBadge(badgeId: String, userId: String) {
+    override suspend fun getBadgesForUserSync(userId: String): List<BadgeEntity> {
+        return badgeDao.getBadgesForUserSync(userId)
+    }
+
+    override suspend fun saveBadge(badgeId: String, userId: String, isBackedUp: Boolean) {
         val existingBadges = badgeDao.getBadgesForUserSync(userId)
         if (existingBadges.none { it.badgeId == badgeId }) {
             badgeDao.insertBadge(
@@ -22,7 +26,7 @@ class BadgeRepositoryImpl @Inject constructor(
                     badgeId = badgeId,
                     userId = userId,
                     unlockTimestamp = System.currentTimeMillis(),
-                    isBackedUp = false
+                    isBackedUp = isBackedUp
                 )
             )
         }
@@ -32,8 +36,8 @@ class BadgeRepositoryImpl @Inject constructor(
         return badgeDao.getPendingBadges()
     }
 
-    override suspend fun markBadgesAsBackedUp(badgeIds: List<String>) {
-        badgeDao.markAsBackedUp(badgeIds)
+    override suspend fun markBadgesAsBackedUp(badgeIds: List<String>, userId: String) {
+        badgeDao.markAsBackedUp(badgeIds, userId)
     }
 
     override suspend fun syncBadgesFromServer(badges: List<BadgeEntity>) {

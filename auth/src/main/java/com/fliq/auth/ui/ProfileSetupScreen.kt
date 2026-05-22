@@ -56,10 +56,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.UtilityMethods
 import com.fliq.common.UtilityMethods.Companion.getAvatarResource
+import com.fliq.core.theme.BgDeepDark
+import com.fliq.core.theme.BgSlate
+import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.gameColors
 
 @Composable
@@ -94,7 +99,7 @@ fun ProfileSetupScreen(
                     letterSpacing = 2.sp,
                     fontFamily = FontFamily.Monospace
                 ),
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Text(
@@ -154,7 +159,7 @@ fun SetupSectionLabel(label: String) {
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp
             ),
-            color = Color.White.copy(alpha = 0.5f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
         )
     }
 }
@@ -176,8 +181,8 @@ fun KineticUsernameField(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(12.dp),
-            color = Color(0xFF1E293B).copy(alpha = 0.7f),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            color = BgSlate.copy(alpha = 0.7f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp),
@@ -188,7 +193,7 @@ fun KineticUsernameField(
                     onValueChange = { if (it.length <= 15) onUsernameChanged(it) },
                     modifier = Modifier.weight(1f),
                     textStyle = TextStyle(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         fontFamily = FontFamily.Monospace,
@@ -202,7 +207,7 @@ fun KineticUsernameField(
                             Text(
                                 text = "ENTER NAME...",
                                 style = TextStyle(
-                                    color = Color.White.copy(alpha = 0.2f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Black,
                                     fontFamily = FontFamily.Monospace
@@ -232,12 +237,12 @@ fun AvatarGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.fillMaxWidth().height(180.dp),
+        modifier = Modifier.fillMaxWidth().height(240.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 8.dp)
     ) {
-        items(8) { index ->
+        items(12) { index ->
             val id = index + 1
             val isSelected = selectedId == id
             val avatarRes = getAvatarResource(id)
@@ -252,13 +257,13 @@ fun AvatarGrid(
                         }
                     }
                     .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f))
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                     .border(
                         width = if (isSelected) 3.dp else 1.dp,
                         brush = if (isSelected) {
-                            Brush.sweepGradient(listOf(MaterialTheme.colorScheme.primary, Color.White, MaterialTheme.colorScheme.primary))
+                            Brush.sweepGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary))
                         } else {
-                            Brush.linearGradient(listOf(Color.White.copy(alpha = 0.1f), Color.Transparent))
+                            Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), Color.Transparent))
                         },
                         shape = CircleShape
                     )
@@ -273,7 +278,7 @@ fun AvatarGrid(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Icon(Icons.Default.Person, null, tint = Color.White.copy(alpha = 0.2f))
+                    Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                 }
                 
                 if (isSelected) {
@@ -301,7 +306,7 @@ fun ConfirmKineticButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val accentColor = Color(0xFF22D3EE)
+    val accentColor = NeonCyan
 
     val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "s")
     val zOffset by animateFloatAsState(if (isPressed) 0f else 6.dp.value, label = "z")
@@ -323,18 +328,18 @@ fun ConfirmKineticButton(
         Surface(
             modifier = Modifier.fillMaxSize().offset(y = 6.dp).alpha(0.4f),
             shape = RoundedCornerShape(16.dp),
-            color = Color.Black
+            color = MaterialTheme.colorScheme.scrim
         ) {}
 
         Surface(
             modifier = Modifier.fillMaxSize().graphicsLayer { translationY = -zOffset },
             shape = RoundedCornerShape(16.dp),
-            color = if (enabled) accentColor else Color.White.copy(alpha = 0.1f),
-            border = if (enabled) null else BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            color = if (enabled) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+            border = if (enabled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color(0xFF0F172A))
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = BgDeepDark)
                 } else {
                     Text(
                         text = "GET STARTED",
@@ -342,10 +347,25 @@ fun ConfirmKineticButton(
                             fontWeight = FontWeight.Black,
                             letterSpacing = 2.sp
                         ),
-                        color = if (enabled) Color(0xFF0F172A) else Color.White.copy(alpha = 0.3f)
+                        color = if (enabled) BgDeepDark else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileSetupScreenPreview() {
+    FliqTheme {
+        ProfileSetupScreen(
+            username = "Sujoy",
+            isLoading = false,
+            avatarId = 1,
+            onAvatarChanged = {},
+            onUsernameChanged = {},
+            onSave = {}
+        )
     }
 }

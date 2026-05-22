@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
@@ -59,6 +60,7 @@ fun SettingsScreen(
     onNotificationsChange: (Boolean) -> Unit = {},
     onGameSoundChange: (Boolean) -> Unit = {},
     onHapticFeedbackChange: (Boolean) -> Unit = {},
+    onSignOut: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     Scaffold(
@@ -148,6 +150,20 @@ fun SettingsScreen(
                     subtitle = "v$versionName",
                     icon = Icons.Default.Info,
                     onClick = { /* Show version info */ }
+                )
+            }
+
+            item {
+                SettingsSectionHeader(title = "Account")
+            }
+
+            item {
+                SettingsClickableItem(
+                    title = "Sign Out",
+                    subtitle = "Log out from your account and clear local data",
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    onClick = onSignOut
                 )
             }
 
@@ -334,6 +350,7 @@ private fun SettingsClickableItem(
     title: String,
     subtitle: String? = null,
     icon: ImageVector,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit
 ) {
     Surface(
@@ -352,13 +369,13 @@ private fun SettingsClickableItem(
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                color = iconTint.copy(alpha = 0.1f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = iconTint,
                         modifier = Modifier.size(20.dp)
                     )
                 }

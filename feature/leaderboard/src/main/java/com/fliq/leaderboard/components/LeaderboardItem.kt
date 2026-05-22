@@ -28,6 +28,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.fliq.common.UtilityMethods.Companion.getAvatarResource
+import com.fliq.core.theme.RankBronze
+import com.fliq.core.theme.RankGold
+import com.fliq.core.theme.RankSilver
 
 @Composable
 fun LeaderboardItem(
@@ -60,9 +63,9 @@ fun LeaderboardItem(
         ) {
             // Rank Display with Gradient / Background
             val rankColor = when(rank) {
-                1 -> Color(0xFFFACC15) // Gold
-                2 -> Color(0xFF94A3B8) // Silver
-                3 -> Color(0xFFB45309) // Bronze
+                1 -> RankGold // Gold
+                2 -> RankSilver // Silver
+                3 -> RankBronze // Bronze
                 else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             }
 
@@ -77,7 +80,7 @@ fun LeaderboardItem(
                         text = rank.toString(),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Black,
-                            color = if (rank <= 3) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = if (rank <= 3) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
                 }

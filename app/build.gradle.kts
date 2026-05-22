@@ -19,14 +19,14 @@ val googleWebClientId: String = localProperties.getProperty("google.web.client.i
 
 android {
     namespace = "com.fliq"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.fliq"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "1.1"
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.fliq.core.models.UserData
+import com.fliq.database.BadgeDAO
 import com.fliq.database.MatchDAO
 import com.fliq.database.MatchHistory
 import com.fliq.database.UserDAO
@@ -17,7 +18,8 @@ import javax.inject.Inject
 class ProfileRepositoryImpl @Inject constructor(
     @ApplicationContext context: Context,
     private val matchDao: MatchDAO,
-    private val userDao: UserDAO
+    private val userDao: UserDAO,
+    private val badgeDao: BadgeDAO
 ) : ProfileRepository {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
@@ -66,5 +68,6 @@ class ProfileRepositoryImpl @Inject constructor(
         // Clear Room database
         matchDao.clearAll()
         userDao.clearAll()
+        badgeDao.clearAll()
     }
 }

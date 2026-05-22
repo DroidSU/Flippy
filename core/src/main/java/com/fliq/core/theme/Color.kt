@@ -40,6 +40,15 @@ val GlassWhiteBright = Color(0xFFFFFFFF).copy(alpha = 0.2f)
 val CyberWhite = Color(0xFFF8FAFC)
 val HeartRed = Color(0xFFEF4444)
 
+// --- Semantic / Trophies ---
+val RankGold = Color(0xFFFFD700)
+val RankSilver = Color(0xFFC0C0C0)
+val RankBronze = Color(0xFFCD7F32)
+
+val SuccessGreen = Color(0xFF22C55E)
+val WarningYellow = Color(0xFFEAB308)
+val InfoSlate = Color(0xFF94A3B8)
+
 // --- Legacy support or additional colors ---
 val CyberBlack = Color(0xFF0B1120)
 val CyberSlate = Color(0xFF1E293B)

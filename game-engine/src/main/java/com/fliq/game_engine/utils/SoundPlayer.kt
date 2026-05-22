@@ -15,6 +15,7 @@ class SoundPlayer(private val context: Context) {
     private var soundPool: SoundPool
     private var bombSoundId: Int = 0
     private var gameOverSoundId: Int = 0
+    private var bonusSoundId: Int = 0
     private var isEffectsLoaded = false
 
     private var backgroundMusicPlayer: MediaPlayer? = null
@@ -39,7 +40,8 @@ class SoundPlayer(private val context: Context) {
 
         CoroutineScope(Dispatchers.IO).launch {
             bombSoundId = soundPool.load(context, R.raw.sound_error, 1)
-            gameOverSoundId = soundPool.load(context, R.raw.sound_game_over, 1)
+            gameOverSoundId = soundPool.load(context, R.raw.retro_game_over, 1)
+            bonusSoundId = soundPool.load(context, R.raw.bonus_achieved, 1)
         }
 
         initializeMediaPlayer()
@@ -47,7 +49,7 @@ class SoundPlayer(private val context: Context) {
 
     private fun initializeMediaPlayer() {
         if (backgroundMusicPlayer == null) {
-            backgroundMusicPlayer = MediaPlayer.create(context, R.raw.sound_island_clearing).apply {
+            backgroundMusicPlayer = MediaPlayer.create(context, R.raw.game_bg_2).apply {
                 isLooping = true
                 setVolume(0.3f, 0.3f)
             }
@@ -64,6 +66,13 @@ class SoundPlayer(private val context: Context) {
         if (isEffectsLoaded) {
             stopBackgroundMusic()
             soundPool.play(gameOverSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        }
+    }
+
+    fun playBonusSound() {
+        if (isEffectsLoaded) {
+            stopBackgroundMusic()
+            soundPool.play(bonusSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
         }
     }
 

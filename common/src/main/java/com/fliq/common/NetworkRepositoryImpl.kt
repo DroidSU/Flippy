@@ -8,7 +8,6 @@ import com.fliq.core.ConstantsManager
 import com.fliq.core.models.UserData
 import com.fliq.core.models.toMap
 import com.fliq.database.BadgeDAO
-import com.fliq.database.BadgeEntity
 import com.fliq.database.MatchDAO
 import com.fliq.database.MatchHistory
 import com.fliq.database.toMap
@@ -45,40 +44,25 @@ class NetworkRepositoryImpl @Inject constructor(
         val userId = auth.currentUser?.uid ?: return@withContext
 
         try {
-            val rootUpdates = mutableMapOf<String, Any>()
             val matchIds = matchList.map { it.id }
 
+            // Write each match object atomically using setValue at its specific path.
+            // This ensures a single write operation per match node, preventing multiple
+            // child-created events that can occur with multi-path updates or field-level updates.
             matchList.forEach { match ->
-                // New format: matches/{Challenge_Name}/{userId}/{matchId}
-                val path = "matches/${match.challengeName}/$userId/${match.id}"
-                rootUpdates[path] = match.toMap()
+                database.child("matches")
+                    .child(match.challengeName)
+                    .child(userId)
+                    .child(match.id)
+                    .setValue(match.toMap())
+                    .await()
             }
 
-            database.updateChildren(rootUpdates).await()
             matchDAO.markMatchesAsBackedUp(matchIds)
         } catch (e: Exception) {
             Log.e(ConstantsManager.APP_TAG, "Error storing match data: ${e.message}")
             e.printStackTrace()
             throw e 
-        }
-    }
-
-    override suspend fun storeBadgeData(badgeList: List<BadgeEntity>) = withContext(Dispatchers.IO) {
-        val userId = auth.currentUser?.uid ?: return@withContext
-
-        try {
-            val badgeMap = mutableMapOf<String, Any>()
-            val badgeIds = badgeList.map { it.badgeId }
-
-            badgeList.forEach { badge ->
-                badgeMap[badge.badgeId] = badge.toMap()
-            }
-
-            database.child("badges").child(userId).updateChildren(badgeMap).await()
-            badgeDAO.markAsBackedUp(badgeIds)
-        } catch (e: Exception) {
-            Log.e(ConstantsManager.APP_TAG, "Error storing badge data: ${e.message}")
-            throw e
         }
     }
 
@@ -169,18 +153,6 @@ class NetworkRepositoryImpl @Inject constructor(
             emit(Result.Success(allMatches))
         } catch (e: Exception) {
             emit(Result.Failure(e.message ?: "Failed to fetch match history"))
-        }
-    }
-
-    override fun fetchBadges(userId: String): Flow<Result<List<BadgeEntity>>> = flow {
-        try {
-            val snapshot = database.child("badges").child(userId).get().await()
-            val badges = snapshot.children.mapNotNull { child ->
-                child.getValue(BadgeEntity::class.java)
-            }
-            emit(Result.Success(badges))
-        } catch (e: Exception) {
-            emit(Result.Failure(e.message ?: "Failed to fetch badges"))
         }
     }
 

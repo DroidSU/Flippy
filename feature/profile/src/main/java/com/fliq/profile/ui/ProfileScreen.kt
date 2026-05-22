@@ -78,6 +78,8 @@ import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
+import com.fliq.core.theme.SuccessGreen
+import com.fliq.core.theme.WarningYellow
 import com.fliq.core.theme.gameColors
 import com.fliq.profile.components.EditDialog
 import kotlinx.coroutines.delay
@@ -407,7 +409,7 @@ private fun PlayerInsightsCard(
                             label = "Accuracy",
                             value = "%.1f%%".format(accuracyRate),
                             icon = Icons.Default.TrackChanges,
-                            color = Color(0xFF22C55E)
+                            color = SuccessGreen
                         )
                         InsightItem(
                             modifier = Modifier.weight(1f),
@@ -526,9 +528,9 @@ private fun InsightItem(
 private fun ReflexIndicator(reflexMs: Long) {
     // 0-300ms: Elite (Green), 300-500ms: Good (Yellow), 500ms+: Slow (Red)
     val color = when {
-        reflexMs <= 300 -> Color(0xFF22C55E)
-        reflexMs <= 500 -> Color(0xFFEAB308)
-        else -> Color(0xFFEF4444)
+        reflexMs <= 300 -> SuccessGreen
+        reflexMs <= 500 -> WarningYellow
+        else -> MaterialTheme.colorScheme.error
     }
     
     val label = when {

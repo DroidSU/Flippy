@@ -422,7 +422,7 @@ class GameViewModel @Inject constructor(
         _status.value = GameStatus.GAME_OVER
         _isGamePaused.value = false
         stopTimer()
-        soundRepository.playGameOverSound()
+        soundRepository.stopBackgroundMusic()
 
         // Clear badges immediately as game ends to avoid stale data from previous game
         _newlyUnlockedBadges.value = emptyList()
@@ -480,16 +480,20 @@ class GameViewModel @Inject constructor(
             )
             matchRepository.saveMatch(match)
 
-            try {
-                if (networkRepository.isInternetAvailable()) {
-                    networkRepository.storeMatchData(listOf(match))
-                }
-            } catch (e: Exception) {
-                Log.e("GameViewModel", "Failed to sync match result: ${e.message}")
-            }
-
-            updateUserStats(match)
+            // Trigger UI critical logic immediately (Badges and Sound)
             checkAndAwardBadges(match, currentBestReactionTime, currentClutchTime)
+
+            // Perform potentially slow network sync in background
+            launch {
+                updateUserStats(match)
+                try {
+                    if (networkRepository.isInternetAvailable()) {
+                        networkRepository.storeMatchData(listOf(match))
+                    }
+                } catch (e: Exception) {
+                    Log.e("GameViewModel", "Failed to sync match result: ${e.message}")
+                }
+            }
         }
     }
 
@@ -519,6 +523,9 @@ class GameViewModel @Inject constructor(
             newlyUnlocked.forEach { badge ->
                 badgeRepository.saveBadge(badge.id, userId)
             }
+            soundRepository.playBonusSound()
+        } else {
+            soundRepository.playGameOverSound()
         }
     }
 
