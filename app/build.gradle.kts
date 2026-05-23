@@ -51,7 +51,7 @@ android {
                 "proguard-rules.pro"
             )
             // Test AdMob IDs
-            manifestPlaceholders["admob_app_id"] = "ca-app-pub-3940256099942544~3347511713"
+            manifestPlaceholders["admob_app_id"] = "ca-app-pub-1987028719507493~7400511270"
             buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/5354046379\"")
         }
         release {
@@ -64,7 +64,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             
             // Forces use of Test IDs during Alpha testing
-            val testAppId = "ca-app-pub-3940256099942544~3347511713"
+            val testAppId = "ca-app-pub-1987028719507493~7400511270"
             val testAdUnitId = "ca-app-pub-3940256099942544/5354046379"
             
             manifestPlaceholders["admob_app_id"] = testAppId
