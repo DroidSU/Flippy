@@ -21,7 +21,7 @@ fun AuthenticationScreen(
     onSaveUser: (String, Int) -> Unit,
     onUsernameChanged: (String) -> Unit,
     onAvatarChanged: (Int) -> Unit,
-    showProfileDialog: Boolean,
+    showProfileDialog: Boolean
 ) {
 
     LaunchedEffect(uiState) {
@@ -39,24 +39,27 @@ fun AuthenticationScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        if (showProfileDialog) {
-            ProfileSetupScreen(
-                username = userData?.username ?: "",
-                avatarId = userData?.avatarId ?: 1,
-                isLoading = uiState is AppUIState.Loading,
-                onUsernameChanged = onUsernameChanged,
-                onAvatarChanged = onAvatarChanged,
-                onSave = {
-                    userData?.let {
-                        onSaveUser(it.username, it.avatarId)
+        when {
+            showProfileDialog -> {
+                ProfileSetupScreen(
+                    username = userData?.username ?: "",
+                    avatarId = userData?.avatarId ?: 1,
+                    isLoading = uiState is AppUIState.Loading,
+                    onUsernameChanged = onUsernameChanged,
+                    onAvatarChanged = onAvatarChanged,
+                    onSave = {
+                        userData?.let {
+                            onSaveUser(it.username, it.avatarId)
+                        }
                     }
-                }
-            )
-        } else {
-            LoginOptionsView(
-                isLoading = uiState is AppUIState.Loading,
-                onGoogleSignIn = onGoogleSignIn
-            )
+                )
+            }
+            else -> {
+                LoginOptionsView(
+                    isLoading = uiState is AppUIState.Loading,
+                    onGoogleSignIn = onGoogleSignIn
+                )
+            }
         }
     }
 }

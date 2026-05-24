@@ -37,29 +37,42 @@ class ProfileActivity : ComponentActivity() {
                 val reflexAverage by viewModel.reflexAverage.collectAsState()
                 val accuracyRate by viewModel.accuracyRate.collectAsState()
                 val unlockedBadges by viewModel.unlockedBadges.collectAsState()
+                val baseReflex by viewModel.baseReflex.collectAsState()
+                val showCalibration by viewModel.showCalibration.collectAsState()
 
-                ProfileScreen(
-                    username = username,
-                    avatarId = avatarId,
-                    uiState = uiState,
-                    isEditing = isEditing,
-                    onAvatarIdChanged = { viewModel.onAvatarIdChanged(it) },
-                    onSaveProfile = { _, a ->
-                        viewModel.saveProfile(a)
-                        viewModel.onCancelEdit()
-                    },
-                    onBackClick = { finish() },
-                    onEdit = { viewModel.onEdit() },
-                    onDismissEdit = {
-                        viewModel.onCancelEdit()
-                    },
-                    totalMatches = totalMatches,
-                    highestScore = highestScore,
-                    longestRound = longestRound,
-                    accuracyRate = accuracyRate,
-                    reflexAverage = reflexAverage,
-                    unlockedBadges = unlockedBadges,
-                )
+                if (showCalibration) {
+                    com.fliq.auth.ui.ReflexCalibrationScreen(
+                        onCalibrationComplete = { reflex ->
+                            viewModel.recalibrateReflex(reflex)
+                            viewModel.onCalibrationDismiss()
+                        }
+                    )
+                } else {
+                    ProfileScreen(
+                        username = username,
+                        avatarId = avatarId,
+                        uiState = uiState,
+                        isEditing = isEditing,
+                        onAvatarIdChanged = { viewModel.onAvatarIdChanged(it) },
+                        onSaveProfile = { _, a ->
+                            viewModel.saveProfile(a)
+                            viewModel.onCancelEdit()
+                        },
+                        onBackClick = { finish() },
+                        onEdit = { viewModel.onEdit() },
+                        onDismissEdit = {
+                            viewModel.onCancelEdit()
+                        },
+                        totalMatches = totalMatches,
+                        highestScore = highestScore,
+                        longestRound = longestRound,
+                        accuracyRate = accuracyRate,
+                        reflexAverage = reflexAverage,
+                        baseReflex = baseReflex,
+                        unlockedBadges = unlockedBadges,
+                        onRecalibrate = { viewModel.onRecalibrate() }
+                    )
+                }
             }
         }
     }

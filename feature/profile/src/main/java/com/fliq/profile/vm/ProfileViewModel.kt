@@ -37,6 +37,9 @@ class ProfileViewModel @Inject constructor(
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 
+    private val _showCalibration = MutableStateFlow(false)
+    val showCalibration: StateFlow<Boolean> = _showCalibration.asStateFlow()
+
     private val _totalMatchesPlayed = MutableStateFlow(0)
     val totalMatchesPlayed: StateFlow<Int> = _totalMatchesPlayed.asStateFlow()
 
@@ -51,6 +54,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _reflexAverage = MutableStateFlow(0L)
     val reflexAverage: StateFlow<Long> = _reflexAverage.asStateFlow()
+
+    private val _baseReflex = MutableStateFlow<Long?>(null)
+    val baseReflex: StateFlow<Long?> = _baseReflex.asStateFlow()
 
     private val _unlockedBadges = MutableStateFlow<List<Badge>>(emptyList())
     val unlockedBadges: StateFlow<List<Badge>> = _unlockedBadges.asStateFlow()
@@ -78,6 +84,7 @@ class ProfileViewModel @Inject constructor(
                         _totalMatchesPlayed.value = localData.totalMatches
                         _highestScore.value = localData.highestScore
                         _longestRound.value = localData.longestRound
+                        _baseReflex.value = localData.baseReflex
                         
                         if (localData.totalTaps > 0) {
                             _accuracyRate.value = (localData.totalCorrectTaps.toDouble() / localData.totalTaps.toDouble()) * 100
@@ -154,10 +161,39 @@ class ProfileViewModel @Inject constructor(
         _isEditing.value = true
     }
 
+    fun onRecalibrate() {
+        _showCalibration.value = true
+    }
+
+    fun onCalibrationDismiss() {
+        _showCalibration.value = false
+    }
+
     fun onCancelEdit() {
         _username.value = profileRepository.getUsername()
         _avatarId.value = profileRepository.getAvatarId()
         _isEditing.value = false
+    }
+
+    fun recalibrateReflex(reflexMs: Long) {
+        _uiState.value = AppUIState.Loading
+        viewModelScope.launch {
+            val userId = auth.currentUser?.uid ?: return@launch
+            
+            when (val result = networkRepository.updateBaseReflex(reflexMs)) {
+                is Result.Success -> {
+                    val currentData = profileRepository.getUserDataSync(userId)
+                    if (currentData != null) {
+                        profileRepository.saveUserData(currentData.copy(baseReflex = reflexMs))
+                    }
+                    _baseReflex.value = reflexMs
+                    _uiState.value = AppUIState.Success
+                }
+                is Result.Failure -> {
+                    _uiState.value = AppUIState.Error(result.message)
+                }
+            }
+        }
     }
 
     fun resetState() {

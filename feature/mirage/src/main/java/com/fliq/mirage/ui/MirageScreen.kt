@@ -179,20 +179,31 @@ fun MirageScreen(
                     onHelpClick = onHelpClick
                 )
 
+                Spacer(modifier = Modifier.weight(0.5f))
+
                 MirageStats(
                     score = score,
                     lives = lives,
                     gameTime = gameTime
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.weight(0.5f))
 
                 GameGrid(
                     tiles = tiles,
                     onTileTapped = onTileTapped,
                     onTilePositioned = { id, pos -> tilePositions[id] = pos },
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                PlayButtonComponent(
+                    status = status,
+                    onAction = { if (isPlaying) onResetGame() else onPlayClick() }
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
             }
 
             activeEffects.toList().forEach { effect ->
@@ -203,16 +214,6 @@ fun MirageScreen(
                         EffectType.PARTICLE_BOMB -> BombEffect(effect) { activeEffects.remove(effect) }
                     }
                 }
-            }
-
-            Box(
-                modifier = Modifier.fillMaxSize().padding(bottom = 32.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                PlayButtonComponent(
-                    status = status,
-                    onAction = { if (isPlaying) onResetGame() else onPlayClick() }
-                )
             }
 
             if (showRules) MirageRulesDialog(onDismiss = onRulesDismissed)
@@ -349,7 +350,7 @@ fun GameGrid(
     val columns = 4
     val rows = (tiles.size + columns - 1) / columns
 
-    Column(modifier = modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         for (i in 0 until rows) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                 for (j in 0 until columns) {

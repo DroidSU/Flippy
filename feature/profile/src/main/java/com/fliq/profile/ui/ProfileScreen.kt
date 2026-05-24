@@ -100,7 +100,9 @@ fun ProfileScreen(
     longestRound: Long = 0L,
     accuracyRate: Double = 0.0,
     reflexAverage: Long = 0L,
+    baseReflex: Long? = null,
     unlockedBadges: List<Badge> = emptyList(),
+    onRecalibrate: () -> Unit = {}
 ) {
     val gameColors = MaterialTheme.gameColors
     val scrollState = rememberScrollState()
@@ -153,7 +155,9 @@ fun ProfileScreen(
                     highestScore = highestScore,
                     accuracyRate = accuracyRate,
                     longestRound = longestRound,
-                    reflexAverage = reflexAverage
+                    reflexAverage = reflexAverage,
+                    baseReflex = baseReflex,
+                    onRecalibrate = onRecalibrate
                 )
 
                 BadgeGallery(
@@ -313,7 +317,9 @@ private fun PlayerInsightsCard(
     highestScore: Int,
     accuracyRate: Double,
     longestRound: Long,
-    reflexAverage: Long
+    reflexAverage: Long,
+    baseReflex: Long?,
+    onRecalibrate: () -> Unit
 ) {
     var visible by remember { mutableStateOf(value = false) }
     LaunchedEffect(Unit) {
@@ -462,6 +468,58 @@ private fun PlayerInsightsCard(
                             }
                             
                             ReflexIndicator(reflexAverage)
+                        }
+                    }
+
+                    if (baseReflex != null) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.AvTimer,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = "NEURAL SYNC LEVEL",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "${baseReflex}ms",
+                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                
+                                Surface(
+                                    onClick = onRecalibrate,
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.height(36.dp)
+                                ) {
+                                    Box(modifier = Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "RESET",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -744,8 +802,10 @@ internal fun ProfileScreenPreview() {
             totalMatches = 124,
             accuracyRate = 89.2,
             reflexAverage = 285,
+            baseReflex = 320,
             highestScore = 4500,
-            longestRound = 185000L
+            longestRound = 185000L,
+            onRecalibrate = {}
         )
     }
 }

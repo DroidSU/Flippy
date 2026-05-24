@@ -11,6 +11,7 @@ interface NetworkRepository {
     fun fetchUserData(userId: String): Flow<Result<UserData?>>
     suspend fun updateUserName(username: String, avatarId: Int, oldUsername: String? = null): Result<Unit>
     suspend fun uploadUserData(userData: UserData): Result<Unit>
+    suspend fun updateBaseReflex(baseReflex: Long): Result<Unit>
     fun fetchMatchHistory(userId: String): Flow<Result<List<MatchHistory>>>
     suspend fun isUsernameExisting(username: String) : Boolean
 }

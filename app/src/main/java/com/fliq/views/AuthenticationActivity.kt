@@ -17,6 +17,7 @@ import com.fliq.auth.viewmodel.AuthViewModel
 import com.fliq.common.AppUIState
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
+import com.fliq.game_engine.repository.GamePreferencesRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -32,6 +33,9 @@ class AuthenticationActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var preferencesRepository: GamePreferencesRepository
 
     private val googleSignInClient: GoogleSignInClient by lazy {
         val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
@@ -58,8 +62,14 @@ class AuthenticationActivity : ComponentActivity() {
                     uiState = uiState,
                     userData = userData,
                     onAuthSuccess = {
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
+                        if(preferencesRepository.isUserCalibrated()){
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
+                        else{
+                            startActivity(Intent(this, CalibrationActivity::class.java))
+                            finish()
+                        }
                     },
                     onGoogleSignIn = {
                         googleSignInClient.signOut().addOnCompleteListener {

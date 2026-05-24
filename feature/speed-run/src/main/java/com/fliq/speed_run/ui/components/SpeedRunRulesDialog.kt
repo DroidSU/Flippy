@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,11 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -64,105 +66,104 @@ fun SpeedRunRulesDialog(
         onDismissRequest = { onDismiss(showOnStartup) },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight()) {
-            // Shadow Layer
-            Surface(
-                modifier = Modifier.fillMaxWidth().height(440.dp).graphicsLayer { 
-                    translationY = 8.dp.toPx()
-                    alpha = 0.4f
-                },
-                shape = ChamferedCornerShape(32.dp),
-                color = Color.Black
-            ) {}
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(0.85f).wrapContentHeight()) {
+                // Shadow Layer
+                Surface(
+                    modifier = Modifier.matchParentSize().offset(y = 8.dp).alpha(0.4f),
+                    shape = ChamferedCornerShape(32.dp),
+                    color = Color.Black
+                ) {}
 
-            Surface(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                shape = ChamferedCornerShape(32.dp),
-                color = BgDeepDark.copy(alpha = 0.98f),
-                border = BorderStroke(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent)))
-            ) {
-                Column(
-                    modifier = Modifier.padding(28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Surface(
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                    shape = ChamferedCornerShape(32.dp),
+                    color = BgDeepDark.copy(alpha = 0.98f),
+                    border = BorderStroke(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent)))
                 ) {
-                    Surface(
-                        modifier = Modifier.size(56.dp).graphicsLayer { shadowElevation = 16f },
-                        shape = CircleShape,
-                        color = accentColor.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = null,
-                                tint = accentColor,
-                                modifier = Modifier.size(28.dp)
+                        Surface(
+                            modifier = Modifier.size(48.dp),
+                            shape = CircleShape,
+                            color = accentColor.copy(alpha = 0.1f),
+                            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Bolt,
+                                    contentDescription = null,
+                                    tint = accentColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "SPEED RUN",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 1.sp
+                            ),
+                            color = Color.White
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            SpeedRunRuleItem(
+                                iconRes = R.drawable.ic_coin,
+                                title = "STAY QUICK",
+                                description = "Tiles disappear faster every 10 seconds.",
+                                accent = accentColor
+                            )
+                            SpeedRunRuleItem(
+                                iconVector = Icons.Default.Favorite,
+                                title = "KEEP HEARTS",
+                                description = "Missing 3 coins will cost a heart.",
+                                accent = BombRed,
+                                isVector = true
+                            )
+                            SpeedRunRuleItem(
+                                iconRes = R.drawable.ic_bomb,
+                                title = "WATCH BOMBS",
+                                description = "Don't tap them or you'll lose a heart.",
+                                accent = BombOrange
                             )
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                    Text(
-                        text = "SPEED RUN",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        ),
-                        color = Color.White
-                    )
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+                        val btnScale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "s")
 
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SpeedRunRuleItem(
-                            iconRes = R.drawable.ic_coin,
-                            title = "STAY QUICK",
-                            description = "Tiles disappear faster every 10 seconds. Keep your focus sharp.",
-                            accent = accentColor
-                        )
-                        SpeedRunRuleItem(
-                            iconVector = Icons.Default.Favorite,
-                            title = "KEEP HEARTS",
-                            description = "Missing 3 coins in a row will cost you a heart.",
-                            accent = BombRed,
-                            isVector = true
-                        )
-                        SpeedRunRuleItem(
-                            iconRes = R.drawable.ic_bomb,
-                            title = "WATCH FOR BOMBS",
-                            description = "Bombs are dangerous. Don't tap them or you'll lose a heart.",
-                            accent = BombOrange
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isPressed by interactionSource.collectIsPressedAsState()
-                    val btnScale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "s")
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp)
-                            .scale(btnScale)
-                            .graphicsLayer { 
-                                shadowElevation = if (isPressed) 4f else 12f
-                            }
-                            .clip(ChamferedCornerShape(16.dp))
-                            .background(accentColor)
-                            .clickable(interactionSource = interactionSource, indication = null) { onDismiss(showOnStartup) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "PLAY NOW",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp
-                            ),
-                            color = BgDeepDark
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .scale(btnScale)
+                                .clip(ChamferedCornerShape(16.dp))
+                                .background(accentColor)
+                                .clickable(interactionSource = interactionSource, indication = null) { onDismiss(showOnStartup) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "PLAY NOW",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = BgDeepDark
+                            )
+                        }
                     }
                 }
             }
@@ -184,35 +185,35 @@ private fun SpeedRunRuleItem(
         verticalAlignment = Alignment.Top
     ) {
         Surface(
-            modifier = Modifier.size(44.dp).graphicsLayer { shadowElevation = 8f },
+            modifier = Modifier.size(36.dp),
             shape = ChamferedCornerShape(8.dp),
             color = accent.copy(alpha = 0.1f),
             border = BorderStroke(1.dp, accent.copy(alpha = 0.2f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isVector && iconVector != null) {
-                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(20.dp))
+                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(18.dp))
                 } else {
-                    Image(painterResource(id = iconRes), null, modifier = Modifier.size(24.dp))
+                    Image(painterResource(id = iconRes), null, modifier = Modifier.size(20.dp))
                 }
             }
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
         Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelLarge.copy(
+                style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
+                    letterSpacing = 0.5.sp,
                     fontFamily = FontFamily.Monospace
                 ),
                 color = accent
             )
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                 color = Color.White.copy(alpha = 0.5f),
-                lineHeight = 16.sp
+                lineHeight = 14.sp
             )
         }
     }

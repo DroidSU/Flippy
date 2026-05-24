@@ -64,82 +64,82 @@ fun AdRewardDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.gameColors.backgroundGradient.first().copy(alpha = 0.95f),
+                .padding(12.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.gameColors.backgroundGradient.first().copy(alpha = 0.98f),
             tonalElevation = 8.dp,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
         ) {
             Column(
                 modifier = Modifier
-                    .padding(32.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
-                        .background(HeartRed.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
+                        .size(64.dp)
+                        .background(HeartRed.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = null,
                         tint = HeartRed,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
                     text = "EXTRA LIFE?",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp
+                        letterSpacing = 1.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Watch a quick ad to get one more life and continue your streak!",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 LinearProgressIndicator(
                     progress = { timeLeft / 3f },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(6.dp),
+                        .height(4.dp),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                     strokeCap = StrokeCap.Round,
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = onWatchAd,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
+                        .height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (timeLeft > 0) "STARTING IN $timeLeft..." else "LOADING AD...",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             )
@@ -147,7 +147,7 @@ fun AdRewardDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(
                     onClick = onSkip,
@@ -155,7 +155,7 @@ fun AdRewardDialog(
                 ) {
                     Text(
                         "NO THANKS",
-                        style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 1.sp),
+                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.sp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }

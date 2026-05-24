@@ -274,7 +274,8 @@ fun GoogleKineticButton(
                                 fontWeight = FontWeight.Black,
                                 color = BgDeepDark,
                                 letterSpacing = 1.sp,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp
                             )
                         )
                     }

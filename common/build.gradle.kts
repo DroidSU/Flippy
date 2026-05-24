@@ -25,6 +25,7 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/5354046379\"")
+            buildConfigField("String", "FIREBASE_DATABASE_URL", "\"https://fliq-test-db.firebaseio.com\"")
         }
         release {
             isMinifyEnabled = false
@@ -35,6 +36,7 @@ android {
             // Forces use of Test Ad Unit ID during Alpha testing
             val testAdUnitId = "ca-app-pub-3940256099942544/5354046379"
             buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$testAdUnitId\"")
+            buildConfigField("String", "FIREBASE_DATABASE_URL", "\"\"")
         }
     }
     

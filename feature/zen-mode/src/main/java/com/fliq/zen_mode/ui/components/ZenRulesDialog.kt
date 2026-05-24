@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -64,10 +66,7 @@ fun ZenRulesDialog(
         Box(modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight()) {
             // Shadow Layer
             Surface(
-                modifier = Modifier.fillMaxWidth().height(420.dp).graphicsLayer { 
-                    translationY = 8.dp.toPx()
-                    alpha = 0.4f
-                },
+                modifier = Modifier.matchParentSize().offset(y = 8.dp).alpha(0.4f),
                 shape = ChamferedCornerShape(32.dp),
                 color = Color.Black
             ) {}
@@ -98,7 +97,7 @@ fun ZenRulesDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.weight(0.5f))
 
                     Text(
                         text = "ZEN MODE",
@@ -109,7 +108,7 @@ fun ZenRulesDialog(
                         color = Color.White
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.weight(0.8f))
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         ZenRuleItem(
@@ -134,7 +133,7 @@ fun ZenRulesDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.weight(1f))
 
                     val interactionSource = remember { MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
@@ -187,7 +186,7 @@ private fun ZenRuleItem(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isVector && iconVector != null) {
-                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(24.dp))
+                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(20.dp))
                 } else {
                     Image(painterResource(id = iconRes), null, modifier = Modifier.size(24.dp))
                 }

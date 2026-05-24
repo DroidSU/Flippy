@@ -1,12 +1,6 @@
 package com.fliq.mirage.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,10 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
@@ -52,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
 
@@ -67,20 +61,16 @@ fun MirageGameOverDialog(
 ) {
     val accentColor = MaterialTheme.colorScheme.tertiary // NeonPink for Mirage
 
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.8f)),
-            contentAlignment = Alignment.Center
+    if (visible) {
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            AnimatedVisibility(
-                visible = visible,
-                enter = scaleIn(animationSpec = spring(Spring.DampingRatioLowBouncy)) + fadeIn()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
             ) {
                 Surface(
                     modifier = Modifier
@@ -92,9 +82,7 @@ fun MirageGameOverDialog(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(20.dp)
+                        modifier = Modifier.padding(24.dp)
                     ) {
                         Text(
                             text = "GAME OVER",
@@ -129,7 +117,7 @@ fun MirageGameOverDialog(
                                 )
                                 Text(
                                     text = score.toString().padStart(3, '0'),
-                                    style = MaterialTheme.typography.displayMedium.copy(
+                                    style = MaterialTheme.typography.displaySmall.copy(
                                         fontWeight = FontWeight.Black,
                                         fontFamily = FontFamily.Monospace
                                     ),
@@ -162,11 +150,11 @@ fun MirageGameOverDialog(
                         }
 
                         if (newBadges.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             BadgeUnlockSection(newBadges)
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         // Actions
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -246,7 +234,7 @@ private fun MirageActionRequestButton(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(48.dp)
             .scale(scale),
         shape = RoundedCornerShape(12.dp),
         color = if (primary) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
@@ -267,7 +255,7 @@ private fun MirageActionRequestButton(
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 ),
                 color = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
@@ -281,18 +269,18 @@ private fun BadgeUnlockSection(badges: List<Badge>) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "NEW TROPHIES!",
-            style = MaterialTheme.typography.labelMedium.copy(
+            style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
             ),
             color = MaterialTheme.colorScheme.secondary
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(badges) { badge ->
                 BadgeItem(badge)
@@ -305,22 +293,22 @@ private fun BadgeUnlockSection(badges: List<Badge>) {
 private fun BadgeItem(badge: Badge) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(72.dp)
+        modifier = Modifier.width(64.dp)
     ) {
         Surface(
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(40.dp),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f))
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(badge.icon, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(22.dp))
+                Icon(badge.icon, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = badge.title.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 6.sp, fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 1

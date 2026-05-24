@@ -1,7 +1,6 @@
 package com.fliq.views
 
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -22,8 +21,6 @@ import com.fliq.game_engine.models.Challenge
 import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.VibrationType
 import com.fliq.game_engine.repository.SoundRepository
-import com.fliq.game_engine.ui.GameScreen
-import com.fliq.game_engine.viewmodel.GameViewModel
 import com.fliq.minefield.ui.MinefieldScreen
 import com.fliq.minefield.vm.MinefieldViewModel
 import com.fliq.mirage.ui.MirageScreen
@@ -303,86 +300,6 @@ class GameActivity : ComponentActivity() {
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
                         effects = viewModel.effects
-                    )
-                } else {
-                    // Fallback to old GameViewModel for other challenges until they are refactored
-                    val gameViewModel: GameViewModel = hiltViewModel()
-                    gameViewModel.setChallenge(challenge)
-
-                    val tiles by gameViewModel.tiles.collectAsState()
-                    val score by gameViewModel.score.collectAsState()
-                    val lives by gameViewModel.lives.collectAsState()
-                    val status by gameViewModel.status.collectAsState()
-                    val selectedChallenge by gameViewModel.selectedChallenge.collectAsState()
-                    val gameTime by gameViewModel.gameTime.collectAsState()
-                    val topThreeScores by gameViewModel.topThreeScores.collectAsState()
-                    val showRules by gameViewModel.showRules.collectAsState()
-                    val showAdRewardDialog by gameViewModel.showAdRewardDialog.collectAsState()
-                    val isPaused by gameViewModel.isGamePaused.collectAsState()
-                    val streak by gameViewModel.streak.collectAsState()
-                    val reactionTime by gameViewModel.lastReactionTime.collectAsState()
-                    val newlyUnlockedBadges by gameViewModel.newlyUnlockedBadges.collectAsState()
-                    val totalTaps by gameViewModel.totalTaps.collectAsState()
-                    val correctTaps by gameViewModel.correctTaps.collectAsState()
-
-                    val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
-
-                    LaunchedEffect(Unit) {
-                        gameViewModel.effects.collectLatest { effect ->
-                            when (effect) {
-                                is GameEffect.Vibration -> {
-                                    if (settingsRepository.getHapticFeedbackEnabled()) {
-                                        triggerVibration(effect.type)
-                                    }
-                                }
-                                else -> {}
-                            }
-                        }
-                    }
-
-                    GameScreen(
-                        tiles = tiles,
-                        score = score,
-                        lives = lives,
-                        status = status,
-                        currentChallenge = selectedChallenge,
-                        gameTime = gameTime,
-                        leaderboard = topThreeScores,
-                        showRules = showRules,
-                        showAdRewardDialog = showAdRewardDialog,
-                        onTileTapped = gameViewModel::onTileTapped,
-                        onPlayClick = gameViewModel::startGame,
-                        onResetGame = gameViewModel::resetGame,
-                        onChallengeChange = gameViewModel::setChallenge,
-                        onRulesDismissed = gameViewModel::onRulesDismissed,
-                        onWatchAdClick = { gameViewModel.onWatchAdClicked(this@GameActivity) },
-                        onSkipAdClick = gameViewModel::onSkipAdClicked,
-                        onHelpClick = gameViewModel::showRulesDialog,
-                        onSignOutClick = {
-                            gameViewModel.signOut()
-                            val intent = Intent(this@GameActivity, AuthenticationActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            startActivity(intent)
-                            finish()
-                        },
-                        isPaused = isPaused,
-                        onProfileIntentClicked = {
-                            startActivity(Intent(this, ProfileActivity::class.java))
-                        },
-                        onLeaderboardIntentClicked = {
-                            startActivity(Intent(this, LeaderboardActivity::class.java))
-                        },
-                        onAchievementsIntentClicked = {
-                            startActivity(Intent(this, AchievementsActivity::class.java))
-                        },
-                        onPreferencesIntentClicked = {
-                            startActivity(Intent(this, SettingsActivity::class.java))
-                        },
-                        streak = streak,
-                        reactionTime = reactionTime,
-                        accuracy = accuracy,
-                        newBadges = newlyUnlockedBadges,
-                        effects = gameViewModel.effects
                     )
                 }
             }

@@ -45,6 +45,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":feature:profile"))
     implementation(project(":database"))
+    implementation(project(":game-engine"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -73,11 +73,10 @@ class AuthViewModel @Inject constructor(
                         if (fetchedData != null && fetchedData.username.isNotBlank()) {
                             // Existing user with data
                             _userData.value = fetchedData
-                            _showEditDialog.value = false
                             
+                            _showEditDialog.value = false
                             // Save to local Room DB
                             profileRepository.saveUserData(fetchedData)
-
                             fetchMatchHistorySync(userId)
                             _uiState.update { AppUIState.Success }
                         } else {
@@ -134,7 +133,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { AppUIState.Loading }
             val oldUsername = _userData.value?.username
-            val userDataToSave = UserData(userId = userId, username = username, avatarId = avatarId)
+            val currentData = _userData.value ?: UserData(userId = userId)
+            val userDataToSave = currentData.copy(username = username, avatarId = avatarId)
             
             // Check uniqueness if username changed
             if (oldUsername != username) {
@@ -147,8 +147,8 @@ class AuthViewModel @Inject constructor(
             when (val result = networkRepository.updateUserName(username, avatarId, oldUsername)) {
                 is Result.Success -> {
                     _userData.value = userDataToSave
-                    _showEditDialog.value = false
                     profileRepository.saveUserData(userDataToSave)
+                    _showEditDialog.value = false
                     _uiState.update { AppUIState.Success }
                 }
 

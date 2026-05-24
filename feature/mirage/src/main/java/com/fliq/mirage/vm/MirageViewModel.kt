@@ -51,6 +51,7 @@ class MirageViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val adManager: AdManager,
+    private val difficultyManager: com.fliq.common.DifficultyManager
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -119,30 +120,29 @@ class MirageViewModel @Inject constructor(
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
+    private var _cachedUserData: UserData? = null
     
     private val progressionInterval = 15000L // Slower scaling for Mirage to allow observation
 
     private val visibleDurationRange: LongRange
-        get() {
-            val tiers = _gameTime.value / progressionInterval
-            val min = maxOf(600L, 1000L - tiers * 50L)
-            val max = maxOf(800L, 1200L - tiers * 50L)
-            return min..max
-        }
+        get() = difficultyManager.getVisibleDurationRange(_gameTime.value, progressionInterval, _cachedUserData)
 
     private val pauseDuration: Long = 800L
 
     private val spawnIntervalRange: LongRange
-        get() {
-            val tiers = _gameTime.value / progressionInterval
-            val min = maxOf(600L, 1500L - tiers * 100L)
-            val max = maxOf(1000L, 2500L - tiers * 150L)
-            return min..max
-        }
+        get() = difficultyManager.getSpawnIntervalRange(_gameTime.value, progressionInterval, _cachedUserData)
 
     init {
         getUserData()
         checkRulesVisibility()
+    }
+
+    private fun getUserData() {
+        _currentUsername = profileRepository.getUsername()
+        _currentAvatarId = profileRepository.getAvatarId()
+        scope.launch {
+            _cachedUserData = profileRepository.getUserDataSync(playerId)
+        }
     }
 
     private fun checkRulesVisibility() {
@@ -514,9 +514,4 @@ class MirageViewModel @Inject constructor(
     }
 
     fun signOut() { scope.launch { profileRepository.clearLocalData(); auth.signOut() } }
-
-    private fun getUserData() {
-        _currentUsername = profileRepository.getUsername()
-        _currentAvatarId = profileRepository.getAvatarId()
-    }
 }

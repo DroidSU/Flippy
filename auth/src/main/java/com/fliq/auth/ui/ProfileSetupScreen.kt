@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -86,50 +87,56 @@ fun ProfileSetupScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Header
-            Text(
-                text = "CREATE PROFILE",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 2.sp,
-                    fontFamily = FontFamily.Monospace
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            Text(
-                text = "ENTER YOUR PLAYER DETAILS",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                ),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "CREATE PROFILE",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        fontFamily = FontFamily.Monospace
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Text(
+                    text = "ENTER YOUR PLAYER DETAILS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Username Section
-            SetupSectionLabel(label = "USERNAME")
-            KineticUsernameField(
-                username = username,
-                onUsernameChanged = onUsernameChanged,
-                isLoading = isLoading
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                SetupSectionLabel(label = "USERNAME")
+                KineticUsernameField(
+                    username = username,
+                    onUsernameChanged = onUsernameChanged,
+                    isLoading = isLoading
+                )
+            }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Avatar Section
-            SetupSectionLabel(label = "CHOOSE AVATAR")
-            AvatarGrid(
-                selectedId = avatarId,
-                onAvatarSelected = onAvatarChanged,
-                isLoading = isLoading
-            )
+            Column(modifier = Modifier.fillMaxWidth().weight(4f)) {
+                SetupSectionLabel(label = "CHOOSE AVATAR")
+                AvatarGrid(
+                    selectedId = avatarId,
+                    onAvatarSelected = onAvatarChanged,
+                    isLoading = isLoading
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -140,7 +147,7 @@ fun ProfileSetupScreen(
                 enabled = username.isNotBlank()
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.weight(0.5f))
         }
     }
 }
@@ -170,7 +177,7 @@ fun KineticUsernameField(
     onUsernameChanged: (String) -> Unit,
     isLoading: Boolean
 ) {
-    Box(modifier = Modifier.fillMaxWidth().height(72.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(64.dp)) {
         // Shadow
         Surface(
             modifier = Modifier.fillMaxSize().offset(y = 4.dp).alpha(0.3f),
@@ -237,7 +244,7 @@ fun AvatarGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.fillMaxWidth().height(240.dp),
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 8.dp)
@@ -314,7 +321,7 @@ fun ConfirmKineticButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(56.dp)
             .scale(scale)
             .alpha(if (enabled) 1f else 0.5f)
             .clickable(

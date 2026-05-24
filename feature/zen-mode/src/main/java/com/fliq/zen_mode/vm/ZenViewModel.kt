@@ -51,6 +51,7 @@ class ZenViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val adManager: AdManager,
+    private val difficultyManager: com.fliq.common.DifficultyManager
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -119,16 +120,30 @@ class ZenViewModel @Inject constructor(
     private var clutchTime = 0L
     private var clutchStartTime = 0L
     private var perfectStreak = 0
+    private var _cachedUserData: UserData? = null
     
-    // Zen Mode is constant speed
-    private val visibleDurationRange: LongRange = 500L..500L
-    private val spawnIntervalRange: LongRange = 800L..1200L
+    // Zen Mode uses DifficultyManager for base speed but doesn't scale as fast
+    private val progressionInterval = 30000L 
+
+    private val visibleDurationRange: LongRange
+        get() = difficultyManager.getVisibleDurationRange(_gameTime.value, progressionInterval, _cachedUserData)
+
+    private val spawnIntervalRange: LongRange
+        get() = difficultyManager.getSpawnIntervalRange(_gameTime.value, progressionInterval, _cachedUserData)
 
     private val pauseDuration: Long = 800L
 
     init {
         getUserData()
         checkRulesVisibility()
+    }
+
+    private fun getUserData() {
+        _currentUsername = profileRepository.getUsername()
+        _currentAvatarId = profileRepository.getAvatarId()
+        scope.launch {
+            _cachedUserData = profileRepository.getUserDataSync(playerId)
+        }
     }
 
     private fun checkRulesVisibility() {
@@ -479,9 +494,4 @@ class ZenViewModel @Inject constructor(
     }
 
     fun signOut() { scope.launch { profileRepository.clearLocalData(); auth.signOut() } }
-
-    private fun getUserData() {
-        _currentUsername = profileRepository.getUsername()
-        _currentAvatarId = profileRepository.getAvatarId()
-    }
 }

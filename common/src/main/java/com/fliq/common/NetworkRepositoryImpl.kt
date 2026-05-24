@@ -14,7 +14,7 @@ import com.fliq.database.toMap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -30,10 +30,9 @@ class NetworkRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val matchDAO: MatchDAO,
     private val badgeDAO: BadgeDAO,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val database: DatabaseReference
 ) : NetworkRepository {
-
-    private val database = FirebaseDatabase.getInstance().reference
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun isInternetAvailable(): Boolean {
@@ -134,6 +133,16 @@ class NetworkRepositoryImpl @Inject constructor(
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(e.message ?: "Failed to upload user stats")
+        }
+    }
+
+    override suspend fun updateBaseReflex(baseReflex: Long): Result<Unit> = withContext(Dispatchers.IO) {
+        val userId = auth.currentUser?.uid ?: return@withContext Result.Failure("User not logged in")
+        try {
+            database.child("users").child(userId).child("baseReflex").setValue(baseReflex).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to update reflex baseline")
         }
     }
 
