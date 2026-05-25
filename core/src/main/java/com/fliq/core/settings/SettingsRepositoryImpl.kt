@@ -38,6 +38,8 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_ZEN_LANDSCAPE_PREFERRED = "zen_landscape_preferred"
         private const val KEY_SPEED_RUN_TUTORIAL_COMPLETED = "speed_run_tutorial_completed"
         private const val KEY_SPEED_RUN_ROTATION_HINT_DISABLED = "speed_run_rotation_hint_disabled"
+        private const val KEY_MIRAGE_TUTORIAL_COMPLETED = "mirage_tutorial_completed"
+        private const val KEY_MIRAGE_ROTATION_HINT_DISABLED = "mirage_rotation_hint_disabled"
     }
 
     override fun setAppTheme(theme: AppTheme) {
@@ -130,5 +132,21 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun isSpeedRunRotationHintDisabled(): Boolean {
         return prefs.getBoolean(KEY_SPEED_RUN_ROTATION_HINT_DISABLED, false)
+    }
+
+    override fun setMirageTutorialCompleted(completed: Boolean) {
+        prefs.edit { putBoolean(KEY_MIRAGE_TUTORIAL_COMPLETED, completed) }
+    }
+
+    override fun isMirageTutorialCompleted(): Boolean {
+        return prefs.getBoolean(KEY_MIRAGE_TUTORIAL_COMPLETED, false)
+    }
+
+    override fun setMirageRotationHintDisabled(disabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MIRAGE_ROTATION_HINT_DISABLED, disabled) }
+    }
+
+    override fun isMirageRotationHintDisabled(): Boolean {
+        return prefs.getBoolean(KEY_MIRAGE_ROTATION_HINT_DISABLED, false)
     }
 }

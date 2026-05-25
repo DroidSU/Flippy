@@ -32,4 +32,10 @@ interface SettingsRepository {
 
     fun setSpeedRunRotationHintDisabled(disabled: Boolean)
     fun isSpeedRunRotationHintDisabled(): Boolean
+
+    fun setMirageTutorialCompleted(completed: Boolean)
+    fun isMirageTutorialCompleted(): Boolean
+
+    fun setMirageRotationHintDisabled(disabled: Boolean)
+    fun isMirageRotationHintDisabled(): Boolean
 }

@@ -122,6 +122,8 @@ class GameActivity : ComponentActivity() {
                     val newlyUnlockedBadges by viewModel.newlyUnlockedBadges.collectAsState()
                     val totalTaps by viewModel.totalTaps.collectAsState()
                     val correctTaps by viewModel.correctTaps.collectAsState()
+                    val tutorialStep by viewModel.tutorialStep.collectAsState()
+                    val showRotationPrompt by viewModel.showRotationPrompt.collectAsState()
                     val accuracy = if (totalTaps > 0) correctTaps.toFloat() / totalTaps else 0f
 
                     LaunchedEffect(Unit) {
@@ -154,7 +156,12 @@ class GameActivity : ComponentActivity() {
                         streak = streak,
                         accuracy = accuracy,
                         newBadges = newlyUnlockedBadges,
-                        effects = viewModel.effects
+                        effects = viewModel.effects,
+                        tutorialStep = tutorialStep,
+                        onNextTutorialStep = viewModel::nextTutorialStep,
+                        onSkipTutorial = viewModel::skipTutorial,
+                        showRotationPrompt = showRotationPrompt,
+                        onRotationPromptDismissed = viewModel::onRotationPromptDismissed
                     )
                 } else if (challenge == Challenge.MINEFIELD) {
                     val viewModel: MinefieldViewModel = hiltViewModel()
