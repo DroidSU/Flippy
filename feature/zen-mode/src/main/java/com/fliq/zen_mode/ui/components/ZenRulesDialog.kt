@@ -12,14 +12,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -35,13 +37,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.R
 
 @Composable
@@ -57,111 +57,149 @@ fun ZenRulesDialog(
     onDismiss: (showOnStartup: Boolean) -> Unit
 ) {
     var showOnStartup by remember { mutableStateOf(false) }
-    val accentColor = Color(0xFF2DD4BF) // Teal for Zen
+    val accentColor = MaterialTheme.colorScheme.primary
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     Dialog(
         onDismissRequest = { onDismiss(showOnStartup) },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(modifier = Modifier.fillMaxWidth(0.9f).wrapContentHeight()) {
-            // Shadow Layer
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f))
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Surface(
-                modifier = Modifier.matchParentSize().offset(y = 8.dp).alpha(0.4f),
-                shape = ChamferedCornerShape(32.dp),
-                color = Color.Black
-            ) {}
-
-            Surface(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                shape = ChamferedCornerShape(32.dp),
-                color = Color(0xFF0F172A).copy(alpha = 0.98f),
+                modifier = Modifier
+                    .widthIn(max = if (isLandscape) 600.dp else 400.dp)
+                    .wrapContentHeight(),
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 16.dp,
+                tonalElevation = 8.dp,
                 border = BorderStroke(1.dp, Brush.linearGradient(listOf(accentColor.copy(alpha = 0.4f), Color.Transparent)))
             ) {
                 Column(
-                    modifier = Modifier.padding(28.dp),
+                    modifier = Modifier.padding(if (isLandscape) 20.dp else 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Surface(
-                        modifier = Modifier.size(56.dp).graphicsLayer { shadowElevation = 16f },
-                        shape = CircleShape,
-                        color = accentColor.copy(alpha = 0.1f),
-                        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.SelfImprovement,
-                                contentDescription = null,
-                                tint = accentColor,
-                                modifier = Modifier.size(32.dp)
-                            )
+                    HeaderSection(accentColor, isLandscape)
+
+                    Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 20.dp))
+
+                    if (isLandscape) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RulesList(accentColor, isSmall = true)
+                            }
+                            Column(modifier = Modifier.weight(0.8f)) {
+                                PlayButton(accentColor) { onDismiss(showOnStartup) }
+                            }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.weight(0.5f))
-
-                    Text(
-                        text = "ZEN MODE",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        ),
-                        color = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.weight(0.8f))
-
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        ZenRuleItem(
-                            iconVector = Icons.Default.Timer,
-                            title = "CONSTANT PACE",
-                            description = "No speed scaling. Tiles stay for a steady 500ms.",
-                            accent = accentColor,
-                            isVector = true
-                        )
-                        ZenRuleItem(
-                            iconVector = Icons.Default.Favorite,
-                            title = "SURVIVAL",
-                            description = "Missing 3 coins in a row will cost a heart. Keep the flow.",
-                            accent = Color(0xFFF43F5E),
-                            isVector = true
-                        )
-                        ZenRuleItem(
-                            iconRes = R.drawable.ic_bomb,
-                            title = "WATCH FOR BOMBS",
-                            description = "Focus on coins. Tapping a bomb will end your peace.",
-                            accent = Color(0xFFFB923C)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isPressed by interactionSource.collectIsPressedAsState()
-                    val btnScale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "s")
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp)
-                            .scale(btnScale)
-                            .graphicsLayer { shadowElevation = 12f }
-                            .clip(ChamferedCornerShape(16.dp))
-                            .background(accentColor)
-                            .clickable(interactionSource = interactionSource, indication = null) { onDismiss(showOnStartup) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "START FLOW",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp
-                            ),
-                            color = Color(0xFF0F172A)
-                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            RulesList(accentColor)
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        PlayButton(accentColor) { onDismiss(showOnStartup) }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HeaderSection(accentColor: Color, isLandscape: Boolean) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Surface(
+            modifier = Modifier.size(if (isLandscape) 40.dp else 48.dp),
+            shape = CircleShape,
+            color = accentColor.copy(alpha = 0.1f),
+            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.SelfImprovement,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(if (isLandscape) 24.dp else 28.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = "ZEN MODE",
+            style = (if (isLandscape) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall).copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun RulesList(accentColor: Color, isSmall: Boolean = false) {
+    ZenRuleItem(
+        iconVector = Icons.Default.Timer,
+        title = "STEADY PACE",
+        description = "No speed pressure. Focus on your accuracy.",
+        accent = accentColor,
+        isVector = true,
+        isSmall = isSmall
+    )
+    ZenRuleItem(
+        iconVector = Icons.Default.Favorite,
+        title = "SURVIVAL",
+        description = "Missing 3 coins in a row costs a heart.",
+        accent = MaterialTheme.colorScheme.error,
+        isVector = true,
+        isSmall = isSmall
+    )
+    ZenRuleItem(
+        iconRes = R.drawable.ic_bomb,
+        title = "WATCH BOMBS",
+        description = "Tapping a bomb will end your session.",
+        accent = MaterialTheme.colorScheme.secondary,
+        isSmall = isSmall
+    )
+}
+
+@Composable
+private fun PlayButton(accentColor: Color, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val btnScale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "s")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .scale(btnScale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(accentColor)
+            .clickable(interactionSource = interactionSource, indication = null) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "START FLOW",
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.5.sp
+            ),
+            color = MaterialTheme.colorScheme.onPrimary
+        )
     }
 }
 
@@ -172,42 +210,43 @@ private fun ZenRuleItem(
     title: String,
     description: String,
     accent: Color,
-    isVector: Boolean = false
+    isVector: Boolean = false,
+    isSmall: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            modifier = Modifier.size(44.dp).graphicsLayer { shadowElevation = 8f },
-            shape = ChamferedCornerShape(8.dp),
+            modifier = Modifier.size(if (isSmall) 32.dp else 40.dp),
+            shape = RoundedCornerShape(10.dp),
             color = accent.copy(alpha = 0.1f),
             border = BorderStroke(1.dp, accent.copy(alpha = 0.2f))
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isVector && iconVector != null) {
-                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(20.dp))
+                    Icon(iconVector, null, tint = accent, modifier = Modifier.size(if (isSmall) 16.dp else 20.dp))
                 } else {
-                    Image(painterResource(id = iconRes), null, modifier = Modifier.size(24.dp))
+                    Image(painterResource(id = iconRes), null, modifier = Modifier.size(if (isSmall) 18.dp else 22.dp))
                 }
             }
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(if (isSmall) 10.dp else 14.dp))
         Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelLarge.copy(
+                style = (if (isSmall) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelLarge).copy(
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
+                    letterSpacing = 0.5.sp,
                     fontFamily = FontFamily.Monospace
                 ),
                 color = accent
             )
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.5f),
-                lineHeight = 16.sp
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmall) 9.sp else 11.sp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                lineHeight = if (isSmall) 12.sp else 14.sp
             )
         }
     }

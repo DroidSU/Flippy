@@ -36,6 +36,8 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_ZEN_TUTORIAL_COMPLETED = "zen_tutorial_completed"
         private const val KEY_ZEN_ROTATION_HINT_DISABLED = "zen_rotation_hint_disabled"
         private const val KEY_ZEN_LANDSCAPE_PREFERRED = "zen_landscape_preferred"
+        private const val KEY_SPEED_RUN_TUTORIAL_COMPLETED = "speed_run_tutorial_completed"
+        private const val KEY_SPEED_RUN_ROTATION_HINT_DISABLED = "speed_run_rotation_hint_disabled"
     }
 
     override fun setAppTheme(theme: AppTheme) {
@@ -112,5 +114,21 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun isZenLandscapePreferred(): Boolean {
         return prefs.getBoolean(KEY_ZEN_LANDSCAPE_PREFERRED, false)
+    }
+
+    override fun setSpeedRunTutorialCompleted(completed: Boolean) {
+        prefs.edit { putBoolean(KEY_SPEED_RUN_TUTORIAL_COMPLETED, completed) }
+    }
+
+    override fun isSpeedRunTutorialCompleted(): Boolean {
+        return prefs.getBoolean(KEY_SPEED_RUN_TUTORIAL_COMPLETED, false)
+    }
+
+    override fun setSpeedRunRotationHintDisabled(disabled: Boolean) {
+        prefs.edit { putBoolean(KEY_SPEED_RUN_ROTATION_HINT_DISABLED, disabled) }
+    }
+
+    override fun isSpeedRunRotationHintDisabled(): Boolean {
+        return prefs.getBoolean(KEY_SPEED_RUN_ROTATION_HINT_DISABLED, false)
     }
 }
