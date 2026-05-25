@@ -11,6 +11,7 @@ import com.fliq.common.Badge
 import com.fliq.common.NetworkRepository
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.models.UserData
+import com.fliq.core.settings.SettingsRepository
 import com.fliq.database.MatchHistory
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
@@ -23,6 +24,7 @@ import com.fliq.game_engine.models.Tile
 import com.fliq.game_engine.models.VibrationType
 import com.fliq.game_engine.repository.GamePreferencesRepository
 import com.fliq.game_engine.repository.SoundRepository
+import com.fliq.zen_mode.models.ZenTutorialStep
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -51,7 +53,8 @@ class ZenViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val adManager: AdManager,
-    private val difficultyManager: com.fliq.common.DifficultyManager
+    private val difficultyManager: com.fliq.common.DifficultyManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -110,6 +113,11 @@ class ZenViewModel @Inject constructor(
     private val _correctTaps = MutableStateFlow(0)
     val correctTaps = _correctTaps.asStateFlow()
 
+    private val _tutorialStep = MutableStateFlow<ZenTutorialStep?>(null)
+    val tutorialStep = _tutorialStep.asStateFlow()
+
+    private val tutorialTileId = 5
+
     private var timerJob: Job? = null
     private var gameLoopJob: Job? = null
     private var coinsMissedConsecutively = 0
@@ -135,7 +143,14 @@ class ZenViewModel @Inject constructor(
 
     init {
         getUserData()
+        checkTutorialVisibility()
         checkRulesVisibility()
+    }
+
+    private fun checkTutorialVisibility() {
+        if (!settingsRepository.isZenTutorialCompleted()) {
+            _tutorialStep.value = ZenTutorialStep.WELCOME
+        }
     }
 
     private fun getUserData() {
@@ -162,6 +177,47 @@ class ZenViewModel @Inject constructor(
         _showRules.value = false
         preferencesRepository.setShowRulesOnStartup(showOnStartup)
         preferencesRepository.setRulesShownOnce(true)
+    }
+
+    fun nextTutorialStep() {
+        val current = _tutorialStep.value ?: return
+        
+        // Prepare state for specific steps
+        when (current) {
+            ZenTutorialStep.TILE_INTRO -> {
+                // Reveal the interactive tile for the next step
+                updateTile(tutorialTileId) {
+                    it.copy(
+                        isRevealed = true,
+                        isIconVisible = true,
+                        type = CardType.COIN,
+                        lastRevealTime = System.currentTimeMillis(),
+                        currentDuration = 999999L // Make it stay visible
+                    )
+                }
+            }
+            else -> {}
+        }
+
+        _tutorialStep.value = when (current) {
+            ZenTutorialStep.WELCOME -> ZenTutorialStep.STATS
+            ZenTutorialStep.STATS -> ZenTutorialStep.TILE_INTRO
+            ZenTutorialStep.TILE_INTRO -> ZenTutorialStep.TILE_INTERACT
+            ZenTutorialStep.TILE_INTERACT -> ZenTutorialStep.START_GAME
+            ZenTutorialStep.START_GAME -> {
+                settingsRepository.setZenTutorialCompleted(true)
+                // Reset tiles to clear any revealed during tutorial
+                _tiles.value = List(16) { Tile(it) }
+                null
+            }
+        }
+    }
+
+    fun skipTutorial() {
+        settingsRepository.setZenTutorialCompleted(true)
+        _tutorialStep.value = null
+        // Reset tiles in case we were in interactive step
+        _tiles.value = List(16) { Tile(it) }
     }
 
     fun startGame() {
@@ -431,6 +487,22 @@ class ZenViewModel @Inject constructor(
     }
 
     fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
+        if (_tutorialStep.value == ZenTutorialStep.TILE_INTERACT) {
+            if (tileId == tutorialTileId) {
+                scope.launch {
+                    tapPosition?.let { _effects.emit(GameEffect.BackgroundRipple(it)) }
+                    _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
+                    _effects.emit(Particle(tileId, ParticleType.COIN))
+                    _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playBonusSound()
+                    // Hide the tile immediately after collection
+                    updateTile(tileId) { it.copy(isRevealed = false) }
+                    nextTutorialStep()
+                }
+            }
+            return
+        }
+
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
         _totalTaps.update { it + 1 }

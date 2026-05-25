@@ -17,4 +17,7 @@ interface SettingsRepository {
 
     fun setHapticFeedbackEnabled(enabled: Boolean)
     fun getHapticFeedbackEnabled(): Boolean
+
+    fun setZenTutorialCompleted(completed: Boolean)
+    fun isZenTutorialCompleted(): Boolean
 }

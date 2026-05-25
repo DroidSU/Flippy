@@ -33,6 +33,7 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_NOTIFICATIONS = "notifications_enabled"
         private const val KEY_GAME_SOUND = "game_sound_enabled"
         private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback_enabled"
+        private const val KEY_ZEN_TUTORIAL_COMPLETED = "zen_tutorial_completed"
     }
 
     override fun setAppTheme(theme: AppTheme) {
@@ -85,5 +86,13 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun getHapticFeedbackEnabled(): Boolean {
         return prefs.getBoolean(KEY_HAPTIC_FEEDBACK, true)
+    }
+
+    override fun setZenTutorialCompleted(completed: Boolean) {
+        prefs.edit { putBoolean(KEY_ZEN_TUTORIAL_COMPLETED, completed) }
+    }
+
+    override fun isZenTutorialCompleted(): Boolean {
+        return prefs.getBoolean(KEY_ZEN_TUTORIAL_COMPLETED, false)
     }
 }
