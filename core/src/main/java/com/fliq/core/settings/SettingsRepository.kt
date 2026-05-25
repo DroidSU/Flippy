@@ -20,4 +20,16 @@ interface SettingsRepository {
 
     fun setZenTutorialCompleted(completed: Boolean)
     fun isZenTutorialCompleted(): Boolean
+
+    fun setZenRotationHintDisabled(disabled: Boolean)
+    fun isZenRotationHintDisabled(): Boolean
+
+    fun setZenLandscapePreferred(preferred: Boolean)
+    fun isZenLandscapePreferred(): Boolean
+
+    fun setSpeedRunTutorialCompleted(completed: Boolean)
+    fun isSpeedRunTutorialCompleted(): Boolean
+
+    fun setSpeedRunRotationHintDisabled(disabled: Boolean)
+    fun isSpeedRunRotationHintDisabled(): Boolean
 }

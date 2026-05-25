@@ -34,6 +34,8 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_GAME_SOUND = "game_sound_enabled"
         private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback_enabled"
         private const val KEY_ZEN_TUTORIAL_COMPLETED = "zen_tutorial_completed"
+        private const val KEY_ZEN_ROTATION_HINT_DISABLED = "zen_rotation_hint_disabled"
+        private const val KEY_ZEN_LANDSCAPE_PREFERRED = "zen_landscape_preferred"
     }
 
     override fun setAppTheme(theme: AppTheme) {
@@ -94,5 +96,21 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun isZenTutorialCompleted(): Boolean {
         return prefs.getBoolean(KEY_ZEN_TUTORIAL_COMPLETED, false)
+    }
+
+    override fun setZenRotationHintDisabled(disabled: Boolean) {
+        prefs.edit { putBoolean(KEY_ZEN_ROTATION_HINT_DISABLED, disabled) }
+    }
+
+    override fun isZenRotationHintDisabled(): Boolean {
+        return prefs.getBoolean(KEY_ZEN_ROTATION_HINT_DISABLED, false)
+    }
+
+    override fun setZenLandscapePreferred(preferred: Boolean) {
+        prefs.edit { putBoolean(KEY_ZEN_LANDSCAPE_PREFERRED, preferred) }
+    }
+
+    override fun isZenLandscapePreferred(): Boolean {
+        return prefs.getBoolean(KEY_ZEN_LANDSCAPE_PREFERRED, false)
     }
 }

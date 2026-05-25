@@ -25,25 +25,30 @@
             android:name=".views.AchievementsActivity"
             android:exported="false"
             android:label="Achievements"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.LeaderboardActivity"
             android:exported="false"
             android:label="@string/title_activity_leaderboard"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.ProfileActivity"
             android:exported="false"
             android:label="@string/title_activity_profile"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.SplashActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -54,14 +59,17 @@
         <activity
             android:name=".views.AuthenticationActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.MainActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
         <activity
             android:name=".views.CalibrationActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Fliq" />
 
         <meta-data

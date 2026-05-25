@@ -116,6 +116,9 @@ class ZenViewModel @Inject constructor(
     private val _tutorialStep = MutableStateFlow<ZenTutorialStep?>(null)
     val tutorialStep = _tutorialStep.asStateFlow()
 
+    private val _showRotationPrompt = MutableStateFlow(false)
+    val showRotationPrompt = _showRotationPrompt.asStateFlow()
+
     private val tutorialTileId = 5
 
     private var timerJob: Job? = null
@@ -143,14 +146,16 @@ class ZenViewModel @Inject constructor(
 
     init {
         getUserData()
-        checkTutorialVisibility()
+        if (!settingsRepository.isZenTutorialCompleted()) {
+            _tutorialStep.value = ZenTutorialStep.WELCOME
+        } else {
+            checkRotationPromptVisibility()
+        }
         checkRulesVisibility()
     }
 
-    private fun checkTutorialVisibility() {
-        if (!settingsRepository.isZenTutorialCompleted()) {
-            _tutorialStep.value = ZenTutorialStep.WELCOME
-        }
+    companion object {
+        private var hasShownRotationPromptInSession = false
     }
 
     private fun getUserData() {
@@ -208,8 +213,16 @@ class ZenViewModel @Inject constructor(
                 settingsRepository.setZenTutorialCompleted(true)
                 // Reset tiles to clear any revealed during tutorial
                 _tiles.value = List(16) { Tile(it) }
+                checkRotationPromptVisibility()
                 null
             }
+        }
+    }
+
+    private fun checkRotationPromptVisibility() {
+        if (!settingsRepository.isZenRotationHintDisabled() && !hasShownRotationPromptInSession) {
+            _showRotationPrompt.value = true
+            hasShownRotationPromptInSession = true
         }
     }
 
@@ -218,6 +231,14 @@ class ZenViewModel @Inject constructor(
         _tutorialStep.value = null
         // Reset tiles in case we were in interactive step
         _tiles.value = List(16) { Tile(it) }
+        checkRotationPromptVisibility()
+    }
+
+    fun onRotationPromptDismissed(dontShowAgain: Boolean) {
+        _showRotationPrompt.value = false
+        if (dontShowAgain) {
+            settingsRepository.setZenRotationHintDisabled(true)
+        }
     }
 
     fun startGame() {

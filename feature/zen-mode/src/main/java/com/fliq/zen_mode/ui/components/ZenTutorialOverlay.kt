@@ -150,7 +150,7 @@ fun TutorialTooltip(
         ZenTutorialStep.STATS -> "Your score and remaining lives are tracked here."
         ZenTutorialStep.TILE_INTRO -> "Once a tile is revealed, tap on coins to increase your score. Avoid bombs at all costs - they deplete your lives."
         ZenTutorialStep.TILE_INTERACT -> "Tap the highlighted tile now to experience your first match!"
-        ZenTutorialStep.START_GAME -> "Tapping start begins the session. Take a deep breath and stay calm."
+        ZenTutorialStep.START_GAME -> "Tapping PLAY begins the session. Take a deep breath and stay calm."
     }
 
     Surface(
