@@ -11,6 +11,7 @@ import com.fliq.common.Badge
 import com.fliq.common.NetworkRepository
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.models.UserData
+import com.fliq.core.settings.SettingsRepository
 import com.fliq.database.MatchHistory
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
@@ -23,6 +24,7 @@ import com.fliq.game_engine.models.Tile
 import com.fliq.game_engine.models.VibrationType
 import com.fliq.game_engine.repository.GamePreferencesRepository
 import com.fliq.game_engine.repository.SoundRepository
+import com.fliq.minefield.models.MinefieldTutorialStep
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -51,7 +53,8 @@ class MinefieldViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val adManager: AdManager,
-    private val difficultyManager: com.fliq.common.DifficultyManager
+    private val difficultyManager: com.fliq.common.DifficultyManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -110,6 +113,14 @@ class MinefieldViewModel @Inject constructor(
     private val _correctTaps = MutableStateFlow(0)
     val correctTaps = _correctTaps.asStateFlow()
 
+    private val _tutorialStep = MutableStateFlow<MinefieldTutorialStep?>(null)
+    val tutorialStep = _tutorialStep.asStateFlow()
+
+    private val _showRotationPrompt = MutableStateFlow(false)
+    val showRotationPrompt = _showRotationPrompt.asStateFlow()
+
+    private val tutorialTileId = 5
+
     private var timerJob: Job? = null
     private var gameLoopJob: Job? = null
     private var coinsMissedConsecutively = 0
@@ -134,7 +145,23 @@ class MinefieldViewModel @Inject constructor(
 
     init {
         getUserData()
+        if (!settingsRepository.isMinefieldTutorialCompleted()) {
+            _tutorialStep.value = MinefieldTutorialStep.WELCOME
+        } else {
+            checkRotationPromptVisibility()
+        }
         checkRulesVisibility()
+    }
+
+    companion object {
+        private var hasShownRotationPromptInSession = false
+    }
+
+    private fun checkRotationPromptVisibility() {
+        if (!settingsRepository.isMinefieldRotationHintDisabled() && !hasShownRotationPromptInSession) {
+            _showRotationPrompt.value = true
+            hasShownRotationPromptInSession = true
+        }
     }
 
     private fun getUserData() {
@@ -161,6 +188,52 @@ class MinefieldViewModel @Inject constructor(
         _showRules.value = false
         preferencesRepository.setShowRulesOnStartup(showOnStartup)
         preferencesRepository.setRulesShownOnce(true)
+    }
+
+    fun nextTutorialStep() {
+        val current = _tutorialStep.value ?: return
+
+        when (current) {
+            MinefieldTutorialStep.TILE_INTRO -> {
+                updateTile(tutorialTileId) {
+                    it.copy(
+                        isRevealed = true,
+                        isIconVisible = true,
+                        type = CardType.COIN,
+                        lastRevealTime = System.currentTimeMillis(),
+                        currentDuration = 999999L
+                    )
+                }
+            }
+            else -> {}
+        }
+
+        _tutorialStep.value = when (current) {
+            MinefieldTutorialStep.WELCOME -> MinefieldTutorialStep.STATS
+            MinefieldTutorialStep.STATS -> MinefieldTutorialStep.TILE_INTRO
+            MinefieldTutorialStep.TILE_INTRO -> MinefieldTutorialStep.TILE_INTERACT
+            MinefieldTutorialStep.TILE_INTERACT -> MinefieldTutorialStep.START_GAME
+            MinefieldTutorialStep.START_GAME -> {
+                settingsRepository.setMinefieldTutorialCompleted(true)
+                _tiles.value = List(16) { Tile(it) }
+                checkRotationPromptVisibility()
+                null
+            }
+        }
+    }
+
+    fun skipTutorial() {
+        settingsRepository.setMinefieldTutorialCompleted(true)
+        _tutorialStep.value = null
+        _tiles.value = List(16) { Tile(it) }
+        checkRotationPromptVisibility()
+    }
+
+    fun onRotationPromptDismissed(dontShowAgain: Boolean) {
+        _showRotationPrompt.value = false
+        if (dontShowAgain) {
+            settingsRepository.setMinefieldRotationHintDisabled(true)
+        }
     }
 
     fun startGame() {
@@ -439,6 +512,21 @@ class MinefieldViewModel @Inject constructor(
     }
 
     fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
+        if (_tutorialStep.value == MinefieldTutorialStep.TILE_INTERACT) {
+            if (tileId == tutorialTileId) {
+                scope.launch {
+                    tapPosition?.let { _effects.emit(GameEffect.BackgroundRipple(it)) }
+                    _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
+                    _effects.emit(Particle(tileId, ParticleType.COIN))
+                    _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playBonusSound()
+                    updateTile(tileId) { it.copy(isRevealed = false) }
+                    nextTutorialStep()
+                }
+            }
+            return
+        }
+
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
         _totalTaps.update { it + 1 }

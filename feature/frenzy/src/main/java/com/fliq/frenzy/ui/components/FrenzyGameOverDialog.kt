@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,7 +61,9 @@ fun FrenzyGameOverDialog(
     onRetry: () -> Unit,
     onBackToDashboard: () -> Unit
 ) {
-    val accentColor = MaterialTheme.colorScheme.secondary // Gold for Frenzy
+    val accentColor = MaterialTheme.colorScheme.primary
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     if (visible) {
         Dialog(
@@ -69,20 +73,23 @@ fun FrenzyGameOverDialog(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.7f)),
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.7f))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.85f)
+                        .widthIn(max = if (isLandscape) 560.dp else 400.dp)
                         .wrapContentHeight(),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(32.dp),
                     color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 16.dp,
                     border = BorderStroke(1.dp, accentColor.copy(alpha = 0.15f))
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
+                        modifier = Modifier.padding(if (isLandscape) 20.dp else 24.dp)
                     ) {
                         Text(
                             text = "GAME OVER",
@@ -93,90 +100,182 @@ fun FrenzyGameOverDialog(
                             color = MaterialTheme.colorScheme.error
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(if (isLandscape) 12.dp else 16.dp))
 
-                        // Score Block
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "STREAK SCORE",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 1.sp,
-                                        fontFamily = FontFamily.Monospace
-                                    ),
-                                    color = accentColor.copy(alpha = 0.6f)
-                                )
-                                Text(
-                                    text = score.toString().padStart(3, '0'),
-                                    style = MaterialTheme.typography.displaySmall.copy(
-                                        fontWeight = FontWeight.Black,
-                                        fontFamily = FontFamily.Monospace
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Stats Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PerformanceStatItem(
-                                modifier = Modifier.weight(1f),
-                                label = "TIME",
-                                value = UtilityMethods.formatTime(gameTime),
-                                icon = Icons.Default.Timer,
-                                color = accentColor
-                            )
-                            PerformanceStatItem(
-                                modifier = Modifier.weight(1f),
-                                label = "ACCURACY",
-                                value = "${(accuracy * 100).toInt()}%",
-                                icon = Icons.Default.TouchApp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        if (newBadges.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            BadgeUnlockSection(newBadges)
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Actions
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FrenzyActionRequestButton(
-                                text = "PLAY AGAIN",
-                                icon = Icons.Default.Refresh,
-                                primary = true,
+                        if (isLandscape) {
+                            LandscapeContent(
+                                score = score,
+                                gameTime = gameTime,
+                                accuracy = accuracy,
+                                newBadges = newBadges,
                                 accentColor = accentColor,
-                                onClick = onRetry
+                                onRetry = onRetry,
+                                onBackToDashboard = onBackToDashboard
                             )
-                            FrenzyActionRequestButton(
-                                text = "MAIN MENU",
-                                icon = Icons.Default.Home,
-                                primary = false,
-                                accentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                onClick = onBackToDashboard
+                        } else {
+                            PortraitContent(
+                                score = score,
+                                gameTime = gameTime,
+                                accuracy = accuracy,
+                                newBadges = newBadges,
+                                accentColor = accentColor,
+                                onRetry = onRetry,
+                                onBackToDashboard = onBackToDashboard
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PortraitContent(
+    score: Int,
+    gameTime: Long,
+    accuracy: Float,
+    newBadges: List<Badge>,
+    accentColor: Color,
+    onRetry: () -> Unit,
+    onBackToDashboard: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        ScoreBlock(score = score, accentColor = accentColor)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PerformanceStatItem(
+                modifier = Modifier.weight(1f),
+                label = "TIME",
+                value = UtilityMethods.formatTime(gameTime),
+                icon = Icons.Default.Timer,
+                color = accentColor
+            )
+            PerformanceStatItem(
+                modifier = Modifier.weight(1f),
+                label = "ACCURACY",
+                value = "${(accuracy * 100).toInt()}%",
+                icon = Icons.Default.TouchApp,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
+
+        if (newBadges.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            BadgeUnlockSection(newBadges)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        ActionsSection(onRetry, onBackToDashboard, accentColor)
+    }
+}
+
+@Composable
+private fun LandscapeContent(
+    score: Int,
+    gameTime: Long,
+    accuracy: Float,
+    newBadges: List<Badge>,
+    accentColor: Color,
+    onRetry: () -> Unit,
+    onBackToDashboard: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            ScoreBlock(score = score, accentColor = accentColor)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PerformanceStatItem(
+                    modifier = Modifier.weight(1f),
+                    label = "TIME",
+                    value = UtilityMethods.formatTime(gameTime),
+                    icon = Icons.Default.Timer,
+                    color = accentColor
+                )
+                PerformanceStatItem(
+                    modifier = Modifier.weight(1f),
+                    label = "ACCURACY",
+                    value = "${(accuracy * 100).toInt()}%",
+                    icon = Icons.Default.TouchApp,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+        }
+
+        Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (newBadges.isNotEmpty()) {
+                BadgeUnlockSection(newBadges)
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            ActionsSection(onRetry, onBackToDashboard, accentColor)
+        }
+    }
+}
+
+@Composable
+private fun ScoreBlock(score: Int, accentColor: Color) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Text(
+                text = "SCORE",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = accentColor.copy(alpha = 0.6f)
+            )
+            Text(
+                text = score.toString().padStart(3, '0'),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionsSection(
+    onRetry: () -> Unit,
+    onBackToDashboard: () -> Unit,
+    accentColor: Color
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ActionRequestButton(
+            text = "PLAY AGAIN",
+            icon = Icons.Default.Refresh,
+            primary = true,
+            accentColor = accentColor,
+            onClick = onRetry
+        )
+        ActionRequestButton(
+            text = "MAIN MENU",
+            icon = Icons.Default.Home,
+            primary = false,
+            accentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            onClick = onBackToDashboard
+        )
     }
 }
 
@@ -195,11 +294,11 @@ private fun PerformanceStatItem(
         border = BorderStroke(1.dp, color.copy(alpha = 0.1f))
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(icon, null, modifier = Modifier.size(14.dp), tint = color.copy(alpha = 0.6f))
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -218,7 +317,7 @@ private fun PerformanceStatItem(
 }
 
 @Composable
-private fun FrenzyActionRequestButton(
+private fun ActionRequestButton(
     text: String,
     icon: ImageVector,
     primary: Boolean,
@@ -276,7 +375,7 @@ private fun BadgeUnlockSection(badges: List<Badge>) {
             color = MaterialTheme.colorScheme.secondary
         )
         
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyRow(
             contentPadding = PaddingValues(horizontal = 4.dp),

@@ -40,6 +40,10 @@ class SettingsRepositoryImpl @Inject constructor(
         private const val KEY_SPEED_RUN_ROTATION_HINT_DISABLED = "speed_run_rotation_hint_disabled"
         private const val KEY_MIRAGE_TUTORIAL_COMPLETED = "mirage_tutorial_completed"
         private const val KEY_MIRAGE_ROTATION_HINT_DISABLED = "mirage_rotation_hint_disabled"
+        private const val KEY_MINEFIELD_TUTORIAL_COMPLETED = "minefield_tutorial_completed"
+        private const val KEY_MINEFIELD_ROTATION_HINT_DISABLED = "minefield_rotation_hint_disabled"
+        private const val KEY_FRENZY_TUTORIAL_COMPLETED = "frenzy_tutorial_completed"
+        private const val KEY_FRENZY_ROTATION_HINT_DISABLED = "frenzy_rotation_hint_disabled"
     }
 
     override fun setAppTheme(theme: AppTheme) {
@@ -148,5 +152,37 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override fun isMirageRotationHintDisabled(): Boolean {
         return prefs.getBoolean(KEY_MIRAGE_ROTATION_HINT_DISABLED, false)
+    }
+
+    override fun setMinefieldTutorialCompleted(completed: Boolean) {
+        prefs.edit { putBoolean(KEY_MINEFIELD_TUTORIAL_COMPLETED, completed) }
+    }
+
+    override fun isMinefieldTutorialCompleted(): Boolean {
+        return prefs.getBoolean(KEY_MINEFIELD_TUTORIAL_COMPLETED, false)
+    }
+
+    override fun setMinefieldRotationHintDisabled(disabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MINEFIELD_ROTATION_HINT_DISABLED, disabled) }
+    }
+
+    override fun isMinefieldRotationHintDisabled(): Boolean {
+        return prefs.getBoolean(KEY_MINEFIELD_ROTATION_HINT_DISABLED, false)
+    }
+
+    override fun setFrenzyTutorialCompleted(completed: Boolean) {
+        prefs.edit { putBoolean(KEY_FRENZY_TUTORIAL_COMPLETED, completed) }
+    }
+
+    override fun isFrenzyTutorialCompleted(): Boolean {
+        return prefs.getBoolean(KEY_FRENZY_TUTORIAL_COMPLETED, false)
+    }
+
+    override fun setFrenzyRotationHintDisabled(disabled: Boolean) {
+        prefs.edit { putBoolean(KEY_FRENZY_ROTATION_HINT_DISABLED, disabled) }
+    }
+
+    override fun isFrenzyRotationHintDisabled(): Boolean {
+        return prefs.getBoolean(KEY_FRENZY_ROTATION_HINT_DISABLED, false)
     }
 }

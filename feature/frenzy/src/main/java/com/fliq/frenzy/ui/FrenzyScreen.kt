@@ -1,80 +1,63 @@
 package com.fliq.frenzy.ui
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
 import com.fliq.common.UtilityMethods
-import com.fliq.core.theme.BgDeepDark
-import com.fliq.core.theme.BgSlate
-import com.fliq.core.theme.Gold
-import com.fliq.core.theme.NeonCyan
+import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.gameColors
-import com.fliq.core.util.ChamferedCornerShape
+import com.fliq.frenzy.models.FrenzyTutorialStep
+import com.fliq.frenzy.ui.components.FrenzyBackgroundRipple
+import com.fliq.frenzy.ui.components.FrenzyBeatingHeartIcon
+import com.fliq.frenzy.ui.components.FrenzyFloatingScore
+import com.fliq.frenzy.ui.components.FrenzyGameGrid
 import com.fliq.frenzy.ui.components.FrenzyGameOverDialog
+import com.fliq.frenzy.ui.components.FrenzyIconButton
+import com.fliq.frenzy.ui.components.FrenzyPlayButton
+import com.fliq.frenzy.ui.components.FrenzyRotationOverlay
 import com.fliq.frenzy.ui.components.FrenzyRulesDialog
-import com.fliq.game_engine.R
+import com.fliq.frenzy.ui.components.FrenzyStatBlock
+import com.fliq.frenzy.ui.components.FrenzyStats
+import com.fliq.frenzy.ui.components.FrenzyTopBar
+import com.fliq.frenzy.ui.components.FrenzyTutorialHighlight
+import com.fliq.frenzy.ui.components.FrenzyTutorialOverlay
 import com.fliq.game_engine.models.EffectState
 import com.fliq.game_engine.models.EffectType
 import com.fliq.game_engine.models.GameEffect
@@ -86,13 +69,9 @@ import com.fliq.game_engine.ui.AdRewardDialog
 import com.fliq.game_engine.ui.BombEffect
 import com.fliq.game_engine.ui.CriticalVignette
 import com.fliq.game_engine.ui.MeshBackground
-import com.fliq.game_engine.ui.PlayButtonComponent
 import com.fliq.game_engine.ui.SparkleEffect
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 fun FrenzyScreen(
@@ -113,12 +92,26 @@ fun FrenzyScreen(
     onHelpClick: () -> Unit,
     onBackClick: () -> Unit,
     streak: Int = 0,
-    reactionTime: Long = 0,
     accuracy: Float = 0f,
     newBadges: List<Badge> = emptyList(),
-    effects: SharedFlow<GameEffect>? = null
+    effects: SharedFlow<GameEffect>? = null,
+    tutorialStep: FrenzyTutorialStep? = null,
+    onNextTutorialStep: () -> Unit = {},
+    onSkipTutorial: () -> Unit = {},
+    showRotationPrompt: Boolean = false,
+    onRotationPromptDismissed: (Boolean) -> Unit = {}
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    LaunchedEffect(isLandscape) {
+        if (isLandscape && showRotationPrompt) {
+            onRotationPromptDismissed(false)
+        }
+    }
+
     val tilePositions = remember { mutableMapOf<Int, Offset>() }
+    val highlights = remember { mutableStateMapOf<FrenzyTutorialStep, FrenzyTutorialHighlight>() }
     val activeEffects = remember { mutableStateListOf<EffectState>() }
     val ripples = remember { mutableStateListOf<RippleState>() }
     val gameColors = MaterialTheme.gameColors
@@ -156,58 +149,89 @@ fun FrenzyScreen(
 
             ripples.forEach { ripple ->
                 key(ripple.id) {
-                    BackgroundRippleEffect(ripple.position) { ripples.remove(ripple) }
+                    FrenzyBackgroundRipple(ripple.position) { ripples.remove(ripple) }
                 }
             }
 
-            if (lives == 0 && isPlaying) CriticalVignette()
+            if (lives == 1 && isPlaying) CriticalVignette()
 
             if (isPaused) Box(modifier = Modifier.fillMaxSize().background(gameColors.pauseDim).zIndex(5f))
 
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp)
             ) {
-                FrenzyTopBar(
-                    isPaused = isPaused,
-                    onBackClick = onBackClick,
-                    onHelpClick = onHelpClick
-                )
-
-                Spacer(modifier = Modifier.weight(0.5f))
-
-                FrenzyStats(
-                    score = score,
-                    gameTime = gameTime
-                )
-
-                Spacer(modifier = Modifier.weight(0.5f))
-
-                GameGrid(
-                    tiles = tiles,
-                    onTileTapped = onTileTapped,
-                    onTilePositioned = { id, pos -> tilePositions[id] = pos },
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                PlayButtonComponent(
-                    status = status,
-                    onAction = { if (isPlaying) onResetGame() else onPlayClick() }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
+                if (isLandscape) {
+                    FrenzyContentLandscape(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        isPaused = isPaused,
+                        isPlaying = isPlaying,
+                        onTileTapped = onTileTapped,
+                        onPlayClick = onPlayClick,
+                        onResetGame = onResetGame,
+                        onHelpClick = onHelpClick,
+                        onBackClick = onBackClick,
+                        onTilePositioned = { id, pos, size ->
+                            tilePositions[id] = pos
+                            if (id == 5) {
+                                highlights[FrenzyTutorialStep.TILE_INTRO] = FrenzyTutorialHighlight(pos, size)
+                                highlights[FrenzyTutorialStep.TILE_INTERACT] = FrenzyTutorialHighlight(pos, size)
+                            }
+                        },
+                        onStatsPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.STATS] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        },
+                        onTopBarPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.WELCOME] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        },
+                        onPlayButtonPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.START_GAME] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        }
+                    )
+                } else {
+                    FrenzyContentPortrait(
+                        tiles = tiles,
+                        score = score,
+                        lives = lives,
+                        status = status,
+                        gameTime = gameTime,
+                        isPaused = isPaused,
+                        isPlaying = isPlaying,
+                        onTileTapped = onTileTapped,
+                        onPlayClick = onPlayClick,
+                        onResetGame = onResetGame,
+                        onHelpClick = onHelpClick,
+                        onBackClick = onBackClick,
+                        onTilePositioned = { id, pos, size ->
+                            tilePositions[id] = pos
+                            if (id == 5) {
+                                highlights[FrenzyTutorialStep.TILE_INTRO] = FrenzyTutorialHighlight(pos, size)
+                                highlights[FrenzyTutorialStep.TILE_INTERACT] = FrenzyTutorialHighlight(pos, size)
+                            }
+                        },
+                        onStatsPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.STATS] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        },
+                        onTopBarPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.WELCOME] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        },
+                        onPlayButtonPositioned = { pos, size ->
+                            highlights[FrenzyTutorialStep.START_GAME] = FrenzyTutorialHighlight(pos, size, isCircle = false)
+                        }
+                    )
+                }
             }
 
-            // Effects
             activeEffects.toList().forEach { effect ->
                 key(effect.id) {
                     when (effect.type) {
-                        EffectType.SCORE -> FloatingScore(effect) { activeEffects.remove(effect) }
+                        EffectType.SCORE -> FrenzyFloatingScore(effect) { activeEffects.remove(effect) }
                         EffectType.PARTICLE_COIN -> SparkleEffect(effect) { activeEffects.remove(effect) }
                         EffectType.PARTICLE_BOMB -> BombEffect(effect) { activeEffects.remove(effect) }
                     }
@@ -226,256 +250,266 @@ fun FrenzyScreen(
                 onRetry = onResetGame,
                 onBackToDashboard = onBackClick
             )
+
+            if (tutorialStep != null) {
+                FrenzyTutorialOverlay(
+                    step = tutorialStep,
+                    highlight = highlights[tutorialStep],
+                    onNext = onNextTutorialStep,
+                    onSkip = onSkipTutorial
+                )
+            }
+
+            if (showRotationPrompt && !isLandscape) {
+                FrenzyRotationOverlay(onDismiss = onRotationPromptDismissed)
+            }
         }
     }
 }
 
 @Composable
-fun FrenzyTopBar(
+fun FrenzyContentPortrait(
+    tiles: List<Tile>,
+    score: Int,
+    lives: Int,
+    status: GameStatus,
+    gameTime: Long,
     isPaused: Boolean,
+    isPlaying: Boolean,
+    onTileTapped: (Int, Offset?) -> Unit,
+    onPlayClick: () -> Unit,
+    onResetGame: () -> Unit,
+    onHelpClick: () -> Unit,
     onBackClick: () -> Unit,
-    onHelpClick: () -> Unit
+    onTilePositioned: (Int, Offset, Size) -> Unit,
+    onStatsPositioned: (Offset, Size) -> Unit,
+    onTopBarPositioned: (Offset, Size) -> Unit,
+    onPlayButtonPositioned: (Offset, Size) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        FrenzyIconButton(icon = Icons.Default.ArrowBack, onClick = onBackClick)
-        
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        FrenzyTopBar(
+            isPaused = isPaused,
+            onBackClick = onBackClick,
+            onHelpClick = onHelpClick,
+            onPositioned = onTopBarPositioned
+        )
+
+        Spacer(modifier = Modifier.weight(0.2f))
+
+        FrenzyStats(
+            score = score,
+            lives = lives,
+            gameTime = gameTime,
+            onPositioned = onStatsPositioned
+        )
+
+        Spacer(modifier = Modifier.weight(0.5f))
+
+        FrenzyGameGrid(
+            tiles = tiles,
+            onTileTapped = onTileTapped,
+            onTilePositioned = onTilePositioned,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        FrenzyPlayButton(
+            status = status,
+            onAction = { if (isPlaying) onResetGame() else onPlayClick() },
+            onPositioned = onPlayButtonPositioned,
+            modifier = Modifier.padding(horizontal = 48.dp)
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+fun FrenzyContentLandscape(
+    tiles: List<Tile>,
+    score: Int,
+    lives: Int,
+    status: GameStatus,
+    gameTime: Long,
+    isPaused: Boolean,
+    isPlaying: Boolean,
+    onTileTapped: (Int, Offset?) -> Unit,
+    onPlayClick: () -> Unit,
+    onResetGame: () -> Unit,
+    onHelpClick: () -> Unit,
+    onBackClick: () -> Unit,
+    onTilePositioned: (Int, Offset, Size) -> Unit,
+    onStatsPositioned: (Offset, Size) -> Unit,
+    onTopBarPositioned: (Offset, Size) -> Unit,
+    onPlayButtonPositioned: (Offset, Size) -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .onGloballyPositioned { coords ->
+                    val center = Offset(
+                        coords.positionInRoot().x + coords.size.width / 2,
+                        coords.positionInRoot().y + coords.size.height / 2
+                    )
+                    onStatsPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
+                    onTopBarPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
+                }
+        ) {
             Text(
                 text = "FRENZY",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black, 
-                    letterSpacing = 1.sp,
-                    shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), offset = Offset(0f, 4f), blurRadius = 8f)
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
                 ),
                 color = Color.White
             )
             Text(
-                text = if (isPaused) "PAUSED" else "GO FOR GOLD!",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                color = if (isPaused) Gold else NeonCyan
+                text = if (isPaused) "PAUSED" else "GO WILD",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FrenzyStatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
+                FrenzyStatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
+            }
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.TopEnd),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = "LIVES",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            )
+            Row(modifier = Modifier.padding(top = 4.dp)) {
+                repeat(lives.coerceAtLeast(0)) { index ->
+                    FrenzyBeatingHeartIcon(
+                        isAlive = true,
+                        size = 24.dp,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 16.dp)
+                .align(Alignment.Center),
+            contentAlignment = Alignment.Center
+        ) {
+            FrenzyGameGrid(
+                tiles = tiles,
+                onTileTapped = onTileTapped,
+                onTilePositioned = onTilePositioned,
+                modifier = Modifier.fillMaxHeight().aspectRatio(1f)
             )
         }
 
-        FrenzyIconButton(icon = Icons.AutoMirrored.Default.HelpOutline, onClick = onHelpClick)
-    }
-}
-
-@Composable
-fun FrenzyStats(
-    score: Int,
-    gameTime: Long
-) {
-    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-        Surface(
-            modifier = Modifier.fillMaxWidth().height(88.dp).offset(y = 4.dp).alpha(0.3f),
-            shape = ChamferedCornerShape(24.dp),
-            color = Color.Black
-        ) {}
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = ChamferedCornerShape(24.dp),
-            color = BgSlate.copy(alpha = 0.7f),
-            border = BorderStroke(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.2f), Color.Transparent, Color.White.copy(alpha = 0.05f))))
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(bottom = 16.dp, start = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatBlock(label = "STREAK", value = score.toString().padStart(3, '0'))
-                Box(modifier = Modifier.width(1.dp).height(32.dp).background(Color.White.copy(alpha = 0.1f)))
-                StatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
-                Box(modifier = Modifier.width(1.dp).height(32.dp).background(Color.White.copy(alpha = 0.1f)))
-                
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "RANK",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                    )
-                    Icon(
-                        imageVector = Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint = Gold,
-                        modifier = Modifier.size(24.dp).graphicsLayer { 
-                            shadowElevation = 8f
-                            translationY = -2f
-                        }
-                    )
-                }
-            }
+            FrenzyIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack, 
+                onClick = onBackClick
+            )
+            FrenzyIconButton(
+                icon = Icons.AutoMirrored.Filled.HelpOutline, 
+                onClick = onHelpClick
+            )
         }
-    }
-}
 
-@Composable
-fun StatBlock(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.Black, 
-                fontFamily = FontFamily.Monospace,
-                shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.5f), offset = Offset(0f, 4f))
-            ),
-            color = Color.White
+        FrenzyPlayButton(
+            status = status,
+            onAction = { if (isPlaying) onResetGame() else onPlayClick() },
+            onPositioned = onPlayButtonPositioned,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 16.dp, end = 12.dp)
         )
     }
 }
 
+@Preview(showBackground = true, widthDp = 800, heightDp = 400)
 @Composable
-fun GameGrid(
-    tiles: List<Tile>,
-    onTileTapped: (Int, Offset?) -> Unit,
-    onTilePositioned: (Int, Offset) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val columns = 4
-    val rows = (tiles.size + columns - 1) / columns
-
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        for (i in 0 until rows) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
-                for (j in 0 until columns) {
-                    val index = i * columns + j
-                    if (index < tiles.size) {
-                        val tile = tiles[index]
-                        var tileCenter by remember { mutableStateOf(Offset.Zero) }
-                        FrenzyTile(
-                            tile = tile,
-                            onClick = { onTileTapped(tile.id, tileCenter) },
-                            modifier = Modifier.weight(1f).aspectRatio(1f).onGloballyPositioned { coords ->
-                                val center = Offset(coords.positionInRoot().x + coords.size.width / 2, coords.positionInRoot().y + coords.size.height / 2)
-                                tileCenter = center
-                                onTilePositioned(tile.id, center)
-                            }
-                        )
-                    } else Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
+fun FrenzyScreenLandscapePreview() {
+    FliqTheme {
+        FrenzyScreen(
+            tiles = List(16) { Tile(it) },
+            accuracy = 0f,
+            onSkipAdClick = {},
+            onWatchAdClick = {},
+            showAdRewardDialog = false,
+            lives = 1,
+            score = 100,
+            status = GameStatus.READY,
+            streak = 3,
+            gameTime = 100L,
+            isPaused = false,
+            effects = null,
+            newBadges = emptyList(),
+            showRules = false,
+            onBackClick = {},
+            onHelpClick = {},
+            onPlayClick = {},
+            onResetGame = {},
+            onTileTapped = { _, _ -> },
+            onRulesDismissed = {},
+            tutorialStep = null,
+            onNextTutorialStep = {},
+            onSkipTutorial = {},
+            showRotationPrompt = false,
+            onRotationPromptDismissed = {}
+        )
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun FrenzyTile(
-    tile: Tile,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val rotation by animateFloatAsState(
-        targetValue = if (tile.isRevealed) 180f else 0f,
-        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow),
-        label = "rot"
-    )
-    val scale by animateFloatAsState(if (isPressed) 0.94f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "s")
-    val zOffset by animateFloatAsState(if (isPressed) 0f else 6.dp.value, label = "z")
-
-    Box(
-        modifier = modifier
-            .scale(scale)
-            .graphicsLayer { rotationY = rotation; cameraDistance = 16 * density; translationY = -zOffset }
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-    ) {
-        if (rotation <= 90f) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Surface(
-                    modifier = Modifier.fillMaxSize().offset(y = 6.dp),
-                    shape = ChamferedCornerShape(12.dp),
-                    color = Color.Black.copy(alpha = 0.5f)
-                ) {}
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = ChamferedCornerShape(12.dp),
-                    color = BgSlate.copy(alpha = 0.9f),
-                    border = BorderStroke(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)))
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(painterResource(id = R.drawable.ic_card_back), null, modifier = Modifier.size(24.dp).alpha(0.05f), tint = Color.White)
-                    }
-                }
-            }
-        } else {
-            Box(modifier = Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = ChamferedCornerShape(12.dp),
-                    color = BgDeepDark,
-                    border = BorderStroke(2.dp, Gold)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_coin),
-                            contentDescription = null,
-                            modifier = Modifier.size(38.dp).graphicsLayer { 
-                                translationY = -2f
-                            }
-                        )
-                    }
-                }
-            }
-        }
+fun FrenzyScreenPreview() {
+    FliqTheme {
+        FrenzyScreen(
+            tiles = List(16) { Tile(it) },
+            accuracy = 0f,
+            onSkipAdClick = {},
+            onWatchAdClick = {},
+            showAdRewardDialog = false,
+            lives = 1,
+            score = 100,
+            status = GameStatus.READY,
+            streak = 3,
+            gameTime = 100L,
+            isPaused = false,
+            effects = null,
+            newBadges = emptyList(),
+            showRules = false,
+            onBackClick = {},
+            onHelpClick = {},
+            onPlayClick = {},
+            onResetGame = {},
+            onTileTapped = { _, _ -> },
+            onRulesDismissed = {},
+            tutorialStep = null,
+            onNextTutorialStep = {},
+            onSkipTutorial = {},
+            showRotationPrompt = false,
+            onRotationPromptDismissed = {}
+        )
     }
-}
-
-@Composable
-fun FrenzyIconButton(icon: ImageVector, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    Surface(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        shape = CircleShape,
-        color = Color.White.copy(alpha = 0.05f),
-        modifier = Modifier.size(46.dp).graphicsLayer { translationY = if (isPressed) 2f else -2f },
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-        shadowElevation = if (isPressed) 2.dp else 8.dp
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
-        }
-    }
-}
-
-@Composable
-fun BackgroundRippleEffect(position: Offset, onComplete: () -> Unit) {
-    val progress = remember { Animatable(0f) }
-    val color = MaterialTheme.colorScheme.primary
-    LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(1200, easing = LinearEasing))
-        onComplete()
-    }
-    Canvas(modifier = Modifier.fillMaxSize().zIndex(0.1f)) {
-        drawCircle(color = color.copy(alpha = 0.25f * (1f - progress.value)), radius = size.maxDimension * 0.8f * progress.value, center = position, style = Stroke(width = 2.dp.toPx()))
-    }
-}
-
-@Composable
-fun FloatingScore(effect: EffectState, onComplete: () -> Unit) {
-    val offsetY = remember { Animatable(0f) }
-    val alpha = remember { Animatable(1f) }
-    val scale = remember { Animatable(0.5f) }
-    LaunchedEffect(Unit) {
-        launch { scale.animateTo(1.2f, spring(Spring.DampingRatioHighBouncy)); scale.animateTo(1f, tween(200)) }
-        launch { offsetY.animateTo(-180f, animationSpec = tween(1000, easing = LinearEasing)) }
-        launch { delay(600); alpha.animateTo(0f, animationSpec = tween(400)); onComplete() }
-    }
-    Text(
-        text = effect.text,
-        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black, fontFamily = FontFamily.Monospace, shadow = androidx.compose.ui.graphics.Shadow(color = Color.Black.copy(alpha = 0.6f), offset = Offset(0f, 6f), blurRadius = 12f)),
-        color = Gold,
-        modifier = Modifier.offset { IntOffset(effect.position.x.roundToInt() - 50, (effect.position.y + offsetY.value).roundToInt() - 50) }.scale(scale.value).alpha(alpha.value)
-    )
 }

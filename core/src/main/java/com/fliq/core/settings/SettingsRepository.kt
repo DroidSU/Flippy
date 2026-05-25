@@ -38,4 +38,16 @@ interface SettingsRepository {
 
     fun setMirageRotationHintDisabled(disabled: Boolean)
     fun isMirageRotationHintDisabled(): Boolean
+
+    fun setMinefieldTutorialCompleted(completed: Boolean)
+    fun isMinefieldTutorialCompleted(): Boolean
+
+    fun setMinefieldRotationHintDisabled(disabled: Boolean)
+    fun isMinefieldRotationHintDisabled(): Boolean
+
+    fun setFrenzyTutorialCompleted(completed: Boolean)
+    fun isFrenzyTutorialCompleted(): Boolean
+
+    fun setFrenzyRotationHintDisabled(disabled: Boolean)
+    fun isFrenzyRotationHintDisabled(): Boolean
 }

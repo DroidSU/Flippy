@@ -11,9 +11,11 @@ import com.fliq.common.Badge
 import com.fliq.common.NetworkRepository
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.models.UserData
+import com.fliq.core.settings.SettingsRepository
 import com.fliq.database.MatchHistory
 import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.MatchRepository
+import com.fliq.frenzy.models.FrenzyTutorialStep
 import com.fliq.game_engine.models.CardType
 import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.GameEffect.Particle
@@ -51,7 +53,8 @@ class FrenzyViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val analyticsRepository: AnalyticsRepository,
     private val adManager: AdManager,
-    private val difficultyManager: com.fliq.common.DifficultyManager
+    private val difficultyManager: com.fliq.common.DifficultyManager,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -110,6 +113,14 @@ class FrenzyViewModel @Inject constructor(
     private val _correctTaps = MutableStateFlow(0)
     val correctTaps = _correctTaps.asStateFlow()
 
+    private val _tutorialStep = MutableStateFlow<FrenzyTutorialStep?>(null)
+    val tutorialStep = _tutorialStep.asStateFlow()
+
+    private val _showRotationPrompt = MutableStateFlow(false)
+    val showRotationPrompt = _showRotationPrompt.asStateFlow()
+
+    private val tutorialTileId = 5
+
     private var timerJob: Job? = null
     private var gameLoopJob: Job? = null
     private var lastStartTime = 0L
@@ -133,7 +144,23 @@ class FrenzyViewModel @Inject constructor(
 
     init {
         getUserData()
+        if (!settingsRepository.isFrenzyTutorialCompleted()) {
+            _tutorialStep.value = FrenzyTutorialStep.WELCOME
+        } else {
+            checkRotationPromptVisibility()
+        }
         checkRulesVisibility()
+    }
+
+    companion object {
+        private var hasShownRotationPromptInSession = false
+    }
+
+    private fun checkRotationPromptVisibility() {
+        if (!settingsRepository.isFrenzyRotationHintDisabled() && !hasShownRotationPromptInSession) {
+            _showRotationPrompt.value = true
+            hasShownRotationPromptInSession = true
+        }
     }
 
     private fun getUserData() {
@@ -160,6 +187,52 @@ class FrenzyViewModel @Inject constructor(
         _showRules.value = false
         preferencesRepository.setShowRulesOnStartup(showOnStartup)
         preferencesRepository.setRulesShownOnce(true)
+    }
+
+    fun nextTutorialStep() {
+        val current = _tutorialStep.value ?: return
+
+        when (current) {
+            FrenzyTutorialStep.TILE_INTRO -> {
+                updateTile(tutorialTileId) {
+                    it.copy(
+                        isRevealed = true,
+                        isIconVisible = true,
+                        type = CardType.COIN,
+                        lastRevealTime = System.currentTimeMillis(),
+                        currentDuration = 999999L
+                    )
+                }
+            }
+            else -> {}
+        }
+
+        _tutorialStep.value = when (current) {
+            FrenzyTutorialStep.WELCOME -> FrenzyTutorialStep.STATS
+            FrenzyTutorialStep.STATS -> FrenzyTutorialStep.TILE_INTRO
+            FrenzyTutorialStep.TILE_INTRO -> FrenzyTutorialStep.TILE_INTERACT
+            FrenzyTutorialStep.TILE_INTERACT -> FrenzyTutorialStep.START_GAME
+            FrenzyTutorialStep.START_GAME -> {
+                settingsRepository.setFrenzyTutorialCompleted(true)
+                _tiles.value = List(16) { Tile(it) }
+                checkRotationPromptVisibility()
+                null
+            }
+        }
+    }
+
+    fun skipTutorial() {
+        settingsRepository.setFrenzyTutorialCompleted(true)
+        _tutorialStep.value = null
+        _tiles.value = List(16) { Tile(it) }
+        checkRotationPromptVisibility()
+    }
+
+    fun onRotationPromptDismissed(dontShowAgain: Boolean) {
+        _showRotationPrompt.value = false
+        if (dontShowAgain) {
+            settingsRepository.setFrenzyRotationHintDisabled(true)
+        }
     }
 
     fun startGame() {
@@ -418,6 +491,21 @@ class FrenzyViewModel @Inject constructor(
     }
 
     fun onTileTapped(tileId: Int, tapPosition: Offset? = null) {
+        if (_tutorialStep.value == FrenzyTutorialStep.TILE_INTERACT) {
+            if (tileId == tutorialTileId) {
+                scope.launch {
+                    tapPosition?.let { _effects.emit(GameEffect.BackgroundRipple(it)) }
+                    _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
+                    _effects.emit(Particle(tileId, ParticleType.COIN))
+                    _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playBonusSound()
+                    updateTile(tileId) { it.copy(isRevealed = false) }
+                    nextTutorialStep()
+                }
+            }
+            return
+        }
+
         val tile = _tiles.value.find { it.id == tileId } ?: return
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
         _totalTaps.update { it + 1 }
