@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,8 +49,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -78,6 +82,11 @@ fun ProfileSetupScreen(
     onSave: () -> Unit
 ) {
     val gameColors = MaterialTheme.gameColors
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Box(
         modifier = Modifier
@@ -87,34 +96,35 @@ fun ProfileSetupScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(64.dp))
 
             // Header
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 32.dp)
+            ) {
                 Text(
                     text = "CREATE PROFILE",
-                    style = MaterialTheme.typography.headlineSmall.copy(
+                    style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp,
+                        letterSpacing = 3.sp,
                         fontFamily = FontFamily.Monospace
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Text(
-                    text = "ENTER YOUR PLAYER DETAILS",
+                    text = "SET YOUR IDENTITY IN THE ARCADE",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.5.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                 )
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             // Username Section
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -122,15 +132,17 @@ fun ProfileSetupScreen(
                 KineticUsernameField(
                     username = username,
                     onUsernameChanged = onUsernameChanged,
-                    isLoading = isLoading
+                    isLoading = isLoading,
+                    focusRequester = focusRequester
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Avatar Section
-            Column(modifier = Modifier.fillMaxWidth().weight(4f)) {
+            Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 SetupSectionLabel(label = "CHOOSE AVATAR")
+                Spacer(modifier = Modifier.height(10.dp))
                 AvatarGrid(
                     selectedId = avatarId,
                     onAvatarSelected = onAvatarChanged,
@@ -138,7 +150,6 @@ fun ProfileSetupScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
 
             // Confirm Button
             ConfirmKineticButton(
@@ -147,7 +158,7 @@ fun ProfileSetupScreen(
                 enabled = username.isNotBlank()
             )
             
-            Spacer(modifier = Modifier.weight(0.5f))
+            Spacer(modifier = Modifier.height(54.dp))
         }
     }
 }
@@ -175,7 +186,8 @@ fun SetupSectionLabel(label: String) {
 fun KineticUsernameField(
     username: String,
     onUsernameChanged: (String) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    focusRequester: FocusRequester
 ) {
     Box(modifier = Modifier.fillMaxWidth().height(64.dp)) {
         // Shadow
@@ -198,7 +210,7 @@ fun KineticUsernameField(
                 BasicTextField(
                     value = username,
                     onValueChange = { if (it.length <= 15) onUsernameChanged(it) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
                     textStyle = TextStyle(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 20.sp,
@@ -206,6 +218,7 @@ fun KineticUsernameField(
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 1.sp
                     ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     singleLine = true,
                     enabled = !isLoading,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

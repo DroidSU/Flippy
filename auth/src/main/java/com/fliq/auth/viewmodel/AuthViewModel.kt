@@ -7,7 +7,6 @@ import com.fliq.auth.repository.AuthRepository
 import com.fliq.common.AppUIState
 import com.fliq.common.NetworkRepository
 import com.fliq.common.Result
-import com.fliq.common.UtilityMethods
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.ConstantsManager
 import com.fliq.core.models.UserData
@@ -81,9 +80,8 @@ class AuthViewModel @Inject constructor(
                             _uiState.update { AppUIState.Success }
                         } else {
                             // New user or user with missing username
-                            val generatedUsername = UtilityMethods.generateUniqueUsername()
                             val defaultAvatarId = 1
-                            _userData.value = UserData(userId, generatedUsername, defaultAvatarId)
+                            _userData.value = UserData(userId, "", defaultAvatarId)
                             _showEditDialog.value = true
                             _uiState.update { AppUIState.Idle }
                         }

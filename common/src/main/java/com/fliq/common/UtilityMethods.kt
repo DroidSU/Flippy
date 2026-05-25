@@ -10,7 +10,6 @@ import android.text.format.DateUtils
 import androidx.annotation.RequiresPermission
 import com.fliq.core.R
 import java.util.Locale
-import kotlin.random.Random
 
 class UtilityMethods {
     companion object {
@@ -62,43 +61,53 @@ class UtilityMethods {
         }
 
         fun generateUniqueUsername(): String {
-            val adjectives = listOf(
-                "Swift", "Fliq", "Mega", "Cool", "Epic", "Turbo", "Ghost", "Neon",
-                "Fire", "Shadow", "Elite", "Hyper", "Frost", "Mystic", "Iron", "Storm",
-                "Wild", "Silent", "Rapid", "Gilded", "Crimson", "Azure", "Sonic", "Zen",
-                "Vortex", "Cosmic", "Solar", "Lunar", "Radiant", "Lucky", "Vivid", "Noble",
-                "Primal", "Ancient", "Clever", "Quick", "Zesty", "Flashy", "Dynamic", "Aura",
-                "Blazing", "Freezing", "Nimble", "Volcanic", "Celestial", "Galactic", "Stellar", "Snappy"
+            val prefixes = listOf(
+                "Cyber", "Turbo", "Mega", "Phantom", "Glitch", "Ultra", "Retro", "Neon",
+                "Zero", "Hyper", "Zen", "Nova", "Vortex", "Astro", "Sonic", "Alpha",
+                "Sigma", "Meta", "Giga", "Proto", "Radiant", "Primal", "Vivid", "Stellar",
+                "Cosmic", "Solar", "Lunar", "Rapid", "Silent", "Wild", "Iron", "Mystic",
+                "Frost", "Shadow", "Fire", "Epic", "Cool", "Swift", "Fliq", "Flash",
+                "Aura", "Blaze", "Volt", "Pulse", "Quantum", "Nano", "Flux", "Aero", "Nitro"
             )
             val nouns = listOf(
-                "Player", "Gamer", "Wizard", "Knight", "Ninja", "Falcon", "Ghost", "Racer",
-                "Titan", "Wolf", "Dragon", "Phoenix", "Legend", "Hunter", "Warrior", "Cyborg",
-                "Rogue", "Paladin", "Archer", "Bard", "Monk", "Druid", "Master", "Beast",
-                "Spirit", "Soul", "Heart", "Mind", "Pulse", "Echo", "Wave", "Spark",
-                "Blaze", "Frost", "Reflex", "Wind", "Rain", "Thunder", "Cloud", "Sky",
-                "Bolt", "Moon", "Sun", "Star", "Nova", "Comet", "Orbit", "Astro", "Mech"
+                "Combo", "Pixel", "Reflex", "Ghost", "Blade", "Spark", "Vibe", "Pulse",
+                "Wave", "Echo", "Racer", "Titan", "Wolf", "Dragon", "Phoenix", "Legend",
+                "Hunter", "Warrior", "Cyborg", "Rogue", "Archer", "Master", "Beast", "Spirit",
+                "Soul", "Heart", "Mind", "Bolt", "Orbit", "Mech", "Grid", "Flux",
+                "Drift", "Shift", "Edge", "Zenith", "Apex", "Void", "Arcade", "Sync", "Link"
+            )
+            val suffixes = listOf(
+                "Pro", "Ace", "Flux", "Zen", "Mode", "Bot", "One", "Sky", "Run", "Dash",
+                "Core", "Loop", "Zone", "Prime", "Ultra", "X", "Max", "Go", "Play", "V"
+            )
+            val connectors = listOf("@", "&", "!")
+
+            val prefix = prefixes.random()
+            val noun = nouns.random()
+            val suffix = suffixes.random()
+            val connector = connectors.random()
+
+            val templates = listOf(
+                { "$prefix$noun" },
+                { "$noun$suffix" },
+                { "$prefix$suffix" },
+                { "$prefix$noun" },
+                { "$noun$suffix" },
+                { "$prefix$suffix" },
+                { "$prefix$connector$noun" },
+                { "$noun$connector$suffix" },
+                { "$prefix$noun!" },
+                { "$noun$connector$prefix" }
             )
 
-            val random = Random.Default
-            val adjective = adjectives[random.nextInt(adjectives.size)]
-            val noun = nouns[random.nextInt(nouns.size)]
-            val number = random.nextInt(100, 999)
+            var username = templates.random().invoke()
 
-            // Randomly decide format
-            return when (random.nextInt(3)) {
-                0 -> "$adjective$noun$number"
-                1 -> "${adjective}_$noun"
-                else -> {
-                    // Leet-like transformation
-                    val leetUsername = "$adjective$noun"
-                        .replace("a", "4")
-                        .replace("e", "3")
-                        .replace("i", "1")
-                        .replace("o", "0")
-                        .replace("s", "5")
-                    "$leetUsername$number"
-                }
+            // Ensure length doesn't exceed 12 characters
+            if (username.length > 12) {
+                username = username.take(12)
             }
+
+            return username
         }
 
         fun getAppVersionName(context: Context): String {
