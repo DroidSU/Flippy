@@ -9,5 +9,8 @@ interface SoundRepository {
     fun playBombSound()
     fun playGameOverSound()
     fun playBonusSound()
+    fun playCoinTapSound()
+    fun setMusicActivated(activated: Boolean)
+    fun isMusicActivated(): Boolean
     fun release()
 }

@@ -12,10 +12,12 @@ class SoundRepositoryImpl @Inject constructor(
 ) : SoundRepository {
     private val soundPlayer = SoundPlayer(context)
     private var isMusicAllowed = true
+    private var isMusicActivated = false
 
     private fun isSoundEnabled() = settingsRepository.getGameSoundEnabled()
 
     override fun startBackgroundMusic() {
+        isMusicActivated = true
         if (isSoundEnabled() && isMusicAllowed) {
             soundPlayer.startBackgroundMusic()
         }
@@ -26,12 +28,19 @@ class SoundRepositoryImpl @Inject constructor(
     }
 
     override fun stopBackgroundMusic() {
+        isMusicActivated = false
         soundPlayer.stopBackgroundMusic()
     }
 
     override fun setMusicAllowed(allowed: Boolean) {
         isMusicAllowed = allowed
     }
+
+    override fun setMusicActivated(activated: Boolean) {
+        isMusicActivated = activated
+    }
+
+    override fun isMusicActivated(): Boolean = isMusicActivated
 
     override suspend fun pauseBackgroundMusicTemp(millis: Long) {
         if (isSoundEnabled()) {
@@ -54,6 +63,12 @@ class SoundRepositoryImpl @Inject constructor(
     override fun playBonusSound() {
         if (isSoundEnabled()) {
             soundPlayer.playBonusSound()
+        }
+    }
+
+    override fun playCoinTapSound() {
+        if (isSoundEnabled()) {
+            soundPlayer.playCoinTapSound()
         }
     }
 

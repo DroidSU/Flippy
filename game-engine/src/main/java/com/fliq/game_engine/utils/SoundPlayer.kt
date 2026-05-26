@@ -16,10 +16,10 @@ class SoundPlayer(private val context: Context) {
     private var bombSoundId: Int = 0
     private var gameOverSoundId: Int = 0
     private var bonusSoundId: Int = 0
+    private var coinTapSoundId: Int = 0
     private var isEffectsLoaded = false
 
     private var backgroundMusicPlayer: MediaPlayer? = null
-    private val scope = CoroutineScope(Dispatchers.Main)
 
     init {
         val audioAttributes = AudioAttributes.Builder()
@@ -28,7 +28,7 @@ class SoundPlayer(private val context: Context) {
             .build()
 
         soundPool = SoundPool.Builder()
-            .setMaxStreams(2)
+            .setMaxStreams(5)
             .setAudioAttributes(audioAttributes)
             .build()
 
@@ -42,6 +42,7 @@ class SoundPlayer(private val context: Context) {
             bombSoundId = soundPool.load(context, R.raw.sound_error, 1)
             gameOverSoundId = soundPool.load(context, R.raw.retro_game_over, 1)
             bonusSoundId = soundPool.load(context, R.raw.bonus_achieved, 1)
+            coinTapSoundId = soundPool.load(context, R.raw.coin_tap, 1)
         }
 
         initializeMediaPlayer()
@@ -49,7 +50,7 @@ class SoundPlayer(private val context: Context) {
 
     private fun initializeMediaPlayer() {
         if (backgroundMusicPlayer == null) {
-            backgroundMusicPlayer = MediaPlayer.create(context, R.raw.game_bg_2).apply {
+            backgroundMusicPlayer = MediaPlayer.create(context, R.raw.sound_island_clearing).apply {
                 isLooping = true
                 setVolume(0.3f, 0.3f)
             }
@@ -71,8 +72,13 @@ class SoundPlayer(private val context: Context) {
 
     fun playBonusSound() {
         if (isEffectsLoaded) {
-            stopBackgroundMusic()
             soundPool.play(bonusSoundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        }
+    }
+
+    fun playCoinTapSound() {
+        if (isEffectsLoaded) {
+            soundPool.play(coinTapSoundId, 0.8f, 0.8f, 1, 0, 1.0f)
         }
     }
 

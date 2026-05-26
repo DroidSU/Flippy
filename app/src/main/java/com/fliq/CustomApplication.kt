@@ -2,8 +2,12 @@ package com.fliq
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.fliq.common.SyncScheduler
+import com.fliq.game_engine.repository.SoundRepository
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
@@ -20,6 +24,9 @@ class CustomApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var syncScheduler: SyncScheduler
+
+    @Inject
+    lateinit var soundRepository: SoundRepository
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -49,5 +56,19 @@ class CustomApplication : Application(), Configuration.Provider {
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             )
         }
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                // App comes to foreground
+                if (soundRepository.isMusicActivated()) {
+                    soundRepository.startBackgroundMusic()
+                }
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                // App goes to background
+                soundRepository.pauseBackgroundMusic()
+            }
+        })
     }
 }

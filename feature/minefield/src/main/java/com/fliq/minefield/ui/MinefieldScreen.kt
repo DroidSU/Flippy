@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -31,16 +30,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
-import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.models.EffectState
@@ -57,15 +51,14 @@ import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.SparkleEffect
 import com.fliq.minefield.models.MinefieldTutorialStep
 import com.fliq.minefield.ui.components.MinefieldBackgroundRipple
-import com.fliq.minefield.ui.components.MinefieldBeatingHeartIcon
 import com.fliq.minefield.ui.components.MinefieldFloatingScore
 import com.fliq.minefield.ui.components.MinefieldGameGrid
 import com.fliq.minefield.ui.components.MinefieldGameOverDialog
 import com.fliq.minefield.ui.components.MinefieldIconButton
+import com.fliq.minefield.ui.components.MinefieldLandscapeStatsPanel
 import com.fliq.minefield.ui.components.MinefieldPlayButton
 import com.fliq.minefield.ui.components.MinefieldRotationOverlay
 import com.fliq.minefield.ui.components.MinefieldRulesDialog
-import com.fliq.minefield.ui.components.MinefieldStatBlock
 import com.fliq.minefield.ui.components.MinefieldStats
 import com.fliq.minefield.ui.components.MinefieldTopBar
 import com.fliq.minefield.ui.components.MinefieldTutorialHighlight
@@ -164,20 +157,19 @@ fun MinefieldScreen(
                     .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp)
             ) {
                 if (isLandscape) {
-                    MinefieldContentLandscape(
-                        tiles = tiles,
-                        score = score,
-                        lives = lives,
-                        status = status,
-                        gameTime = gameTime,
-                        isPaused = isPaused,
-                        isPlaying = isPlaying,
-                        onTileTapped = onTileTapped,
-                        onPlayClick = onPlayClick,
-                        onResetGame = onResetGame,
-                        onHelpClick = onHelpClick,
-                        onBackClick = onBackClick,
-                        onTilePositioned = { id, pos, size ->
+                MinefieldContentLandscape(
+                    tiles = tiles,
+                    score = score,
+                    lives = lives,
+                    status = status,
+                    gameTime = gameTime,
+                    isPlaying = isPlaying,
+                    onTileTapped = onTileTapped,
+                    onPlayClick = onPlayClick,
+                    onResetGame = onResetGame,
+                    onHelpClick = onHelpClick,
+                    onBackClick = onBackClick,
+                    onTilePositioned = { id, pos, size ->
                             tilePositions[id] = pos
                             if (id == 5) {
                                 highlights[MinefieldTutorialStep.TILE_INTRO] = MinefieldTutorialHighlight(pos, size)
@@ -337,7 +329,6 @@ fun MinefieldContentLandscape(
     lives: Int,
     status: GameStatus,
     gameTime: Long,
-    isPaused: Boolean,
     isPlaying: Boolean,
     onTileTapped: (Int, Offset?) -> Unit,
     onPlayClick: () -> Unit,
@@ -349,100 +340,74 @@ fun MinefieldContentLandscape(
     onTopBarPositioned: (Offset, Size) -> Unit,
     onPlayButtonPositioned: (Offset, Size) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Left Column: Stats Panel and Navigation
         Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .onGloballyPositioned { coords ->
-                    val center = Offset(
-                        coords.positionInRoot().x + coords.size.width / 2,
-                        coords.positionInRoot().y + coords.size.height / 2
-                    )
-                    onStatsPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                    onTopBarPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                }
-        ) {
-            Text(
-                text = "MINEFIELD",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.sp
-                ),
-                color = Color.White
-            )
-            Text(
-                text = if (isPaused) "PAUSED" else "WATCH YOUR STEP",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                MinefieldStatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
-                MinefieldStatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
-            }
-        }
-
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = "LIVES",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-            Row(modifier = Modifier.padding(top = 4.dp)) {
-                repeat(lives.coerceAtLeast(0)) { index ->
-                    MinefieldBeatingHeartIcon(
-                        isAlive = true,
-                        size = 24.dp,
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    )
-                }
-            }
-        }
-
-        Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(vertical = 16.dp)
-                .align(Alignment.Center),
+                .weight(0.3f),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            MinefieldLandscapeStatsPanel(
+                score = score,
+                lives = lives,
+                gameTime = gameTime,
+                modifier = Modifier.weight(1f, fill = false).padding(top = 8.dp),
+                onPositioned = { pos: Offset, size: Size ->
+                    onStatsPositioned(pos, size)
+                    onTopBarPositioned(pos, size)
+                }
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+            ) {
+                MinefieldIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = onBackClick
+                )
+                MinefieldIconButton(
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    onClick = onHelpClick
+                )
+            }
+        }
+
+        // Center: Game Grid
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             MinefieldGameGrid(
                 tiles = tiles,
                 onTileTapped = onTileTapped,
                 onTilePositioned = onTilePositioned,
-                modifier = Modifier.fillMaxHeight().aspectRatio(1f)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
             )
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(bottom = 16.dp, start = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        // Right side: Play Button
+        Box(
+            modifier = Modifier.fillMaxHeight(),
+            contentAlignment = Alignment.BottomEnd
         ) {
-            MinefieldIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack, 
-                onClick = onBackClick
-            )
-            MinefieldIconButton(
-                icon = Icons.AutoMirrored.Filled.HelpOutline, 
-                onClick = onHelpClick
+            MinefieldPlayButton(
+                status = status,
+                onAction = { if (isPlaying) onResetGame() else onPlayClick() },
+                onPositioned = onPlayButtonPositioned,
+                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
             )
         }
-
-        MinefieldPlayButton(
-            status = status,
-            onAction = { if (isPlaying) onResetGame() else onPlayClick() },
-            onPositioned = onPlayButtonPositioned,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp, end = 12.dp)
-        )
     }
 }
 

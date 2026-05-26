@@ -19,6 +19,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -106,6 +108,12 @@ fun ProfileScreen(
 ) {
     val gameColors = MaterialTheme.gameColors
     val scrollState = rememberScrollState()
+    
+    var contentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(200)
+        contentVisible = true
+    }
 
     if (isEditing) {
         EditDialog(
@@ -143,26 +151,33 @@ fun ProfileScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ProfileHeader(username, avatarId)
 
-                PlayerInsightsCard(
-                    totalMatches = totalMatches,
-                    highestScore = highestScore,
-                    accuracyRate = accuracyRate,
-                    longestRound = longestRound,
-                    reflexAverage = reflexAverage,
-                    baseReflex = baseReflex,
-                    onRecalibrate = onRecalibrate
-                )
+                AnimatedVisibility(
+                    visible = contentVisible,
+                    enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { 30 }
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        PlayerInsightsCard(
+                            totalMatches = totalMatches,
+                            highestScore = highestScore,
+                            accuracyRate = accuracyRate,
+                            longestRound = longestRound,
+                            reflexAverage = reflexAverage,
+                            baseReflex = baseReflex,
+                            onRecalibrate = onRecalibrate
+                        )
 
-                BadgeGallery(
-                    unlockedBadges = unlockedBadges
-                )
+                        BadgeGallery(
+                            unlockedBadges = unlockedBadges
+                        )
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -321,203 +336,192 @@ private fun PlayerInsightsCard(
     baseReflex: Long?,
     onRecalibrate: () -> Unit
 ) {
-    var visible by remember { mutableStateOf(value = false) }
-    LaunchedEffect(Unit) {
-        delay(300)
-        visible = true
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(600)) + slideInVertically(tween(600)) { 50 }
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(24.dp, RoundedCornerShape(32.dp), spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+        border = BorderStroke(1.dp, Brush.linearGradient(
+            listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), Color.Transparent)
+        ))
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(24.dp, RoundedCornerShape(32.dp), spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-            border = BorderStroke(1.dp, Brush.linearGradient(
-                listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), Color.Transparent)
-            ))
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "PLAYER INSIGHTS",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 1.5.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                Column {
+                    Text(
+                        text = "PLAYER INSIGHTS",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                        Text(
-                            text = "Your lifetime game performance",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                    Text(
+                        text = "Your lifetime game performance",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
+                
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.AutoGraph,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                    
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        modifier = Modifier.size(40.dp)
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+
+            // Stats Grid with internal cards
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    InsightItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Matches",
+                        value = totalMatches.toString(),
+                        icon = Icons.Default.Gamepad,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    InsightItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Best Score",
+                        value = highestScore.toString(),
+                        icon = Icons.Default.EmojiEvents,
+                        color = MaterialTheme.gameColors.scorePopup
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    InsightItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Accuracy",
+                        value = "%.1f%%".format(accuracyRate),
+                        icon = Icons.Default.TrackChanges,
+                        color = SuccessGreen
+                    )
+                    InsightItem(
+                        modifier = Modifier.weight(1f),
+                        label = "Endurance",
+                        value = UtilityMethods.formatTime(longestRound),
+                        icon = Icons.Default.Timer,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.AutoGraph,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f), CircleShape)
+                                    .border(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.AvTimer,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = "Avg Reflex",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                                Text(
+                                    text = "${reflexAverage}ms",
+                                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
+                        
+                        ReflexIndicator(reflexAverage)
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-
-                // Stats Grid with internal cards
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        InsightItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Matches",
-                            value = totalMatches.toString(),
-                            icon = Icons.Default.Gamepad,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        InsightItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Best Score",
-                            value = highestScore.toString(),
-                            icon = Icons.Default.EmojiEvents,
-                            color = MaterialTheme.gameColors.scorePopup
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        InsightItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Accuracy",
-                            value = "%.1f%%".format(accuracyRate),
-                            icon = Icons.Default.TrackChanges,
-                            color = SuccessGreen
-                        )
-                        InsightItem(
-                            modifier = Modifier.weight(1f),
-                            label = "Endurance",
-                            value = UtilityMethods.formatTime(longestRound),
-                            icon = Icons.Default.Timer,
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
-
+                if (baseReflex != null) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                     ) {
                         Row(
-                            modifier = Modifier.padding(20.dp),
+                            modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f), CircleShape)
-                                        .border(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.AvTimer,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Icon(
+                                    Icons.Default.AvTimer,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        text = "Avg Reflex Response",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        text = "NEURAL SYNC",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "${reflexAverage}ms",
-                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                                        text = "${baseReflex}ms",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
                             
-                            ReflexIndicator(reflexAverage)
-                        }
-                    }
-
-                    if (baseReflex != null) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                            Surface(
+                                onClick = onRecalibrate,
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.height(36.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.AvTimer,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                Box(modifier = Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "RESET",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
+                                        color = MaterialTheme.colorScheme.onPrimary
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
-                                        Text(
-                                            text = "NEURAL SYNC LEVEL",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = "${baseReflex}ms",
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    }
-                                }
-                                
-                                Surface(
-                                    onClick = onRecalibrate,
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.height(36.dp)
-                                ) {
-                                    Box(modifier = Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-                                        Text(
-                                            text = "RESET",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
                                 }
                             }
                         }
@@ -690,6 +694,7 @@ private fun MeshBackground() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BadgeGallery(
     unlockedBadges: List<Badge>
@@ -702,7 +707,7 @@ private fun BadgeGallery(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
         border = BorderStroke(1.dp, Gold.copy(alpha = 0.1f))
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -741,42 +746,46 @@ private fun BadgeGallery(
                     )
                 }
             } else {
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    maxItemsInEachRow = 4
                 ) {
-                    unlockedBadges.take(4).forEach { badge ->
-                        Surface(
-                            modifier = Modifier.size(56.dp),
-                            shape = CircleShape,
-                            color = Gold.copy(alpha = 0.05f),
-                            border = BorderStroke(1.5.dp, Gold.copy(alpha = 0.3f))
+                    unlockedBadges.forEach { badge ->
+                        Column(
+                            modifier = Modifier.width(72.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = badge.icon,
-                                    contentDescription = null,
-                                    tint = Gold,
-                                    modifier = Modifier.size(28.dp)
-                                )
+                            Surface(
+                                modifier = Modifier.size(52.dp),
+                                shape = CircleShape,
+                                color = Gold.copy(alpha = 0.05f),
+                                border = BorderStroke(1.5.dp, Gold.copy(alpha = 0.3f))
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = badge.icon,
+                                        contentDescription = null,
+                                        tint = Gold,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
-                        }
-                    }
-                    
-                    if (unlockedBadges.size > 4) {
-                        Surface(
-                            modifier = Modifier.size(56.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "+${unlockedBadges.size - 4}",
-                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                )
-                            }
+                            
+                            Text(
+                                text = badge.title,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    lineHeight = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                maxLines = 2,
+                                minLines = 2,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                     }
                 }

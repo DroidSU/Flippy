@@ -17,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -31,16 +30,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
-import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.models.EffectState
@@ -57,15 +51,14 @@ import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.SparkleEffect
 import com.fliq.speed_run.models.SpeedRunTutorialStep
 import com.fliq.speed_run.ui.components.SpeedRunBackgroundRipple
-import com.fliq.speed_run.ui.components.SpeedRunBeatingHeartIcon
 import com.fliq.speed_run.ui.components.SpeedRunFloatingScore
 import com.fliq.speed_run.ui.components.SpeedRunGameGrid
 import com.fliq.speed_run.ui.components.SpeedRunGameOverDialog
 import com.fliq.speed_run.ui.components.SpeedRunIconButton
+import com.fliq.speed_run.ui.components.SpeedRunLandscapeStatsPanel
 import com.fliq.speed_run.ui.components.SpeedRunPlayButton
 import com.fliq.speed_run.ui.components.SpeedRunRotationOverlay
 import com.fliq.speed_run.ui.components.SpeedRunRulesDialog
-import com.fliq.speed_run.ui.components.SpeedRunStatBlock
 import com.fliq.speed_run.ui.components.SpeedRunStats
 import com.fliq.speed_run.ui.components.SpeedRunTopBar
 import com.fliq.speed_run.ui.components.SpeedRunTutorialHighlight
@@ -164,20 +157,19 @@ fun SpeedRunScreen(
                     .blur(if (status == GameStatus.GAME_OVER || showRules || showAdRewardDialog) 16.dp else 0.dp)
             ) {
                 if (isLandscape) {
-                    SpeedRunContentLandscape(
-                        tiles = tiles,
-                        score = score,
-                        lives = lives,
-                        status = status,
-                        gameTime = gameTime,
-                        isPaused = isPaused,
-                        isPlaying = isPlaying,
-                        onTileTapped = onTileTapped,
-                        onPlayClick = onPlayClick,
-                        onResetGame = onResetGame,
-                        onHelpClick = onHelpClick,
-                        onBackClick = onBackClick,
-                        onTilePositioned = { id, pos, size ->
+                SpeedRunContentLandscape(
+                    tiles = tiles,
+                    score = score,
+                    lives = lives,
+                    status = status,
+                    gameTime = gameTime,
+                    isPlaying = isPlaying,
+                    onTileTapped = onTileTapped,
+                    onPlayClick = onPlayClick,
+                    onResetGame = onResetGame,
+                    onHelpClick = onHelpClick,
+                    onBackClick = onBackClick,
+                    onTilePositioned = { id, pos, size ->
                             tilePositions[id] = pos
                             if (id == 5) {
                                 highlights[SpeedRunTutorialStep.TILE_INTRO] = SpeedRunTutorialHighlight(pos, size)
@@ -337,7 +329,6 @@ fun SpeedRunContentLandscape(
     lives: Int,
     status: GameStatus,
     gameTime: Long,
-    isPaused: Boolean,
     isPlaying: Boolean,
     onTileTapped: (Int, Offset?) -> Unit,
     onPlayClick: () -> Unit,
@@ -349,100 +340,74 @@ fun SpeedRunContentLandscape(
     onTopBarPositioned: (Offset, Size) -> Unit,
     onPlayButtonPositioned: (Offset, Size) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Left Column: Stats Panel and Navigation
         Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .onGloballyPositioned { coords ->
-                    val center = Offset(
-                        coords.positionInRoot().x + coords.size.width / 2,
-                        coords.positionInRoot().y + coords.size.height / 2
-                    )
-                    onStatsPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                    onTopBarPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                }
-        ) {
-            Text(
-                text = "SPEED RUN",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.sp
-                ),
-                color = Color.White
-            )
-            Text(
-                text = if (isPaused) "PAUSED" else "GO!",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SpeedRunStatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
-                SpeedRunStatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
-            }
-        }
-
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = "LIVES",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-            Row(modifier = Modifier.padding(top = 4.dp)) {
-                repeat(3) { index ->
-                    SpeedRunBeatingHeartIcon(
-                        isAlive = index < lives,
-                        size = 24.dp,
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    )
-                }
-            }
-        }
-
-        Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(vertical = 16.dp)
-                .align(Alignment.Center),
+                .weight(0.3f),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            SpeedRunLandscapeStatsPanel(
+                score = score,
+                lives = lives,
+                gameTime = gameTime,
+                modifier = Modifier.weight(1f, fill = false).padding(top = 8.dp),
+                onPositioned = { pos: Offset, size: Size ->
+                    onStatsPositioned(pos, size)
+                    onTopBarPositioned(pos, size)
+                }
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+            ) {
+                SpeedRunIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = onBackClick
+                )
+                SpeedRunIconButton(
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    onClick = onHelpClick
+                )
+            }
+        }
+
+        // Center: Game Grid
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             SpeedRunGameGrid(
                 tiles = tiles,
                 onTileTapped = onTileTapped,
                 onTilePositioned = onTilePositioned,
-                modifier = Modifier.fillMaxHeight().aspectRatio(1f)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
             )
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(bottom = 16.dp, start = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        // Right side: Play Button
+        Box(
+            modifier = Modifier.fillMaxHeight(),
+            contentAlignment = Alignment.BottomEnd
         ) {
-            SpeedRunIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack, 
-                onClick = onBackClick
-            )
-            SpeedRunIconButton(
-                icon = Icons.AutoMirrored.Filled.HelpOutline, 
-                onClick = onHelpClick
+            SpeedRunPlayButton(
+                status = status,
+                onAction = { if (isPlaying) onResetGame() else onPlayClick() },
+                onPositioned = onPlayButtonPositioned,
+                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
             )
         }
-
-        SpeedRunPlayButton(
-            status = status,
-            onAction = { if (isPlaying) onResetGame() else onPlayClick() },
-            onPositioned = onPlayButtonPositioned,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp, end = 12.dp)
-        )
     }
 }
 

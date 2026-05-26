@@ -19,7 +19,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.fliq.core.theme.BombRed
@@ -173,29 +173,38 @@ fun MeshBackground(streak: Int = 0) {
             .blur(100.dp)
             .alpha(if (isLightTheme) 0.6f else 0.4f)
     ) {
+        val baseRadius = size.minDimension
         drawCircle(
             color = color1.copy(alpha = 0.5f),
-            radius = size.width,
-            center = Offset(size.width / 2 + xOffset, size.height / 3 + yOffset)
+            radius = baseRadius * 1.5f,
+            center = Offset(size.width * 0.5f + xOffset, size.height * 0.3f + yOffset)
         )
         drawCircle(
             color = color2.copy(alpha = 0.4f),
-            radius = size.width * 0.8f,
-            center = Offset(size.width / 4 - xOffset, size.height / 1.5f - yOffset)
+            radius = baseRadius * 1.2f,
+            center = Offset(size.width * 0.2f - xOffset, size.height * 0.7f - yOffset)
         )
     }
     
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val particleCount = if (isLandscape) 25 else 15
+
     // Floating Particles
-    repeat(15) {
+    repeat(particleCount) {
          FloatingParticle()
     }
 }
 
 @Composable
 fun FloatingParticle() {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
     val infiniteTransition = rememberInfiniteTransition(label = "particle")
-    val x = remember { Random.nextFloat() }
-    val y = remember { Random.nextFloat() }
+    val xFrac = remember { Random.nextFloat() }
+    val yFrac = remember { Random.nextFloat() }
     val size = remember { Random.nextFloat() * 4 + 2 }
     val duration = remember { Random.nextInt(4000, 8000) }
     
@@ -214,13 +223,14 @@ fun FloatingParticle() {
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = (y * 1000).dp, start = (x * 400).dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Box(
             modifier = Modifier
-                .offset(y = animY.dp)
+                .offset(
+                    x = screenWidth * xFrac,
+                    y = (screenHeight * yFrac) + animY.dp
+                )
                 .size(size.dp)
                 .background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha), CircleShape)
         )

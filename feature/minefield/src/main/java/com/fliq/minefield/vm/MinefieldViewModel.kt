@@ -310,8 +310,8 @@ class MinefieldViewModel @Inject constructor(
 
     fun pauseGameTemporarily() {
         if (_status.value != GameStatus.PLAYING || _isGamePaused.value) return
-        _isGamePaused.value = true
         soundRepository.playBombSound()
+        _isGamePaused.value = true
         accumulatedTime += System.currentTimeMillis() - lastStartTime
         scope.launch {
             soundRepository.pauseBackgroundMusic()
@@ -519,7 +519,7 @@ class MinefieldViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
-                    soundRepository.playBonusSound()
+                    soundRepository.playCoinTapSound()
                     updateTile(tileId) { it.copy(isRevealed = false) }
                     nextTutorialStep()
                 }
@@ -548,6 +548,7 @@ class MinefieldViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playCoinTapSound()
                 }
                 CardType.BOMB -> {
                     _lives.update { (it - 1).coerceAtLeast(0) }

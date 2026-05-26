@@ -498,7 +498,7 @@ class FrenzyViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
-                    soundRepository.playBonusSound()
+                    soundRepository.playCoinTapSound()
                     updateTile(tileId) { it.copy(isRevealed = false) }
                     nextTutorialStep()
                 }
@@ -529,6 +529,7 @@ class FrenzyViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playCoinTapSound()
                 }
                 else -> {}
             }

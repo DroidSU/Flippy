@@ -11,7 +11,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -72,14 +70,14 @@ fun ZenTile(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                 shadowElevation = elevation,
                 border = BorderStroke(
                     1.5.dp,
                     Brush.verticalGradient(
                         listOf(
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                            Color.Transparent
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                         )
                     )
                 )
@@ -89,13 +87,14 @@ fun ZenTile(
                         painterResource(id = R.drawable.ic_card_back),
                         null,
                         modifier = Modifier
-                            .size(24.dp)
-                            .alpha(0.08f),
-                        tint = MaterialTheme.colorScheme.onSurface
+                            .size(28.dp)
+                            .alpha(0.15f),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-        } else {
+        }
+else {
             Box(
                 modifier = Modifier
                     .fillMaxSize()

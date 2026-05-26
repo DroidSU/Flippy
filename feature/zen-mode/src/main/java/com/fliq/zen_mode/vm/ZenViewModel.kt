@@ -315,8 +315,8 @@ class ZenViewModel @Inject constructor(
 
     fun pauseGameTemporarily() {
         if ((_status.value != GameStatus.PLAYING) || _isGamePaused.value) return
-        _isGamePaused.value = true
         soundRepository.playBombSound()
+        _isGamePaused.value = true
         accumulatedTime += System.currentTimeMillis() - lastStartTime
         scope.launch {
             soundRepository.pauseBackgroundMusic()
@@ -515,7 +515,7 @@ class ZenViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
-                    soundRepository.playBonusSound()
+                    soundRepository.playCoinTapSound()
                     // Hide the tile immediately after collection
                     updateTile(tileId) { it.copy(isRevealed = false) }
                     nextTutorialStep()
@@ -545,6 +545,7 @@ class ZenViewModel @Inject constructor(
                     _effects.emit(GameEffect.ScorePopup(tileId, "+1"))
                     _effects.emit(Particle(tileId, ParticleType.COIN))
                     _effects.emit(GameEffect.Vibration(VibrationType.SHORT))
+                    soundRepository.playCoinTapSound()
                 }
                 CardType.BOMB -> {
                     val oldLives = _lives.value

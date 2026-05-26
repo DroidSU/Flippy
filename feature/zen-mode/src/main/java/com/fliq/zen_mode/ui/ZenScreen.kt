@@ -1,5 +1,6 @@
 package com.fliq.zen_mode.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -30,16 +30,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
-import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.models.EffectState
@@ -55,14 +50,13 @@ import com.fliq.game_engine.ui.CriticalVignette
 import com.fliq.game_engine.ui.MeshBackground
 import com.fliq.game_engine.ui.SparkleEffect
 import com.fliq.zen_mode.models.ZenTutorialStep
-import com.fliq.zen_mode.ui.components.BeatingHeartIcon
 import com.fliq.zen_mode.ui.components.GameGrid
-import com.fliq.zen_mode.ui.components.StatBlock
 import com.fliq.zen_mode.ui.components.TutorialHighlight
 import com.fliq.zen_mode.ui.components.ZenBackgroundRipple
 import com.fliq.zen_mode.ui.components.ZenFloatingScore
 import com.fliq.zen_mode.ui.components.ZenGameOverDialog
 import com.fliq.zen_mode.ui.components.ZenIconButton
+import com.fliq.zen_mode.ui.components.ZenLandscapeStatsPanel
 import com.fliq.zen_mode.ui.components.ZenPlayButton
 import com.fliq.zen_mode.ui.components.ZenRotationOverlay
 import com.fliq.zen_mode.ui.components.ZenRulesDialog
@@ -158,6 +152,7 @@ fun ZenScreen(
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gameColors.backgroundGradient))
         ) {
+            StarBackground()
             MeshBackground(streak = streak)
 
             ripples.forEach { ripple ->
@@ -295,6 +290,35 @@ fun ZenScreen(
 }
 
 @Composable
+fun StarBackground() {
+    val configuration = LocalConfiguration.current
+    val starCount = remember(configuration.screenWidthDp, configuration.screenHeightDp) {
+        val area = configuration.screenWidthDp * configuration.screenHeightDp
+        (area / 2500).coerceIn(50, 200)
+    }
+
+    val stars = remember(starCount) {
+        List(starCount) {
+            val x = kotlin.random.Random.nextFloat()
+            val y = kotlin.random.Random.nextFloat()
+            val starSize = kotlin.random.Random.nextFloat() * 1.5f + 0.5f
+            val alpha = kotlin.random.Random.nextFloat() * 0.3f + 0.2f
+            Triple(x, y, starSize to alpha)
+        }
+    }
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        stars.forEach { (x, y, data) ->
+            val (starSize, alpha) = data
+            drawCircle(
+                color = Color.White.copy(alpha = alpha),
+                radius = starSize.dp.toPx(),
+                center = Offset(x * size.width, y * size.height)
+            )
+        }
+    }
+}
+
+@Composable
 fun ZenContentPortrait(
     tiles: List<Tile>,
     score: Int,
@@ -376,105 +400,74 @@ fun ZenContentLandscape(
     onTopBarPositioned: (Offset, androidx.compose.ui.geometry.Size) -> Unit,
     onPlayButtonPositioned: (Offset, androidx.compose.ui.geometry.Size) -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-        // Top Left: Score and Time
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Left Column: Stats Panel and Navigation
         Column(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .onGloballyPositioned { coords ->
-                    val center = Offset(
-                        coords.positionInRoot().x + coords.size.width / 2,
-                        coords.positionInRoot().y + coords.size.height / 2
-                    )
-                    onStatsPositioned(center, androidx.compose.ui.geometry.Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                    onTopBarPositioned(center, androidx.compose.ui.geometry.Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
-                }
+                .fillMaxHeight()
+                .weight(0.3f), // Give the left column a defined portion of the width
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "ZEN MODE",
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.sp
-                ),
-                color = Color.White
+            ZenLandscapeStatsPanel(
+                score = score,
+                lives = lives,
+                gameTime = gameTime,
+                modifier = Modifier.weight(1f, fill = false).padding(top = 8.dp),
+                onPositioned = { pos: Offset, size: androidx.compose.ui.geometry.Size ->
+                    onStatsPositioned(pos, size)
+                    onTopBarPositioned(pos, size)
+                }
             )
-            Text(
-                text = if (isPaused) "PAUSED" else "STAY CALM",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
-                StatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
-            }
-        }
 
-        // Top Right: Lives
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = "LIVES",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-            Row(modifier = Modifier.padding(top = 4.dp)) {
-                repeat(3) { index ->
-                    BeatingHeartIcon(
-                        isAlive = index < lives,
-                        size = 24.dp,
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    )
-                }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+            ) {
+                ZenIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = onBackClick
+                )
+                ZenIconButton(
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    onClick = onHelpClick
+                )
             }
         }
 
         // Center: Game Grid
         Box(
             modifier = Modifier
-                .fillMaxHeight()
-                .padding(vertical = 16.dp)
-                .align(Alignment.Center),
+                .weight(1f)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             GameGrid(
                 tiles = tiles,
                 onTileTapped = onTileTapped,
                 onTilePositioned = onTilePositioned,
-                modifier = Modifier.fillMaxHeight().aspectRatio(1f)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
             )
         }
 
-        // Bottom Left: Action Buttons
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(bottom = 16.dp, start = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        // Right side: Play Button
+        Box(
+            modifier = Modifier.fillMaxHeight(),
+            contentAlignment = Alignment.BottomEnd
         ) {
-            ZenIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack, 
-                onClick = onBackClick
-            )
-            ZenIconButton(
-                icon = Icons.AutoMirrored.Filled.HelpOutline, 
-                onClick = onHelpClick
+            ZenPlayButton(
+                status = status,
+                onAction = { if (isPlaying) onResetGame() else onPlayClick() },
+                onPositioned = onPlayButtonPositioned,
+                modifier = Modifier.padding(bottom = 8.dp, end = 8.dp)
             )
         }
-
-        // Bottom Right: Play Button
-        ZenPlayButton(
-            status = status,
-            onAction = { if (isPlaying) onResetGame() else onPlayClick() },
-            onPositioned = onPlayButtonPositioned,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp, end = 12.dp)
-        )
     }
 }
 
