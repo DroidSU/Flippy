@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
+import com.fliq.game_engine.repository.SoundRepository
 import com.fliq.profile.ui.ProfileScreen
 import com.fliq.profile.vm.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +20,9 @@ class ProfileActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var soundRepository: SoundRepository
 
     private val viewModel: ProfileViewModel by viewModels()
 
@@ -37,13 +41,24 @@ class ProfileActivity : ComponentActivity() {
                 val reflexAverage by viewModel.reflexAverage.collectAsState()
                 val accuracyRate by viewModel.accuracyRate.collectAsState()
                 val unlockedBadges by viewModel.unlockedBadges.collectAsState()
-                val baseReflex by viewModel.baseReflex.collectAsState()
+                val latencyOffset by viewModel.latencyOffset.collectAsState()
                 val showCalibration by viewModel.showCalibration.collectAsState()
 
                 if (showCalibration) {
+                    androidx.compose.runtime.DisposableEffect(Unit) {
+                        soundRepository.stopBackgroundMusic()
+                        onDispose {
+                            // Optionally resume music here if needed, 
+                            // but usually it resumes on activity return or specific actions
+                        }
+                    }
+
                     com.fliq.auth.ui.ReflexCalibrationScreen(
-                        onCalibrationComplete = { reflex ->
-                            viewModel.recalibrateReflex(reflex)
+                        onCalibrationComplete = { offset ->
+                            viewModel.recalibrateLatency(offset)
+                            viewModel.onCalibrationDismiss()
+                        },
+                        onDismiss = {
                             viewModel.onCalibrationDismiss()
                         }
                     )
@@ -68,7 +83,7 @@ class ProfileActivity : ComponentActivity() {
                         longestRound = longestRound,
                         accuracyRate = accuracyRate,
                         reflexAverage = reflexAverage,
-                        baseReflex = baseReflex,
+                        latencyOffset = latencyOffset,
                         unlockedBadges = unlockedBadges,
                         onRecalibrate = { viewModel.onRecalibrate() }
                     )

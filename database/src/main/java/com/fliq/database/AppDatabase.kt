@@ -18,7 +18,7 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `baseReflex` INTEGER")
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `latencyOffset` INTEGER")
             }
         }
 

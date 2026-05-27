@@ -135,12 +135,12 @@ class SpeedRunViewModel @Inject constructor(
     private val progressionInterval = 10000L // 10 seconds scaling for Speed Run
 
     private val visibleDurationRange: LongRange
-        get() = difficultyManager.getVisibleDurationRange(_gameTime.value, progressionInterval, _cachedUserData)
+        get() = difficultyManager.getVisibleDurationRange(_gameTime.value, progressionInterval)
 
     private val pauseDuration: Long = 800L
 
     private val spawnIntervalRange: LongRange
-        get() = difficultyManager.getSpawnIntervalRange(_gameTime.value, progressionInterval, _cachedUserData)
+        get() = difficultyManager.getSpawnIntervalRange(_gameTime.value, progressionInterval)
 
     init {
         getUserData()
@@ -627,7 +627,11 @@ class SpeedRunViewModel @Inject constructor(
                     coinsMissedConsecutively = 0
                     _correctTaps.update { it + 1 }
                     _streak.update { it + 1 }
-                    val reactionTime = System.currentTimeMillis() - tile.lastRevealTime
+                    
+                    val rawReactionTime = System.currentTimeMillis() - tile.lastRevealTime
+                    val offset = _cachedUserData?.latencyOffset ?: 0L
+                    val reactionTime = (rawReactionTime - offset).coerceAtLeast(10L) // Minimum 10ms
+
                     _lastReactionTime.value = reactionTime
                     totalReflexTime += reactionTime
                     bestReactionTime = minOf(bestReactionTime, reactionTime)

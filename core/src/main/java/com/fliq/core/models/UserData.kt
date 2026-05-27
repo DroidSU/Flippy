@@ -12,7 +12,7 @@ data class UserData(
     val totalReflexTime: Long = 0,
     val bestPerfectStreak: Int = 0,
     val badges: List<String> = emptyList(),
-    val baseReflex: Long? = null
+    val latencyOffset: Long? = null
 )
 
 fun UserData.toMap(): Map<String, Any?> {
@@ -28,6 +28,6 @@ fun UserData.toMap(): Map<String, Any?> {
         "totalReflexTime" to totalReflexTime,
         "bestPerfectStreak" to bestPerfectStreak,
         "badges" to badges,
-        "baseReflex" to baseReflex
+        "latencyOffset" to latencyOffset
     )
 }

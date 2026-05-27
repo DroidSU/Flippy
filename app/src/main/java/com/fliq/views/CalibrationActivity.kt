@@ -13,6 +13,7 @@ import com.fliq.auth.viewmodel.CalibrationViewModel
 import com.fliq.common.AppUIState
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
+import com.fliq.game_engine.repository.SoundRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -21,6 +22,9 @@ class CalibrationActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var soundRepository: SoundRepository
 
     private val viewModel: CalibrationViewModel by viewModels()
 
@@ -36,10 +40,19 @@ class CalibrationActivity : ComponentActivity() {
                     finish()
                 }
 
+                androidx.compose.runtime.DisposableEffect(Unit) {
+                    soundRepository.stopBackgroundMusic()
+                    onDispose { }
+                }
+
                 ReflexCalibrationScreen(
-                    onCalibrationComplete = { reflex ->
-                        viewModel.saveBaseReflex(reflex)
-                    }
+                    onCalibrationComplete = { offset ->
+                        viewModel.saveLatencyOffset(offset)
+                    },
+                    onDismiss = {
+                        finish()
+                    },
+                    showCancelButton = false
                 )
             }
         }

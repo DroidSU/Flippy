@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +61,7 @@ fun SettingsScreen(
     onNotificationsChange: (Boolean) -> Unit = {},
     onGameSoundChange: (Boolean) -> Unit = {},
     onHapticFeedbackChange: (Boolean) -> Unit = {},
+    onRecalibrate: () -> Unit = {},
     onSignOut: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
@@ -137,6 +139,19 @@ fun SettingsScreen(
                     icon = Icons.Default.Vibration,
                     checked = hapticFeedbackEnabled,
                     onCheckedChange = { onHapticFeedbackChange(it) }
+                )
+            }
+
+            item {
+                SettingsSectionHeader(title = "Gameplay & Performance")
+            }
+
+            item {
+                SettingsClickableItem(
+                    title = "Recalibrate",
+                    subtitle = "Minimize touch latency for better accuracy",
+                    icon = Icons.Default.Timer,
+                    onClick = onRecalibrate
                 )
             }
 

@@ -1,18 +1,21 @@
 package com.fliq.auth.ui
 
-import androidx.compose.animation.animateColorAsState
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.SystemClock
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,10 +27,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,86 +51,72 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.fliq.core.theme.BgSlate
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.ui.MeshBackground
-import kotlinx.coroutines.delay
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.random.Random
 
 enum class CalibrationState {
-    IDLE, WAITING, ACTIVE, RESULT, FINISHED
+    IDLE, ACTIVE, FINISHED
 }
 
 @Composable
 fun ReflexCalibrationScreen(
-    onCalibrationComplete: (Long) -> Unit
+    onCalibrationComplete: (Long) -> Unit,
+    onDismiss: () -> Unit = {},
+    showCancelButton: Boolean = true
 ) {
     var currentState by remember { mutableStateOf(CalibrationState.IDLE) }
     var currentTrial by remember { mutableIntStateOf(0) }
     val trials = remember { mutableStateListOf<Long>() }
-    var startTime by remember { mutableLongStateOf(0L) }
-    var lastResult by remember { mutableLongStateOf(0L) }
-
-    val gameColors = MaterialTheme.gameColors
+    var lastOffset by remember { mutableLongStateOf(0L) }
     
-    // Animations
-    val infiniteTransition = rememberInfiniteTransition(label = "glow")
-    val standbyAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
-        label = "alpha"
+    val gameColors = MaterialTheme.gameColors
+    val totalTrials = 10
+    val loopDuration = 1000L
+
+    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
+    
+    // Tone Generator for Metronome (Disabled in Preview)
+    val toneGenerator = remember { 
+        if (isPreview) null else ToneGenerator(AudioManager.STREAM_MUSIC, 60)
+    }
+    DisposableEffect(Unit) {
+        onDispose { toneGenerator?.release() }
+    }
+
+    // Animation for the sliding bar
+    val infiniteTransition = rememberInfiniteTransition(label = "calibration")
+    val progress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(loopDuration.toInt(), easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "progress"
     )
 
-    val targetScale by animateFloatAsState(
-        targetValue = if (currentState == CalibrationState.ACTIVE) 1.1f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioHighBouncy),
-        label = "scale"
-    )
-
-    val targetColor by animateColorAsState(
-        targetValue = when (currentState) {
-            CalibrationState.ACTIVE -> NeonCyan
-            CalibrationState.RESULT -> Color.White
-            else -> BgSlate.copy(alpha = 0.5f)
-        },
-        animationSpec = tween(if (currentState == CalibrationState.ACTIVE) 50 else 300),
-        label = "color"
-    )
-
-    // Trial Logic
-    LaunchedEffect(currentState) {
-        if (currentState == CalibrationState.WAITING) {
-            delay(Random.nextLong(1500, 4000))
-            startTime = System.currentTimeMillis()
-            currentState = CalibrationState.ACTIVE
-        } else if (currentState == CalibrationState.RESULT) {
-            delay(1000)
-            if (currentTrial < 3) {
-                currentState = CalibrationState.WAITING
-            } else {
-                currentState = CalibrationState.FINISHED
+    var lastBeepTime by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(progress) {
+        // We trigger a beep when the bar is at the center (0.5)
+        if (progress in 0.5f..<0.6f && SystemClock.uptimeMillis() - lastBeepTime > 500) {
+            if (currentState == CalibrationState.ACTIVE) {
+                toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
             }
+            lastBeepTime = SystemClock.uptimeMillis()
         }
     }
 
@@ -125,269 +124,116 @@ fun ReflexCalibrationScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(gameColors.backgroundGradient))
+            .pointerInput(currentState) {
+                if (currentState == CalibrationState.ACTIVE) {
+                    detectTapGestures {
+                        val tapTime = SystemClock.uptimeMillis()
+                        val cycleStartTime = tapTime - (progress * loopDuration).toLong()
+                        val targetTime = cycleStartTime + (loopDuration / 2)
+                        val diff = tapTime - targetTime
+                        
+                        val normalizedDiff = when {
+                            diff > 500 -> diff - 1000
+                            diff < -500 -> diff + 1000
+                            else -> diff
+                        }
+
+                        trials.add(normalizedDiff)
+                        lastOffset = normalizedDiff
+                        currentTrial++
+
+                        if (currentTrial >= totalTrials) {
+                            currentState = CalibrationState.FINISHED
+                        }
+                    }
+                }
+            }
     ) {
         MeshBackground()
-
-        // Scanline Animation (IDLE Only)
-        if (currentState == CalibrationState.IDLE) {
-            val scanTransition = rememberInfiniteTransition(label = "scan")
-            val scanY by scanTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(tween(4000), RepeatMode.Restart),
-                label = "scanY"
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { translationY = size.height * scanY }
-                    .height(2.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Transparent, NeonCyan.copy(alpha = 0.15f), Color.Transparent)
-                        )
-                    )
-            )
-        }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
             // Header System
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(
+                    color = NeonCyan.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonCyan.copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text = "NEURAL SYNC ENGINE",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp,
+                            color = NeonCyan
+                        )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
                 Text(
-                    text = "REFLEX CALIBRATION",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    text = "HARDWARE CALIBRATION",
+                    style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp,
                         fontFamily = FontFamily.SansSerif
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (currentState == CalibrationState.ACTIVE) NeonCyan.copy(alpha = 0.2f)
-                            else Color.White.copy(alpha = 0.05f),
-                            MaterialTheme.shapes.extraSmall
-                        )
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = when (currentState) {
-                            CalibrationState.IDLE -> "READY TO START"
-                            CalibrationState.WAITING -> "GET READY..."
-                            CalibrationState.ACTIVE -> "TAP NOW!"
-                            CalibrationState.RESULT -> "RESULT: ${lastResult}ms"
-                            CalibrationState.FINISHED -> "CALIBRATION SAVED"
-                        },
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
-                        color = if (currentState == CalibrationState.ACTIVE) NeonCyan else MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                    )
-                }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(0.4f))
 
-            if (currentState == CalibrationState.IDLE) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "HOW TO PLAY",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                letterSpacing = 2.sp,
-                                fontWeight = FontWeight.Black
-                            ),
-                            color = NeonCyan
-                        )
-                        Text(
-                            text = "Calibrate your reaction time to ensure high-speed performance and fair gameplay.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            lineHeight = 20.sp
-                        )
-                    }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(0.95f),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        InstructionRow(number = "01", text = "Tap START to begin the calibration.")
-                        InstructionRow(number = "02", text = "Focus on the central hexagon.")
-                        InstructionRow(number = "03", text = "Tap as soon as it flashes Cyan.")
-                        InstructionRow(number = "04", text = "Repeat 3 times to get your average.", isLast = true)
-                    }
-                }
-            }
-
-            if (currentState != CalibrationState.IDLE) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "TEST PROGRESS",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 2.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(3) { index ->
-                            TrialPip(
-                                isCompleted = index < currentTrial,
-                                isActive = index == currentTrial && currentState != CalibrationState.IDLE
-                            )
+            // Main Dynamic Content
+            AnimatedContent(
+                targetState = currentState,
+                transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(400)) },
+                label = "state_transition"
+            ) { state ->
+                when (state) {
+                    CalibrationState.IDLE -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            InstructionCard()
+                            Spacer(modifier = Modifier.height(42.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (showCancelButton) {
+                                    androidx.compose.material3.TextButton(onClick = onDismiss) {
+                                        Text(
+                                            "CANCEL",
+                                            color = Color.White.copy(alpha = 0.5f),
+                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                    }
+                                }
+                                ConfirmKineticButton(
+                                    text = "START CALIBRATION",
+                                    onClick = { currentState = CalibrationState.ACTIVE },
+                                    isLoading = false,
+                                    enabled = true
+                                )
+                            }
                         }
                     }
+                    CalibrationState.ACTIVE -> CalibrationTrack(progress, infiniteTransition)
+                    CalibrationState.FINISHED -> ResultCard(trials, onCalibrationComplete)
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(0.6f))
 
-            // The Target
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .graphicsLayer {
-                        scaleX = targetScale
-                        scaleY = targetScale
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                // Outer Glow
-                Box(
-                    modifier = Modifier
-                        .size(200.dp)
-                        .blur(40.dp)
-                        .alpha(if (currentState == CalibrationState.ACTIVE) 0.8f else standbyAlpha * 0.4f)
-                        .background(targetColor, HexagonShape)
-                )
-
-                // Main Target
-                Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .clip(HexagonShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(targetColor.copy(alpha = 0.9f), targetColor.copy(alpha = 0.4f))
-                            )
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            enabled = currentState == CalibrationState.ACTIVE || currentState == CalibrationState.IDLE
-                        ) {
-                            if (currentState == CalibrationState.IDLE) {
-                                currentState = CalibrationState.WAITING
-                            } else if (currentState == CalibrationState.ACTIVE) {
-                                val reaction = System.currentTimeMillis() - startTime
-                                trials.add(reaction)
-                                lastResult = reaction
-                                currentTrial++
-                                currentState = CalibrationState.RESULT
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (currentState == CalibrationState.IDLE) {
-                        Text(
-                            text = "START",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-                
-                // Pulsing Ring (Standby/IDLE)
-                if (currentState == CalibrationState.WAITING || currentState == CalibrationState.IDLE) {
-                    val pulseTransition = rememberInfiniteTransition(label = "pulse")
-                    val pulseScale by pulseTransition.animateFloat(
-                        initialValue = if (currentState == CalibrationState.IDLE) 0.9f else 0.8f,
-                        targetValue = if (currentState == CalibrationState.IDLE) 1.1f else 1.2f,
-                        animationSpec = infiniteRepeatable(
-                            tween(if (currentState == CalibrationState.IDLE) 1200 else 1500), 
-                            RepeatMode.Restart
-                        ),
-                        label = "p"
-                    )
-                    val pulseAlpha by pulseTransition.animateFloat(
-                        initialValue = 0.6f,
-                        targetValue = 0f,
-                        animationSpec = infiniteRepeatable(
-                            tween(if (currentState == CalibrationState.IDLE) 1200 else 1500), 
-                            RepeatMode.Restart
-                        ),
-                        label = "a"
-                    )
-
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        drawPath(
-                            path = getHexagonPath(size, pulseScale),
-                            color = NeonCyan.copy(alpha = pulseAlpha),
-                            style = Stroke(
-                                width = 2.dp.toPx(),
-                                pathEffect = PathEffect.dashPathEffect(
-                                    floatArrayOf(20f, 10f), 0f
-                                )
-                            )
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1.2f))
-
-            // Result Action
-            if (currentState == CalibrationState.FINISHED) {
-                val average = trials.average().toLong()
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "AVERAGE REFLEX",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                    Text(
-                        text = "${average}ms",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            fontFamily = FontFamily.Monospace,
-                            color = NeonCyan
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
-                    ConfirmKineticButton(
-                        onClick = { onCalibrationComplete(average) },
-                        isLoading = false,
-                        enabled = true
-                    )
-                }
-            } else if (currentState != CalibrationState.IDLE) {
-                Text(
-                    text = "STAY FOCUSED",
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 4.sp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                )
+            // Active Stats
+            if (currentState == CalibrationState.ACTIVE) {
+                TrialProgressIndicator(currentTrial, totalTrials, lastOffset)
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -396,95 +242,272 @@ fun ReflexCalibrationScreen(
 }
 
 @Composable
-fun InstructionRow(number: String, text: String, isLast: Boolean = false) {
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        modifier = Modifier.height(60.dp)
+fun InstructionCard() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(HexagonShape)
-                    .background(NeonCyan.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = number,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = NeonCyan,
-                    fontWeight = FontWeight.Black
-                )
-            }
-            if (!isLast) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .weight(1f)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(NeonCyan.copy(alpha = 0.5f), Color.Transparent)
-                            )
-                        )
-                )
-            }
-        }
         Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                lineHeight = 20.sp,
-                letterSpacing = 0.5.sp
-            ),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            modifier = Modifier.padding(top = 4.dp)
+            text = "Follow these steps to ensure perfect touch synchronization:",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        InstructionItem(
+            icon = Icons.Default.GraphicEq,
+            title = "Listen to the Rhythm",
+            desc = "A metronome will play a steady beat. Use speakers or wired headphones for best results."
+        )
+
+        InstructionItem(
+            icon = Icons.Default.RadioButtonChecked,
+            title = "Watch the Pulse",
+            desc = "A white bar will slide across the screen. Focus on the Cyan center line."
+        )
+
+        InstructionItem(
+            icon = Icons.Default.Timer,
+            title = "Tap on the Beat",
+            desc = "Tap exactly when the white bar hits the center line. We will take 10 samples."
         )
     }
 }
 
 @Composable
-fun TrialPip(isCompleted: Boolean, isActive: Boolean) {
-    val color by animateColorAsState(
-        targetValue = if (isCompleted) NeonCyan else if (isActive) Color.White else Color.White.copy(alpha = 0.1f),
-        label = "color"
-    )
-    
-    val scale by animateFloatAsState(
-        targetValue = if (isActive) 1.3f else 1.0f,
-        label = "scale"
-    )
+fun InstructionItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, desc: String) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = NeonCyan,
+            modifier = Modifier.size(24.dp)
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
 
+@Composable
+fun CalibrationTrack(progress: Float, infiniteTransition: androidx.compose.animation.core.InfiniteTransition) {
     Box(
         modifier = Modifier
-            .size(18.dp)
-            .scale(scale)
-            .clip(HexagonShape)
-            .background(color)
-            .padding(2.dp)
-            .background(if (isActive) Color.Black else Color.Transparent, HexagonShape)
-    )
-}
+            .fillMaxWidth()
+            .height(160.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Track Base
+        Canvas(modifier = Modifier.fillMaxWidth().height(40.dp)) {
+            val trackHeight = 2.dp.toPx()
+            drawLine(
+                color = Color.White.copy(alpha = 0.1f),
+                start = Offset(0f, size.height / 2),
+                end = Offset(size.width, size.height / 2),
+                strokeWidth = trackHeight,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+            )
+        }
 
-val HexagonShape = GenericShape { size, _ ->
-    val path = getHexagonPath(size)
-    addPath(path)
-}
+        // Target Zone (Center)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(80.dp)
+                    .background(NeonCyan, CircleShape)
+            )
+        }
+        
+        // Pulsing Target Glow
+        val pulseAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.1f,
+            targetValue = 0.5f,
+            animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
+            label = "pulse"
+        )
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(NeonCyan.copy(alpha = pulseAlpha), Color.Transparent)
+                    )
+                )
+        )
 
-fun getHexagonPath(size: Size, scale: Float = 1f): Path {
-    val path = Path()
-    val centerX = size.width / 2
-    val centerY = size.height / 2
-    val radius = (size.width / 2) * scale
-    
-    for (i in 0..5) {
-        val angle = Math.toRadians(i * 60.0 - 30.0)
-        val x = centerX + radius * cos(angle).toFloat()
-        val y = centerY + radius * sin(angle).toFloat()
-        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        // The Sliding Bar
+        Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+            val barWidth = 8.dp.toPx()
+            val x = size.width * progress
+            
+            // Neon Trail
+            drawRect(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(Color.Transparent, NeonCyan.copy(alpha = 0.4f)),
+                    startX = x - 120.dp.toPx(),
+                    endX = x
+                ),
+                topLeft = Offset(x - 120.dp.toPx(), size.height / 2 - 2.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(120.dp.toPx(), 4.dp.toPx())
+            )
+
+            // Bar
+            drawRect(
+                color = Color.White,
+                topLeft = Offset(x - barWidth / 2, size.height / 2 - 40.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(barWidth, 80.dp.toPx())
+            )
+            
+            // Bar Glow
+            drawRect(
+                brush = Brush.radialGradient(
+                    listOf(Color.White.copy(alpha = 0.5f), Color.Transparent),
+                    center = Offset(x, size.height / 2),
+                    radius = 20.dp.toPx()
+                ),
+                topLeft = Offset(x - 20.dp.toPx(), size.height / 2 - 40.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(40.dp.toPx(), 80.dp.toPx())
+            )
+        }
     }
-    path.close()
-    return path
+}
+
+@Composable
+fun ResultCard(trials: List<Long>, onComplete: (Long) -> Unit) {
+    val average = trials.filter { it in -200..300 }.average().toLong().coerceAtLeast(0L)
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.RadioButtonChecked,
+            contentDescription = null,
+            tint = NeonCyan,
+            modifier = Modifier.size(48.dp)
+        )
+
+        Text(
+            text = "CALIBRATION COMPLETE",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Text(
+            text = "Your device latency has been measured and neutralized. The game engine will now account for this delay to ensure perfect fairness.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "SYSTEM OFFSET",
+                style = MaterialTheme.typography.labelSmall,
+                color = NeonCyan
+            )
+            Text(
+                text = "${average}ms",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ConfirmKineticButton(
+            text = "SAVE & CONTINUE",
+            onClick = { onComplete(average) },
+            isLoading = false,
+            enabled = true
+        )
+    }
+}
+
+@Composable
+fun TrialProgressIndicator(current: Int, total: Int, lastOffset: Long) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(total) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(height = 6.dp, width = 20.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (index < current) NeonCyan 
+                            else Color.White.copy(alpha = 0.1f)
+                        )
+                )
+            }
+        }
+        
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Default.Info, contentDescription = null, tint = Color.White.copy(alpha = 0.2f), modifier = Modifier.size(14.dp))
+            Text(
+                text = if (lastOffset != 0L) "Last Sync: ${lastOffset}ms" else "Waiting for input...",
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                color = Color.White.copy(alpha = 0.4f)
+            )
+        }
+    }
+}
+
+@Composable
+fun ConfirmKineticButton(
+    text: String = "CONFIRM",
+    onClick: () -> Unit,
+    isLoading: Boolean,
+    enabled: Boolean
+) {
+    Surface(
+        onClick = onClick,
+        enabled = enabled && !isLoading,
+        shape = RoundedCornerShape(16.dp),
+        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+        modifier = Modifier.wrapContentSize(align = Alignment.Center)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)) {
+            if (isLoading) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Black),
+                    color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true)

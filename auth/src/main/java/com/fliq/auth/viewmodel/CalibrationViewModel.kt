@@ -26,16 +26,16 @@ class CalibrationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
     val uiState = _uiState.asStateFlow()
 
-    fun saveBaseReflex(reflexMs: Long) {
+    fun saveLatencyOffset(offsetMs: Long) {
         val userId = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             _uiState.update { AppUIState.Loading }
             
-            when (val result = networkRepository.updateBaseReflex(reflexMs)) {
+            when (val result = networkRepository.updateLatencyOffset(offsetMs)) {
                 is Result.Success -> {
                     val currentData = profileRepository.getUserDataSync(userId)
                     if (currentData != null) {
-                        profileRepository.saveUserData(currentData.copy(baseReflex = reflexMs))
+                        profileRepository.saveUserData(currentData.copy(latencyOffset = offsetMs))
                     }
                     _uiState.update { AppUIState.Success }
 

@@ -102,7 +102,7 @@ fun ProfileScreen(
     longestRound: Long = 0L,
     accuracyRate: Double = 0.0,
     reflexAverage: Long = 0L,
-    baseReflex: Long? = null,
+    latencyOffset: Long? = null,
     unlockedBadges: List<Badge> = emptyList(),
     onRecalibrate: () -> Unit = {}
 ) {
@@ -169,7 +169,7 @@ fun ProfileScreen(
                             accuracyRate = accuracyRate,
                             longestRound = longestRound,
                             reflexAverage = reflexAverage,
-                            baseReflex = baseReflex,
+                            latencyOffset = latencyOffset,
                             onRecalibrate = onRecalibrate
                         )
 
@@ -333,7 +333,7 @@ private fun PlayerInsightsCard(
     accuracyRate: Double,
     longestRound: Long,
     reflexAverage: Long,
-    baseReflex: Long?,
+    latencyOffset: Long?,
     onRecalibrate: () -> Unit
 ) {
     Surface(
@@ -476,7 +476,7 @@ private fun PlayerInsightsCard(
                     }
                 }
 
-                if (baseReflex != null) {
+                if (latencyOffset != null) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
@@ -503,7 +503,7 @@ private fun PlayerInsightsCard(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "${baseReflex}ms",
+                                        text = "${latencyOffset}ms",
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -811,7 +811,7 @@ internal fun ProfileScreenPreview() {
             totalMatches = 124,
             accuracyRate = 89.2,
             reflexAverage = 285,
-            baseReflex = 320,
+            latencyOffset = 320,
             highestScore = 4500,
             longestRound = 185000L,
             onRecalibrate = {}

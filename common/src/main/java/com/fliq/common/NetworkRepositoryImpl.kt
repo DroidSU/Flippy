@@ -136,13 +136,13 @@ class NetworkRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateBaseReflex(baseReflex: Long): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun updateLatencyOffset(latencyOffset: Long): Result<Unit> = withContext(Dispatchers.IO) {
         val userId = auth.currentUser?.uid ?: return@withContext Result.Failure("User not logged in")
         try {
-            database.child("users").child(userId).child("baseReflex").setValue(baseReflex).await()
+            database.child("users").child(userId).child("latencyOffset").setValue(latencyOffset).await()
             Result.Success(Unit)
         } catch (e: Exception) {
-            Result.Failure(e.message ?: "Failed to update reflex baseline")
+            Result.Failure(e.message ?: "Failed to update latency offset")
         }
     }
 

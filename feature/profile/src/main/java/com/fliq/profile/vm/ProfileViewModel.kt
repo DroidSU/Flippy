@@ -55,8 +55,8 @@ class ProfileViewModel @Inject constructor(
     private val _reflexAverage = MutableStateFlow(0L)
     val reflexAverage: StateFlow<Long> = _reflexAverage.asStateFlow()
 
-    private val _baseReflex = MutableStateFlow<Long?>(null)
-    val baseReflex: StateFlow<Long?> = _baseReflex.asStateFlow()
+    private val _latencyOffset = MutableStateFlow<Long?>(null)
+    val latencyOffset: StateFlow<Long?> = _latencyOffset.asStateFlow()
 
     private val _unlockedBadges = MutableStateFlow<List<Badge>>(emptyList())
     val unlockedBadges: StateFlow<List<Badge>> = _unlockedBadges.asStateFlow()
@@ -84,7 +84,7 @@ class ProfileViewModel @Inject constructor(
                         _totalMatchesPlayed.value = localData.totalMatches
                         _highestScore.value = localData.highestScore
                         _longestRound.value = localData.longestRound
-                        _baseReflex.value = localData.baseReflex
+                        _latencyOffset.value = localData.latencyOffset
                         
                         if (localData.totalTaps > 0) {
                             _accuracyRate.value = (localData.totalCorrectTaps.toDouble() / localData.totalTaps.toDouble()) * 100
@@ -175,18 +175,18 @@ class ProfileViewModel @Inject constructor(
         _isEditing.value = false
     }
 
-    fun recalibrateReflex(reflexMs: Long) {
+    fun recalibrateLatency(offsetMs: Long) {
         _uiState.value = AppUIState.Loading
         viewModelScope.launch {
             val userId = auth.currentUser?.uid ?: return@launch
             
-            when (val result = networkRepository.updateBaseReflex(reflexMs)) {
+            when (val result = networkRepository.updateLatencyOffset(offsetMs)) {
                 is Result.Success -> {
                     val currentData = profileRepository.getUserDataSync(userId)
                     if (currentData != null) {
-                        profileRepository.saveUserData(currentData.copy(baseReflex = reflexMs))
+                        profileRepository.saveUserData(currentData.copy(latencyOffset = offsetMs))
                     }
-                    _baseReflex.value = reflexMs
+                    _latencyOffset.value = offsetMs
                     _uiState.value = AppUIState.Success
                 }
                 is Result.Failure -> {

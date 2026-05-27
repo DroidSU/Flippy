@@ -1,34 +1,34 @@
 package com.fliq.common
 
-import com.fliq.core.models.UserData
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Singleton
 class DifficultyManager @Inject constructor() {
 
-    fun getVisibleDurationRange(gameTime: Long, progressionInterval: Long, userData: UserData?): LongRange {
-        val baseReflex = userData?.baseReflex ?: 400L // Default to 400ms if not calibrated
-        
-        // The faster the base reflex, the lower the threshold, but never below 300ms
-        // A player with 500ms reflex will have a floor of ~400ms
-        val dynamicFloor = maxOf(300L, (baseReflex * 0.75f).toLong())
-        
+    fun getVisibleDurationRange(gameTime: Long, progressionInterval: Long): LongRange {
         val tiers = gameTime / progressionInterval
-        val min = maxOf(dynamicFloor, 600L - tiers * 50L)
-        val max = maxOf(dynamicFloor + 100L, 800L - tiers * 50L)
         
-        return min..max
+        // Start at 800ms, decrease per tier, ceiling (min value) at 350ms
+        // Gradually decrease by ~30ms per tier
+        val baseMin = maxOf(350L, 700L - tiers * 25L)
+        val baseMax = maxOf(400L, 800L - tiers * 30L)
+        
+        // Add jitter (±25ms)
+        val jitter = Random.nextLong(-25L, 26L)
+        return (baseMin + jitter)..(baseMax + jitter)
     }
 
-    fun getSpawnIntervalRange(gameTime: Long, progressionInterval: Long, userData: UserData?): LongRange {
-        val baseReflex = userData?.baseReflex ?: 400L
-        val dynamicFloor = maxOf(300L, (baseReflex * 0.75f).toLong())
-        
+    fun getSpawnIntervalRange(gameTime: Long, progressionInterval: Long): LongRange {
         val tiers = gameTime / progressionInterval
-        val min = maxOf(dynamicFloor, 1200L - tiers * 45L)
-        val max = maxOf(dynamicFloor + 200L, 2000L - tiers * 75L)
         
-        return min..max
+        // Starting intervals for spawning
+        // Decreasing from 1200ms-1800ms down to 450ms-700ms
+        val min = maxOf(450L, 1200L - tiers * 45L)
+        val max = maxOf(700L, 1800L - tiers * 65L)
+        
+        val jitter = Random.nextLong(-30L, 31L)
+        return (min + jitter)..(max + jitter)
     }
 }
