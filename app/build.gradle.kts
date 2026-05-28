@@ -106,6 +106,7 @@ dependencies {
     implementation(project(":feature:minefield"))
     implementation(project(":feature:frenzy"))
     implementation(project(":feature:zen-mode"))
+    implementation(project(":feature:surge"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

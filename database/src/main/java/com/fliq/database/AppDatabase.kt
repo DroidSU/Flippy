@@ -7,7 +7,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fliq.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 13)
+@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 14)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 

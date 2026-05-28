@@ -23,5 +23,9 @@ enum class Challenge(
     FRENZY(
         "FRENZY",
         "No bombs, just pure speed. Miss one coin and it's over."
+    ),
+    SURGE(
+        "SURGE",
+        "Tap fast to fill the bar and keep it from draining. Reach 100% to win!"
     )
 }

@@ -83,6 +83,7 @@ fun LeaderboardScreen(
         Challenge.MIRAGE -> NeonPurple
         Challenge.MINEFIELD -> BombRed
         Challenge.FRENZY -> Gold
+        Challenge.SURGE -> NeonCyan
     }
 
     Box(
@@ -233,6 +234,7 @@ private fun ChallengeSelectorTabs(
                 Challenge.MIRAGE -> NeonPurple
                 Challenge.MINEFIELD -> BombRed
                 Challenge.FRENZY -> Gold
+                Challenge.SURGE -> NeonCyan
             }
 
             Surface(
@@ -256,6 +258,7 @@ private fun ChallengeSelectorTabs(
                             Challenge.MIRAGE -> Icons.Default.VisibilityOff
                             Challenge.MINEFIELD -> Icons.Default.EmojiEvents
                             Challenge.FRENZY -> Icons.Default.EmojiEvents
+                            Challenge.SURGE -> Icons.Default.Bolt
                         },
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),

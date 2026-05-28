@@ -27,6 +27,8 @@ import com.fliq.mirage.ui.MirageScreen
 import com.fliq.mirage.vm.MirageViewModel
 import com.fliq.speed_run.ui.SpeedRunScreen
 import com.fliq.speed_run.vm.SpeedRunViewModel
+import com.fliq.surge.ui.SurgeScreen
+import com.fliq.surge.vm.SurgeViewModel
 import com.fliq.zen_mode.ui.ZenScreen
 import com.fliq.zen_mode.vm.ZenViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,7 +53,35 @@ class GameActivity : ComponentActivity() {
 
         setContent {
             FliqTheme(settingsRepository) {
-                if (challenge == Challenge.SPEED_RUN) {
+                if (challenge == Challenge.SURGE) {
+                    val viewModel: SurgeViewModel = hiltViewModel()
+                    
+                    val tiles by viewModel.tiles.collectAsState()
+                    val status by viewModel.status.collectAsState()
+                    val reservoirLevel by viewModel.reservoirLevel.collectAsState()
+                    val score by viewModel.score.collectAsState()
+
+                    LaunchedEffect(Unit) {
+                        viewModel.effects.collectLatest { effect ->
+                            if (effect is GameEffect.Vibration) {
+                                if (settingsRepository.getHapticFeedbackEnabled()) {
+                                    triggerVibration(effect.type)
+                                }
+                            }
+                        }
+                    }
+
+                    SurgeScreen(
+                        tiles = tiles,
+                        status = status,
+                        reservoirLevel = reservoirLevel,
+                        score = score,
+                        onTileTapped = viewModel::onTileTapped,
+                        onPlayClick = viewModel::startGame,
+                        onNavigateBack = { finish() },
+                        effects = viewModel.effects
+                    )
+                } else if (challenge == Challenge.SPEED_RUN) {
                     val viewModel: SpeedRunViewModel = hiltViewModel()
                     
                     val tiles by viewModel.tiles.collectAsState()

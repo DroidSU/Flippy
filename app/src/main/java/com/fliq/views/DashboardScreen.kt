@@ -159,6 +159,11 @@ fun DashboardScreen(
                                 modifier = Modifier.weight(1f),
                                 onClick = { onChallengeSelected(Challenge.FRENZY) }
                             )
+                            ChallengeTile(
+                                challenge = Challenge.SURGE,
+                                modifier = Modifier.weight(1f),
+                                onClick = { onChallengeSelected(Challenge.SURGE) }
+                            )
                         }
                     }
 
@@ -295,6 +300,7 @@ fun ChallengeTile(
         Challenge.MIRAGE -> NeonPurple
         Challenge.MINEFIELD -> BombRed
         Challenge.FRENZY -> Gold
+        Challenge.SURGE -> NeonCyan
     }
 
     Box(
@@ -354,6 +360,7 @@ fun ChallengeTile(
                     Challenge.MINEFIELD -> Image(painterResource(id = R.drawable.ic_bomb), null, modifier = Modifier.fillMaxSize())
                     Challenge.FRENZY -> Image(painterResource(id = R.drawable.ic_coin), null, modifier = Modifier.fillMaxSize())
                     Challenge.MIRAGE -> Icon(Icons.Default.VisibilityOff, null, tint = accentColor, modifier = Modifier.fillMaxSize())
+                    Challenge.SURGE -> Icon(Icons.Default.Bolt, null, tint = accentColor, modifier = Modifier.fillMaxSize())
                 }
             }
 

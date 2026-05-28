@@ -46,9 +46,42 @@ import androidx.compose.ui.unit.dp
 import com.fliq.core.theme.BombRed
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.models.EffectState
+import com.fliq.game_engine.models.EffectType
+import com.fliq.game_engine.models.GameEffect
 import com.fliq.game_engine.models.GameStatus
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
 import kotlin.random.Random
+
+@Composable
+fun EffectsOverlay(effects: SharedFlow<GameEffect>?) {
+    val activeEffects = remember { androidx.compose.runtime.mutableStateListOf<EffectState>() }
+
+    LaunchedEffect(effects) {
+        effects?.collectLatest { effect ->
+            when (effect) {
+                is GameEffect.Particle -> {
+                    // This is a bit tricky since we don't know the exact tile position here.
+                    // For global effects, usually we'd pass positions in the effect.
+                }
+                else -> {}
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        activeEffects.forEach { effect ->
+            androidx.compose.runtime.key(effect.id) {
+                when (effect.type) {
+                    EffectType.PARTICLE_COIN -> SparkleEffect(effect) { activeEffects.remove(effect) }
+                    EffectType.PARTICLE_BOMB -> BombEffect(effect) { activeEffects.remove(effect) }
+                    else -> {}
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun CriticalVignette() {

@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$/feature/profile" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/speed-run" />
+            <option value="$PROJECT_DIR$/feature/surge" />
             <option value="$PROJECT_DIR$/feature/zen-mode" />
             <option value="$PROJECT_DIR$/game-engine" />
           </set>
