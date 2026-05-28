@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.messaging)
 
     // Hilt
     implementation(libs.hilt.android)

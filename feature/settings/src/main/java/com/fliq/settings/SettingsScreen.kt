@@ -1,5 +1,9 @@
 package com.fliq.settings
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +41,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,6 +74,17 @@ fun SettingsScreen(
     onSignOut: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    var showPermissionRationale by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onNotificationsChange(true)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,7 +138,13 @@ fun SettingsScreen(
                     subtitle = "Get alerts for events and updates",
                     icon = Icons.Default.Notifications,
                     checked = notificationsEnabled,
-                    onCheckedChange = { onNotificationsChange(it) }
+                    onCheckedChange = { enabled ->
+                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            onNotificationsChange(enabled)
+                        }
+                    }
                 )
             }
 

@@ -1,10 +1,15 @@
 package com.fliq.views
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
@@ -34,6 +39,16 @@ class SplashActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         setContent {
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { /* Permission result handled by OS and settings toggle */ }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+
             FliqTheme(settingsRepository = settingsRepository) {
                 SplashScreen {
                     soundRepository.startBackgroundMusic()

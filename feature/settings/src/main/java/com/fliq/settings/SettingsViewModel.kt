@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.fliq.common.AppUIState
 import com.fliq.common.NetworkRepository
 import com.fliq.common.Result
+import com.fliq.common.notifications.FliqNotificationManager
 import com.fliq.common.repository.ProfileRepository
 import com.fliq.core.settings.AppTheme
 import com.fliq.core.settings.SettingsRepository
@@ -25,6 +26,7 @@ class SettingsViewModel @Inject constructor(
     private val networkRepository: NetworkRepository,
     private val auth: FirebaseAuth,
     private val database: AppDatabase,
+    private val notificationManager: FliqNotificationManager,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AppUIState>(AppUIState.Idle)
     val uiState = _uiState.asStateFlow()
@@ -47,6 +49,11 @@ class SettingsViewModel @Inject constructor(
     fun onNotificationChanged(enabled: Boolean) {
         _notificationsEnabled.value = enabled
         settingsRepository.setNotificationsEnabled(enabled)
+        if (enabled) {
+            notificationManager.scheduleDailyReminder()
+        } else {
+            notificationManager.cancelDailyReminder()
+        }
     }
 
     fun onGameSoundChanged(enabled: Boolean) {
