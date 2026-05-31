@@ -33,10 +33,38 @@ data class FliqGameColors(
     val tileBomb: Color = Color.Unspecified,
     val goldGradient: List<Color> = emptyList(),
     val bombGradient: List<Color> = emptyList(),
-    val backgroundGradient: List<Color> = emptyList()
+    val backgroundGradient: List<Color> = emptyList(),
+    val surfaceHighlight: Color = Color.Unspecified,
+    val mutedText: Color = Color.Unspecified
 )
 
 val LocalFliqGameColors = staticCompositionLocalOf { FliqGameColors() }
+
+object FliqTheme {
+    val colors: FliqGameColors
+        @Composable
+        get() = LocalFliqGameColors.current
+    
+    val typography: FliqTypography
+        @Composable
+        get() = LocalFliqTypography.current
+        
+    val spacing: FliqSpacing
+        @Composable
+        get() = LocalFliqSpacing.current
+        
+    val shapes: FliqShapes
+        @Composable
+        get() = LocalFliqShapes.current
+        
+    val motion: FliqMotion
+        @Composable
+        get() = LocalFliqMotion.current
+        
+    val elevation: FliqElevation
+        @Composable
+        get() = LocalFliqElevation.current
+}
 
 val MaterialTheme.gameColors: FliqGameColors
     @Composable
@@ -58,7 +86,9 @@ private val DarkGameColors = FliqGameColors(
     tileBomb = BombRed,
     goldGradient = listOf(CoinYellow, CoinOrange),
     bombGradient = listOf(BombRed, BombOrange),
-    backgroundGradient = listOf(BgDeepDark, BgMidnight, BgSlate)
+    backgroundGradient = listOf(BgDeepDark, BgMidnight, BgSlate),
+    surfaceHighlight = GlassWhiteBright,
+    mutedText = InfoSlate
 )
 
 private val LightGameColors = FliqGameColors(
@@ -81,19 +111,19 @@ private val LightGameColors = FliqGameColors(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NeonCyan,
-    onPrimary = BgDeepDark,
+    primary = ElectricCyan,
+    onPrimary = Obsidian,
     secondary = Gold,
-    onSecondary = BgDeepDark,
-    tertiary = NeonPink,
-    background = BgDeepDark,
+    onSecondary = Obsidian,
+    tertiary = PulseMagenta,
+    background = Obsidian,
     onBackground = White,
-    surface = BgMidnight,
+    surface = SmokeGlass,
     onSurface = White,
     surfaceVariant = BgSlate,
     onSurfaceVariant = White.copy(alpha = 0.7f),
-    outline = NeonCyan.copy(alpha = 0.5f),
-    error = BombRed,
+    outline = ElectricCyan.copy(alpha = 0.5f),
+    error = CoreRed,
     onError = White
 )
 
@@ -152,7 +182,14 @@ fun FliqTheme(
         }
     }
 
-    CompositionLocalProvider(LocalFliqGameColors provides gameColors) {
+    CompositionLocalProvider(
+        LocalFliqGameColors provides gameColors,
+        LocalFliqTypography provides FliqTypography(),
+        LocalFliqSpacing provides FliqSpacing(),
+        LocalFliqShapes provides FliqShapes(),
+        LocalFliqMotion provides FliqMotion(),
+        LocalFliqElevation provides FliqElevation()
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

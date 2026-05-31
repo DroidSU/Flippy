@@ -17,7 +17,11 @@ data class UserEntity(
     val totalReflexTime: Long,
     val bestPerfectStreak: Int,
     val badges: List<String>,
-    val latencyOffset: Long? = null
+    val latencyOffset: Long? = null,
+    val xp: Int = 0,
+    val coins: Int = 0,
+    val currentWorld: Int = 1,
+    val currentStage: Int = 1
 )
 
 fun UserEntity.toUserData() = UserData(
@@ -32,7 +36,11 @@ fun UserEntity.toUserData() = UserData(
     totalReflexTime = totalReflexTime,
     bestPerfectStreak = bestPerfectStreak,
     badges = badges,
-    latencyOffset = latencyOffset
+    latencyOffset = latencyOffset,
+    xp = xp,
+    coins = coins,
+    currentWorld = currentWorld,
+    currentStage = currentStage
 )
 
 fun UserData.toUserEntity() = UserEntity(
@@ -47,5 +55,9 @@ fun UserData.toUserEntity() = UserEntity(
     totalReflexTime = totalReflexTime,
     bestPerfectStreak = bestPerfectStreak,
     badges = badges,
-    latencyOffset = latencyOffset
+    latencyOffset = latencyOffset,
+    xp = xp,
+    coins = coins,
+    currentWorld = currentWorld,
+    currentStage = currentStage
 )

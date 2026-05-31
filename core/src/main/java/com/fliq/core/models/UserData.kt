@@ -12,7 +12,11 @@ data class UserData(
     val totalReflexTime: Long = 0,
     val bestPerfectStreak: Int = 0,
     val badges: List<String> = emptyList(),
-    val latencyOffset: Long? = null
+    val latencyOffset: Long? = null,
+    val xp: Int = 0,
+    val coins: Int = 0,
+    val currentWorld: Int = 1,
+    val currentStage: Int = 1
 )
 
 fun UserData.toMap(): Map<String, Any?> {

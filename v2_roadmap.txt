@@ -1,0 +1,119 @@
+FLIQ V2: SHADOW ARCADE - MASTER DOCUMENTATION
+===========================================
+
+1. PROJECT VISION: "SHADOW ARCADE"
+----------------------------------
+Fliq v2 is a high-intensity, competitive arcade game designed to blend kinetic
+reflex tapping with cognitive memory tasks. The goal is to move beyond a simple
+utility app into a polished, addictive gaming experience.
+
+CORE PILLARS:
+- Action: High-speed, rhythmic gameplay with instant feedback.
+- Reward: Progressive leveling system (XP) and a virtual economy (Coins).
+- Growth: 100+ level campaign across themed "Worlds."
+- Competition: Global rankings and social "Brag Card" sharing.
+
+
+2. VISUAL THEME & UX VISION
+---------------------------
+THEME: "SHADOW ARCADE" (Premium Dark Mode)
+- Background: Obsidian Midnight (#020617). Deep, layered black.
+- Surfaces: "Smoke Glass." Frosted, semi-translucent panels over animated backgrounds.
+- Lighting: Neon Glows. Electric Cyan (Progress/Safe) vs. Pulse Magenta (Memory).
+- Materials: Physical depth, Z-axis scaling, and dynamic shadows.
+
+UX VISION: "THE KINETIC FLOW"
+- Continuous Transitions: Camera-zoom transitions instead of loading screens.
+- Zero Friction: The "Play" button is always the primary thumb-centric action.
+- Tactile Feedback: Custom haptics (Sharp Pulse for hits, Impact Rumble for fails).
+
+
+3. CHALLENGE CLASSES (GAME MODES)
+---------------------------------
+CLASS A: REFLEX (The Classic Blitz)
+- Mechanic: Pop coins, avoid bombs.
+- v2 Twist: Fever Mode (2x points), Shielded Coins (Multi-tap), and Shrinking Tiles.
+
+CLASS B: MEMORY (The Recall)
+- Mechanic: Watch a sequence, then repeat it from memory.
+- Variations: Flash Recall (simultaneous), Mirrors, and Decoys (fake tiles).
+
+CLASS C: TRACE (The Flow)
+- Mechanic: Swipe through a path of coins without lifting your finger.
+- Variations: Moving Paths (sliding lines) and Winding Mazes.
+
+CLASS D: HYBRID (Boss Stages)
+- Mechanic: Dual-tasking. Memorize a pattern on top while tapping coins on the bottom.
+
+
+4. THE CAMPAIGN: WORLD 1 - THE SHADOW DISTRICT
+----------------------------------------------
+STG | TITLE              | CLASS   | CORE MECHANIC                         | STAR 3 GOAL      | REWARDS
+----|--------------------|---------|---------------------------------------|------------------|---------------
+ 01 | First Pulse        | REFLEX  | 15 Coins. Spawn: 1s. Target: 1.2s.    | Finish in < 15s  | 100 XP, 50 🪙
+ 02 | Neon Lite          | REFLEX  | 20 Coins. Spawn: 0.8s.                | 15x Combo        | 120 XP, 60 🪙
+ 03 | Echo One           | MEMORY  | 3-Tile sequence. Speed: 0.5s.         | 100% Accuracy    | 150 XP, 75 🪙
+ 04 | The Slide          | TRACE   | 5-Coin straight path.                 | Finish in < 3s   | 130 XP, 65 🪙
+ 05 | Mini-Boss: Spark   | REFLEX  | 40 Coins. 5% Bomb chance.             | 25x Combo        | 300 XP, 200 🪙
+ 06 | Static Recall      | MEMORY  | 4-Tile sequence. Speed: 0.45s.        | Finish in < 5s   | 160 XP, 80 🪙
+ 07 | Glitch Run         | REFLEX  | 30 Coins. 15% Bomb chance.            | No Bombs Hit     | 180 XP, 90 🪙
+ 08 | Zig-Zag            | TRACE   | 10-Coin winding path.                 | 100% Precision   | 200 XP, 100 🪙
+ 09 | Dark Mirror        | MEMORY  | 5-Tile sequence. Speed: 0.4s.         | 100% Accuracy    | 220 XP, 110 🪙
+ 10 | Shadow Gate        | HYBRID  | Mem: 4 Tiles / Ref: 20 Coins.         | 30x Combo        | 500 XP, 250 🪙
+ 11 | Rapid Fire         | REFLEX  | 30 Coins. Target: 0.6s.               | 20x Combo        | 240 XP, 120 🪙
+ 12 | Shrink Wrap        | REFLEX  | 40 Coins. 15% Bomb chance.            | 100% Accuracy    | 260 XP, 130 🪙
+ 13 | Neon Maze          | TRACE   | 15-Coin complex path.                 | Finish in < 8s   | 280 XP, 140 🪙
+ 14 | Ghost Recall       | MEMORY  | 6-Tile sequence. 1 Decoy tile.        | 100% Accuracy    | 300 XP, 150 🪙
+ 15 | Fever Dream        | REFLEX  | 60 Coins. Fever starts at 15x.        | 40x Combo        | 400 XP, 200 🪙
+ 16 | Double Tap         | REFLEX  | Shielded Coins: 40% chance.           | 100% Accuracy    | 320 XP, 160 🪙
+ 17 | Phantom Grid       | MEMORY  | 5-Tile simultanous flash.             | Finish in < 3s   | 340 XP, 170 🪙
+ 18 | Flow Motion        | TRACE   | Moving Path: 12 Coins.                | 100% Precision   | 360 XP, 180 🪙
+ 19 | Neural Static      | MEMORY  | 7-Tile sequence. Speed: 0.3s.         | 100% Accuracy    | 380 XP, 190 🪙
+ 20 | World Boss         | HYBRID  | Mem: 5 Tiles / Ref: 40 Coins.         | 50x Combo        | 1000 XP, 500 🪙
+
+
+5. THE DOPAMINE ECONOMY (XP & COINS)
+------------------------------------
+PROGRESSION:
+- Star 1 (Clear): Completion of primary objective.
+- Star 2 (Elite): Secondary precision/combo threshold met.
+- Star 3 (Master): Top-tier speed or high-streak goal met.
+- Unlocking: Stages are unlocked sequentially. Stage 20 clear unlocks World 2.
+
+CURRENCY (Neuro-Credits):
+- Shop: Spend on Coin Skins (Molten, Cyber, Chrome).
+- Loadouts: Spend on one-time Boosts before a match starts.
+
+BOOSTS:
+- Shield (100 🪙): Absorbs the first bomb hit or missed coin.
+- Slow-Mo (150 🪙): Coins stay 20% longer on screen.
+- Double XP (200 🪙): Multiplies the final match XP total by 2x.
+
+
+6. REWARD SYSTEM & SOCIAL LOOP
+------------------------------
+PLAYER CARD (The Brag Card):
+- Sleek, shareable visual showing Avatar, Level, Rank, and Star breakdown.
+- Skill Radar: Hexagon chart showing Speed, Memory, Focus, Swiping, and Precision.
+
+SOCIAL SHARING:
+- One-tap share to Instagram, WhatsApp, and Twitter.
+- Deep-link integration: Friends can tap shared cards to jump directly to that stage.
+
+
+7. TECHNICAL ARCHITECTURE (v2 ENGINE)
+-------------------------------------
+STATE MACHINE:
+1. BRIEFING: Load goals and loadouts.
+2. COUNTDOWN: Prepare player.
+3. PREVIEW: (Memory Only) Show the target pattern.
+4. ACTION: Core gameplay loop (Tapping/Swiping).
+5. FEVER: Bonus high-intensity streak mode.
+6. FALLOUT: Post-game Matrix effect transition.
+7. VAULT: Animated results and rewards.
+
+ENGINE SPECS:
+- Unified Controller: One engine handles all classes via a injected Stage Blueprint.
+- Offline-First: Local Room persistence with background Firebase sync.
+- Reactive UI: Full Jetpack Compose state-driven rendering.
+- Modern Navigation: Continuous flow via navigation-compose.

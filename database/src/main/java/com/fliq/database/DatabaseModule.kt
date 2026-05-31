@@ -7,6 +7,8 @@ import com.fliq.database.repository.BadgeRepository
 import com.fliq.database.repository.BadgeRepositoryImpl
 import com.fliq.database.repository.MatchRepository
 import com.fliq.database.repository.MatchRepositoryImpl
+import com.fliq.database.repository.StageRepository
+import com.fliq.database.repository.StageRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -26,6 +28,10 @@ abstract class DatabaseModule {
     @Binds
     @Singleton
     abstract fun bindBadgeRepository(impl: BadgeRepositoryImpl): BadgeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindStageRepository(impl: StageRepositoryImpl): StageRepository
 
     companion object {
         @Provides
@@ -48,7 +54,8 @@ abstract class DatabaseModule {
                 AppDatabase.MIGRATION_9_10,
                 AppDatabase.MIGRATION_10_11,
                 AppDatabase.MIGRATION_11_12,
-                AppDatabase.MIGRATION_12_13
+                AppDatabase.MIGRATION_12_13,
+                AppDatabase.MIGRATION_13_14
             )
                 .fallbackToDestructiveMigration(true)
             .build()
@@ -67,6 +74,11 @@ abstract class DatabaseModule {
         @Provides
         fun provideBadgeDao(appDatabase: AppDatabase): BadgeDAO {
             return appDatabase.badgeDao()
+        }
+
+        @Provides
+        fun provideStageDao(appDatabase: AppDatabase): StageDAO {
+            return appDatabase.stageDao()
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.fliq.frenzy.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,22 +7,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.fliq.common.UtilityMethods
-import com.fliq.core.util.ChamferedCornerShape
+import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.components.FliqCard
+import com.fliq.core.theme.components.FliqStatChip
 
 @Composable
 fun FrenzyStats(
@@ -34,7 +30,7 @@ fun FrenzyStats(
 ) {
     Box(
         modifier = Modifier
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = FliqTheme.spacing.screenPadding)
             .onGloballyPositioned { coords ->
                 val center = Offset(
                     coords.positionInRoot().x + coords.size.width / 2,
@@ -43,40 +39,34 @@ fun FrenzyStats(
                 onPositioned(center, Size(coords.size.width.toFloat(), coords.size.height.toFloat()))
             }
     ) {
-        Surface(
+        FliqCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = ChamferedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-            shadowElevation = 8.dp,
-            border = BorderStroke(
-                1.dp,
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                        Color.Transparent,
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-                    )
-                )
-            )
+            backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+            elevation = FliqTheme.elevation.medium,
+            contentPadding = FliqTheme.spacing.cardPadding
         ) {
             Row(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FrenzyStatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
-                FrenzyStatBlock(label = "TIME", value = UtilityMethods.formatTime(gameTime))
+                FliqStatChip(
+                    label = "SCORE",
+                    value = score.toString().padStart(3, '0')
+                )
+                
+                FliqStatChip(
+                    label = "TIME",
+                    value = UtilityMethods.formatTime(gameTime)
+                )
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "LIVES",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
+                        style = FliqTheme.typography.label,
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
-                    Row(modifier = Modifier.padding(top = 4.dp)) {
+                    Row(modifier = Modifier.padding(top = FliqTheme.spacing.extraSmall)) {
                         repeat(lives.coerceAtLeast(0)) { index ->
                             FrenzyBeatingHeartIcon(
                                 isAlive = true,

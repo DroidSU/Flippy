@@ -1,14 +1,11 @@
 package com.fliq.views
 
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,7 +38,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,10 +53,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +67,9 @@ import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
 import com.fliq.core.theme.NeonCyan
 import com.fliq.core.theme.NeonPurple
+import com.fliq.core.theme.components.FliqButton
+import com.fliq.core.theme.components.FliqCard
+import com.fliq.core.theme.components.FliqSurface
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.R
 import com.fliq.game_engine.models.Challenge
@@ -96,89 +95,98 @@ fun DashboardScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Transparent
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(gameColors.backgroundGradient))
+        FliqSurface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Transparent,
+            shape = RectangleShape
         ) {
-            MeshBackground(streak = 0)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                DashboardHeader(
-                    userName = userName,
-                    onProfileClick = onProfileClick
-                )
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        ChallengeTile(
-                            challenge = Challenge.ZEN_MODE,
-                            isFeatured = true,
-                            onClick = { onChallengeSelected(Challenge.ZEN_MODE) }
-                        )
-                    }
-
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            ChallengeTile(
-                                challenge = Challenge.SPEED_RUN,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onChallengeSelected(Challenge.SPEED_RUN) }
-                            )
-                            ChallengeTile(
-                                challenge = Challenge.MIRAGE,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onChallengeSelected(Challenge.MIRAGE) }
-                            )
-                        }
-                    }
-
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            ChallengeTile(
-                                challenge = Challenge.MINEFIELD,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onChallengeSelected(Challenge.MINEFIELD) }
-                            )
-                            ChallengeTile(
-                                challenge = Challenge.FRENZY,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onChallengeSelected(Challenge.FRENZY) }
-                            )
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
-                }
-            }
-
-            // Navigation Bar
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(gameColors.backgroundGradient))
             ) {
-                DashboardNavBar(
-                    onLeaderboardClick = onLeaderboardClick,
-                    onAchievementsClick = onAchievementsClick,
-                    onSettingsClick = onSettingsClick
-                )
+                MeshBackground(streak = 0)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    DashboardHeader(
+                        userName = userName,
+                        onProfileClick = onProfileClick
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(
+                            horizontal = FliqTheme.spacing.screenPadding,
+                            vertical = FliqTheme.spacing.screenPadding
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(FliqTheme.spacing.medium)
+                    ) {
+                        item {
+                            ChallengeTile(
+                                challenge = Challenge.ZEN_MODE,
+                                isFeatured = true,
+                                onClick = { onChallengeSelected(Challenge.ZEN_MODE) }
+                            )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(FliqTheme.spacing.medium)
+                            ) {
+                                ChallengeTile(
+                                    challenge = Challenge.SPEED_RUN,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onChallengeSelected(Challenge.SPEED_RUN) }
+                                )
+                                ChallengeTile(
+                                    challenge = Challenge.MIRAGE,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onChallengeSelected(Challenge.MIRAGE) }
+                                )
+                            }
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(FliqTheme.spacing.medium)
+                            ) {
+                                ChallengeTile(
+                                    challenge = Challenge.MINEFIELD,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onChallengeSelected(Challenge.MINEFIELD) }
+                                )
+                                ChallengeTile(
+                                    challenge = Challenge.FRENZY,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { onChallengeSelected(Challenge.FRENZY) }
+                                )
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(FliqTheme.spacing.huge * 2))
+                        }
+                    }
+                }
+
+                // Navigation Bar
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = FliqTheme.spacing.extraLarge)
+                ) {
+                    DashboardNavBar(
+                        onLeaderboardClick = onLeaderboardClick,
+                        onAchievementsClick = onAchievementsClick,
+                        onSettingsClick = onSettingsClick
+                    )
+                }
             }
         }
     }
@@ -202,7 +210,11 @@ fun DashboardHeader(
 
     Row(
         modifier = Modifier
-            .padding(top = 32.dp, start = 24.dp, end = 16.dp)
+            .padding(
+                top = FliqTheme.spacing.extraLarge,
+                start = FliqTheme.spacing.screenPadding,
+                end = FliqTheme.spacing.medium
+            )
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -213,29 +225,21 @@ fun DashboardHeader(
         ) {
             Box(
                 modifier = Modifier
-                    .width(4.dp)
+                    .width(FliqTheme.spacing.extraSmall)
                     .height(36.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(FliqTheme.spacing.elementSpacing))
             Column {
                 Text(
                     text = "READY TO PLAY?",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        fontSize = 11.sp
-                    ),
+                    style = FliqTheme.typography.label,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "Hey $displayUser!",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-0.5).sp,
-                        fontSize = 28.sp
-                    ),
+                    style = FliqTheme.typography.heading,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -243,17 +247,22 @@ fun DashboardHeader(
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(FliqTheme.spacing.elementSpacing))
 
         // Profile Icon
-        Surface(
-            onClick = onProfileClick,
+        FliqSurface(
+            modifier = Modifier.size(52.dp),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)),
-            modifier = Modifier.size(52.dp)
+            elevation = FliqTheme.elevation.low,
+            showBorder = true
         ) {
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(onClick = onProfileClick),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
@@ -285,7 +294,7 @@ fun ChallengeTile(
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        animationSpec = FliqTheme.motion.pressAnimation,
         label = "scale"
     )
 
@@ -297,82 +306,105 @@ fun ChallengeTile(
         Challenge.FRENZY -> Gold
     }
 
-    Box(
+    FliqCard(
         modifier = modifier
             .fillMaxWidth()
-            .height(if (isFeatured) 160.dp else 130.dp)
-            .scale(scale)
-            .clip(RoundedCornerShape(24.dp))
-            .background(BgSlate.copy(alpha = 0.6f))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
+            .height(if (isFeatured) 180.dp else 130.dp)
+            .scale(scale),
+        backgroundColor = BgSlate.copy(alpha = 0.6f),
+        contentPadding = 0.dp
     ) {
-        // Subtle animated border for featured
-        if (isFeatured || isPressed) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawPath(
-                    path = Path().apply {
-                        addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, size.width, size.height, 24.dp.toPx(), 24.dp.toPx()))
-                    },
-                    color = accentColor.copy(alpha = 0.3f),
-                    style = Stroke(width = 2.dp.toPx())
-                )
-                
-                val angleRad = Math.toRadians(borderRotation.toDouble())
-                val centerX = size.width / 2
-                val centerY = size.height / 2
-                val spotX = centerX + (size.width / 2) * Math.cos(angleRad).toFloat()
-                val spotY = centerY + (size.height / 2) * Math.sin(angleRad).toFloat()
-                
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        0.0f to accentColor.copy(alpha = 0.4f),
-                        1.0f to Color.Transparent,
-                        center = Offset(spotX, spotY),
-                        radius = 120f
-                    ),
-                    radius = 120f,
-                    center = Offset(spotX, spotY)
-                )
-            }
-        }
-
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                )
         ) {
-            // Use Game Icons for a more authentic game feel
-            Box(modifier = Modifier.size(if (isFeatured) 40.dp else 32.dp)) {
-                when (challenge) {
-                    Challenge.ZEN_MODE -> Icon(Icons.Default.SelfImprovement, null, tint = accentColor, modifier = Modifier.fillMaxSize())
-                    Challenge.SPEED_RUN -> Icon(Icons.Default.Bolt, null, tint = accentColor, modifier = Modifier.fillMaxSize())
-                    Challenge.MINEFIELD -> Image(painterResource(id = R.drawable.ic_bomb), null, modifier = Modifier.fillMaxSize())
-                    Challenge.FRENZY -> Image(painterResource(id = R.drawable.ic_coin), null, modifier = Modifier.fillMaxSize())
-                    Challenge.MIRAGE -> Icon(Icons.Default.VisibilityOff, null, tint = accentColor, modifier = Modifier.fillMaxSize())
+            // Subtle animated border for featured
+            if (isFeatured || isPressed) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawPath(
+                        path = Path().apply {
+                            addRoundRect(
+                                androidx.compose.ui.geometry.RoundRect(
+                                    0f, 0f, size.width, size.height,
+                                    24.dp.toPx(), 24.dp.toPx()
+                                )
+                            )
+                        },
+                        color = accentColor.copy(alpha = 0.3f),
+                        style = Stroke(width = 2.dp.toPx())
+                    )
+                    
+                    val angleRad = Math.toRadians(borderRotation.toDouble())
+                    val centerX = size.width / 2
+                    val centerY = size.height / 2
+                    val spotX = centerX + (size.width / 2) * Math.cos(angleRad).toFloat()
+                    val spotY = centerY + (size.height / 2) * Math.sin(angleRad).toFloat()
+                    
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            0.0f to accentColor.copy(alpha = 0.4f),
+                            1.0f to Color.Transparent,
+                            center = Offset(spotX, spotY),
+                            radius = 120f
+                        ),
+                        radius = 120f,
+                        center = Offset(spotX, spotY)
+                    )
                 }
             }
 
-            Column {
-                Text(
-                    text = challenge.title,
-                    style = (if (isFeatured) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium).copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.5.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (isFeatured) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(FliqTheme.spacing.cardPadding),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Use Game Icons for a more authentic game feel
+                    Box(modifier = Modifier.size(if (isFeatured) 40.dp else 32.dp)) {
+                        when (challenge) {
+                            Challenge.ZEN_MODE -> Icon(Icons.Default.SelfImprovement, null, tint = accentColor, modifier = Modifier.fillMaxSize())
+                            Challenge.SPEED_RUN -> Icon(Icons.Default.Bolt, null, tint = accentColor, modifier = Modifier.fillMaxSize())
+                            Challenge.MINEFIELD -> Image(painterResource(id = R.drawable.ic_bomb), null, modifier = Modifier.fillMaxSize())
+                            Challenge.FRENZY -> Image(painterResource(id = R.drawable.ic_coin), null, modifier = Modifier.fillMaxSize())
+                            Challenge.MIRAGE -> Icon(Icons.Default.VisibilityOff, null, tint = accentColor, modifier = Modifier.fillMaxSize())
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(FliqTheme.spacing.medium))
+
                     Text(
-                        text = challenge.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        text = challenge.title,
+                        style = if (isFeatured) FliqTheme.typography.heading else FliqTheme.typography.subHeading,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (isFeatured) {
+                        Text(
+                            text = challenge.description,
+                            style = FliqTheme.typography.body.copy(fontSize = 12.sp),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                if (isFeatured) {
+                    FliqButton(
+                        text = "PLAY",
+                        onClick = onClick,
+                        modifier = Modifier.height(44.dp),
+                        containerColor = accentColor,
+                        contentColor = Color.Black
                     )
                 }
             }
@@ -386,18 +418,19 @@ fun DashboardNavBar(
     onAchievementsClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    Surface(
+    FliqSurface(
         modifier = Modifier
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = FliqTheme.spacing.screenPadding)
             .height(72.dp),
         shape = RoundedCornerShape(36.dp),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+        elevation = FliqTheme.elevation.medium,
+        showBorder = true
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = FliqTheme.spacing.medium),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -418,7 +451,11 @@ fun NavBarItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.9f else 1f, label = "scale")
+    val scale by animateFloatAsState(
+        if (isPressed) 0.9f else 1f,
+        animationSpec = FliqTheme.motion.pressAnimation,
+        label = "scale"
+    )
 
     Column(
         modifier = Modifier
@@ -428,7 +465,7 @@ fun NavBarItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = FliqTheme.spacing.elementSpacing, vertical = FliqTheme.spacing.small)
             .scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -439,14 +476,10 @@ fun NavBarItem(
             modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isPressed) 1f else 0.7f)
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(FliqTheme.spacing.extraSmall))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 9.sp,
-                letterSpacing = 1.sp
-            ),
+            style = FliqTheme.typography.label.copy(fontSize = 9.sp),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isPressed) 1f else 0.5f)
         )
     }

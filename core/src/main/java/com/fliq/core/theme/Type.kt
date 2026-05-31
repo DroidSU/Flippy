@@ -1,12 +1,49 @@
 package com.fliq.core.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Since Poppins is in :app, we'll use system fonts with correct weights here
-// and override specifically in components if needed, or assume developers move fonts to a common module.
+@Immutable
+data class FliqTypography(
+    val scoreDisplay: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Black,
+        fontSize = 48.sp,
+        letterSpacing = (-1).sp
+    ),
+    val heading: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Black,
+        fontSize = 28.sp,
+        letterSpacing = (-0.5).sp
+    ),
+    val subHeading: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        letterSpacing = 0.sp
+    ),
+    val body: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 24.sp
+    ),
+    val label: TextStyle = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        letterSpacing = 1.sp
+    )
+)
+
+val LocalFliqTypography = staticCompositionLocalOf { FliqTypography() }
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontWeight = FontWeight.Black,

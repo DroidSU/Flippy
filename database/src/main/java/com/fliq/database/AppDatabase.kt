@@ -7,15 +7,45 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.fliq.core.ConstantsManager
 
-@Database(entities = [MatchHistory::class, UserEntity::class, BadgeEntity::class], version = 13)
+@Database(
+    entities = [
+        MatchHistory::class, 
+        UserEntity::class, 
+        BadgeEntity::class,
+        StageProgressEntity::class
+    ], 
+    version = 14
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun matchDao(): MatchDAO
     abstract fun userDao(): UserDAO
     abstract fun badgeDao(): BadgeDAO
+    abstract fun stageDao(): StageDAO
 
     companion object {
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `xp` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `coins` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `currentWorld` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE `user_data` ADD COLUMN `currentStage` INTEGER NOT NULL DEFAULT 1")
+                
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `stage_progress` (
+                        `stageId` TEXT NOT NULL, 
+                        `userId` TEXT NOT NULL, 
+                        `starsEarned` INTEGER NOT NULL, 
+                        `bestScore` INTEGER NOT NULL, 
+                        `bestTime` INTEGER NOT NULL, 
+                        `isUnlocked` INTEGER NOT NULL DEFAULT 0, 
+                        `isBackedUp` INTEGER NOT NULL DEFAULT 0, 
+                        PRIMARY KEY(`stageId`)
+                    )
+                """.trimIndent())
+            }
+        }
         val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `user_data` ADD COLUMN `latencyOffset` INTEGER")

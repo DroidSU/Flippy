@@ -118,6 +118,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.navigation.compose)
     
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

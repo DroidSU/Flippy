@@ -49,6 +49,9 @@ val SuccessGreen = Color(0xFF22C55E)
 val WarningYellow = Color(0xFFEAB308)
 val InfoSlate = Color(0xFF94A3B8)
 
-// --- Legacy support or additional colors ---
-val CyberBlack = Color(0xFF0B1120)
-val CyberSlate = Color(0xFF1E293B)
+// --- Shadow Arcade v2 Colors ---
+val Obsidian = Color(0xFF020617)
+val SmokeGlass = Color(0xFF1E293B).copy(alpha = 0.7f)
+val PulseMagenta = Color(0xFFD946EF)
+val CoreRed = Color(0xFFF43F5E)
+val ElectricCyan = Color(0xFF22D3EE)

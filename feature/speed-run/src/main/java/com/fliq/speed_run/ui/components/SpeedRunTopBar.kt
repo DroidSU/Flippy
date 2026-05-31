@@ -18,9 +18,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.fliq.core.theme.FliqTheme
 
 @Composable
 fun SpeedRunTopBar(
@@ -32,7 +30,10 @@ fun SpeedRunTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .padding(
+                horizontal = FliqTheme.spacing.screenPadding,
+                vertical = FliqTheme.spacing.medium
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -50,9 +51,7 @@ fun SpeedRunTopBar(
         ) {
             Text(
                 text = "SPEED RUN",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.sp,
+                style = FliqTheme.typography.subHeading.copy(
                     shadow = androidx.compose.ui.graphics.Shadow(
                         MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f),
                         offset = Offset(0f, 4f),
@@ -63,10 +62,7 @@ fun SpeedRunTopBar(
             )
             Text(
                 text = if (isPaused) "PAUSED" else "GO!",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp
-                ),
+                style = FliqTheme.typography.label,
                 color = if (isPaused) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
             )
         }
