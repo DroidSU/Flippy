@@ -35,7 +35,11 @@ data class FliqGameColors(
     val bombGradient: List<Color> = emptyList(),
     val backgroundGradient: List<Color> = emptyList(),
     val surfaceHighlight: Color = Color.Unspecified,
-    val mutedText: Color = Color.Unspecified
+    val mutedText: Color = Color.Unspecified,
+    val technicalGrid: Color = Color.Unspecified,
+    val ambientGlowPrimary: Color = Color.Unspecified,
+    val ambientGlowTertiary: Color = Color.Unspecified,
+    val energyPath: Color = Color.Unspecified
 )
 
 val LocalFliqGameColors = staticCompositionLocalOf { FliqGameColors() }
@@ -88,7 +92,11 @@ private val DarkGameColors = FliqGameColors(
     bombGradient = listOf(BombRed, BombOrange),
     backgroundGradient = listOf(BgDeepDark, BgMidnight, BgSlate),
     surfaceHighlight = GlassWhiteBright,
-    mutedText = InfoSlate
+    mutedText = InfoSlate,
+    technicalGrid = Color.White.copy(alpha = 0.15f),
+    ambientGlowPrimary = ElectricCyan.copy(alpha = 0.4f),
+    ambientGlowTertiary = PulseMagenta.copy(alpha = 0.3f),
+    energyPath = ElectricCyan.copy(alpha = 0.3f)
 )
 
 private val LightGameColors = FliqGameColors(
@@ -107,7 +115,11 @@ private val LightGameColors = FliqGameColors(
     tileBomb = BombRed,
     goldGradient = listOf(CoinYellow, CoinOrange),
     bombGradient = listOf(BombRed, BombOrange),
-    backgroundGradient = listOf(LightBgAccent, LightBgMain, LightBgSurface)
+    backgroundGradient = listOf(LightBgAccent, LightBgMain, LightBgSurface),
+    technicalGrid = Color.Black.copy(alpha = 0.05f),
+    ambientGlowPrimary = ElectricBlue.copy(alpha = 0.2f),
+    ambientGlowTertiary = NeonPurple.copy(alpha = 0.15f),
+    energyPath = ElectricBlue.copy(alpha = 0.2f)
 )
 
 private val DarkColorScheme = darkColorScheme(

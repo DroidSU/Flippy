@@ -14,6 +14,8 @@ sealed class Screen(val route: String) {
     object Game : Screen("game/{stageId}") {
         fun createRoute(stageId: String) = "game/$stageId"
     }
+    object Profile : Screen("profile")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -31,10 +33,17 @@ fun MainFlowV2() {
                 stageProgress = stageProgress,
                 xp = userData?.xp ?: 0,
                 coins = userData?.coins ?: 0,
+                avatarId = userData?.avatarId ?: 1,
+                username = userData?.username ?: "Commander",
                 onStageClick = { stage ->
                     navController.navigate(Screen.Game.createRoute(stage.id))
                 },
-                onBackClick = { /* Handle exit */ }
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
+                }
             )
         }
         
