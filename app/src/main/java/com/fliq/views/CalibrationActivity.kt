@@ -1,13 +1,18 @@
 package com.fliq.views
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.fliq.auth.ui.ReflexCalibrationScreen
 import com.fliq.auth.viewmodel.CalibrationViewModel
 import com.fliq.common.AppUIState
@@ -30,7 +35,15 @@ class CalibrationActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Force Landscape
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        
         enableEdgeToEdge()
+        hideSystemUI()
+
+        window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+
         setContent {
             FliqTheme(settingsRepository = settingsRepository) {
                 val uiState by viewModel.uiState.collectAsState()
@@ -55,6 +68,20 @@ class CalibrationActivity : ComponentActivity() {
                     showCancelButton = false
                 )
             }
+        }
+    }
+
+    private fun hideSystemUI() {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemUI()
         }
     }
 }

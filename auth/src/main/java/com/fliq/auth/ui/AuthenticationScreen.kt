@@ -64,19 +64,37 @@ fun AuthenticationScreen(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape", showSystemUi = false)
 @Composable
 fun AuthenticationScreenPreview() {
     FliqTheme {
         AuthenticationScreen(
             uiState = AppUIState.Idle,
-            userData = null,
+            userData = UserData(username = "PLAYER_ONE", avatarId = 1),
             onGoogleSignIn = {},
             onAuthSuccess = {},
             onErrorShown = { _ -> },
             onAvatarChanged = { _ -> },
             onUsernameChanged = { _ -> },
             showProfileDialog = false,
+            onSaveUser = { _, _ -> }
+        )
+    }
+}
+
+@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape", showSystemUi = false)
+@Composable
+fun ProfileSetupPreview() {
+    FliqTheme {
+        AuthenticationScreen(
+            uiState = AppUIState.Idle,
+            userData = UserData(username = "PLAYER_ONE", avatarId = 1),
+            onGoogleSignIn = {},
+            onAuthSuccess = {},
+            onErrorShown = { _ -> },
+            onAvatarChanged = { _ -> },
+            onUsernameChanged = { _ -> },
+            showProfileDialog = true,
             onSaveUser = { _, _ -> }
         )
     }

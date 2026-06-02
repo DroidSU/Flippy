@@ -1,9 +1,15 @@
 package com.fliq.auth.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,7 +30,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -32,13 +37,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,14 +54,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,11 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.UtilityMethods
 import com.fliq.common.UtilityMethods.Companion.getAvatarResource
-import com.fliq.core.theme.BgDeepDark
-import com.fliq.core.theme.BgSlate
 import com.fliq.core.theme.FliqTheme
-import com.fliq.core.theme.NeonCyan
-import com.fliq.core.theme.gameColors
+import com.fliq.core.theme.components.FliqSurface
+import kotlin.random.Random
 
 @Composable
 fun ProfileSetupScreen(
@@ -81,169 +81,164 @@ fun ProfileSetupScreen(
     onAvatarChanged: (Int) -> Unit,
     onSave: () -> Unit
 ) {
-    val gameColors = MaterialTheme.gameColors
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (username.isEmpty()) {
+            focusRequester.requestFocus()
+        }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(gameColors.backgroundGradient))
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Column(
+        AuthBackground()
+
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 48.dp, vertical = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(48.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
-
-            // Header
+            // Left Side: Avatar Selection
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier
+                    .weight(1.2f)
+                    .fillMaxHeight()
             ) {
-                Text(
-                    text = "CREATE PROFILE",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 3.sp,
-                        fontFamily = FontFamily.Monospace
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
+                SetupHeader(
+                    title = "SELECT AVATAR",
+                    subtitle = "Pick your representation"
                 )
                 
-                Text(
-                    text = "SET YOUR IDENTITY IN THE ARCADE",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp
-                    ),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                )
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Box(modifier = Modifier.weight(1f)) {
+                    AvatarGrid(
+                        selectedId = avatarId,
+                        onAvatarSelected = onAvatarChanged,
+                        isLoading = isLoading
+                    )
+                }
             }
 
-            // Username Section
-            Column(modifier = Modifier.fillMaxWidth()) {
-                SetupSectionLabel(label = "USERNAME")
-                KineticUsernameField(
+            // Right Side: Username and Confirm
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                SetupHeader(
+                    title = "PROFILE DETAILS",
+                    subtitle = "Set display name"
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                TechnicalUsernameField(
                     username = username,
                     onUsernameChanged = onUsernameChanged,
                     isLoading = isLoading,
                     focusRequester = focusRequester
                 )
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // Avatar Section
-            Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                SetupSectionLabel(label = "CHOOSE AVATAR")
-                Spacer(modifier = Modifier.height(10.dp))
-                AvatarGrid(
-                    selectedId = avatarId,
-                    onAvatarSelected = onAvatarChanged,
-                    isLoading = isLoading
+                ConfirmSetupButton(
+                    text = "COMPLETE SETUP",
+                    onClick = onSave,
+                    isLoading = isLoading,
+                    enabled = username.isNotBlank()
                 )
             }
-
-
-            // Confirm Button
-            ConfirmKineticButton(
-                onClick = onSave,
-                isLoading = isLoading,
-                enabled = username.isNotBlank()
-            )
-            
-            Spacer(modifier = Modifier.height(54.dp))
         }
     }
 }
 
 @Composable
-fun SetupSectionLabel(label: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(modifier = Modifier.size(8.dp, 2.dp).background(MaterialTheme.colorScheme.primary))
-        Spacer(modifier = Modifier.width(8.dp))
+private fun SetupHeader(title: String, subtitle: String) {
+    Column {
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
+            text = title,
+            style = FliqTheme.typography.label.copy(
+                fontSize = 12.sp,
+                letterSpacing = 4.sp,
+                fontWeight = FontWeight.ExtraBold
             ),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            color = MaterialTheme.colorScheme.primary
         )
+        Text(
+            text = subtitle.uppercase(),
+            style = FliqTheme.typography.heading.copy(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Box(modifier = Modifier.size(50.dp, 2.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)))
     }
 }
 
 @Composable
-fun KineticUsernameField(
+fun TechnicalUsernameField(
     username: String,
     onUsernameChanged: (String) -> Unit,
     isLoading: Boolean,
     focusRequester: FocusRequester
 ) {
-    Box(modifier = Modifier.fillMaxWidth().height(64.dp)) {
-        // Shadow
-        Surface(
-            modifier = Modifier.fillMaxSize().offset(y = 4.dp).alpha(0.3f),
-            shape = RoundedCornerShape(12.dp),
-            color = Color.Black
-        ) {}
-
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(12.dp),
-            color = BgSlate.copy(alpha = 0.7f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+    FliqSurface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(68.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = Color.White.copy(alpha = 0.05f),
+        showBorder = true,
+        elevation = 12.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicTextField(
-                    value = username,
-                    onValueChange = { if (it.length <= 15) onUsernameChanged(it) },
-                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 1.sp
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    singleLine = true,
-                    enabled = !isLoading,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    decorationBox = { innerTextField ->
-                        if (username.isEmpty()) {
-                            Text(
-                                text = "ENTER NAME...",
-                                style = TextStyle(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Black,
-                                    fontFamily = FontFamily.Monospace
-                                )
+            BasicTextField(
+                value = username,
+                onValueChange = { if (it.length <= 12) onUsernameChanged(it) },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                textStyle = FliqTheme.typography.heading.copy(
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                singleLine = true,
+                enabled = !isLoading,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                decorationBox = { innerTextField ->
+                    if (username.isEmpty()) {
+                        Text(
+                            text = "PLAYER NAME",
+                            style = FliqTheme.typography.heading.copy(
+                                color = Color.White.copy(alpha = 0.2f),
+                                fontSize = 18.sp
                             )
-                        }
-                        innerTextField()
+                        )
                     }
-                )
-
-                IconButton(
-                    onClick = { onUsernameChanged(UtilityMethods.generateUniqueUsername()) },
-                    enabled = !isLoading
-                ) {
-                    Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
+                    innerTextField()
                 }
+            )
+
+            IconButton(
+                onClick = { onUsernameChanged(UtilityMethods.generateUniqueUsername()) },
+                enabled = !isLoading
+            ) {
+                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -257,9 +252,9 @@ fun AvatarGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(bottom = 8.dp)
     ) {
         items(12) { index ->
@@ -267,25 +262,22 @@ fun AvatarGrid(
             val isSelected = selectedId == id
             val avatarRes = getAvatarResource(id)
 
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected) 1.1f else 1f, 
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                label = "scale"
+            )
+
             Box(
                 modifier = Modifier
                     .aspectRatio(1f)
-                    .graphicsLayer { 
-                        if (isSelected) {
-                            scaleX = 1.1f
-                            scaleY = 1.1f
-                        }
-                    }
-                    .clip(CircleShape)
-                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    .scale(scale)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.04f))
                     .border(
-                        width = if (isSelected) 3.dp else 1.dp,
-                        brush = if (isSelected) {
-                            Brush.sweepGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary))
-                        } else {
-                            Brush.linearGradient(listOf(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), Color.Transparent))
-                        },
-                        shape = CircleShape
+                        width = if (isSelected) 2.5.dp else 1.dp,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(16.dp)
                     )
                     .clickable(enabled = !isLoading) { onAvatarSelected(id) },
                 contentAlignment = Alignment.Center
@@ -294,15 +286,15 @@ fun AvatarGrid(
                     Image(
                         painter = painterResource(id = avatarRes),
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize().padding(if (isSelected) 4.dp else 0.dp).clip(CircleShape),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(if (isSelected) 6.dp else 0.dp)
+                            .clip(RoundedCornerShape(14.dp)),
                         contentScale = ContentScale.Crop
                     )
-                } else {
-                    Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                 }
                 
                 if (isSelected) {
-                    // Selection Glow
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -319,24 +311,27 @@ fun AvatarGrid(
 }
 
 @Composable
-fun ConfirmKineticButton(
+fun ConfirmSetupButton(
+    text: String,
     onClick: () -> Unit,
     isLoading: Boolean,
     enabled: Boolean
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val accentColor = NeonCyan
 
     val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, spring(Spring.DampingRatioMediumBouncy), label = "s")
-    val zOffset by animateFloatAsState(if (isPressed) 0f else 6.dp.value, label = "z")
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(60.dp)
             .scale(scale)
             .alpha(if (enabled) 1f else 0.5f)
+            .background(
+                if (enabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f),
+                RoundedCornerShape(16.dp)
+            )
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -345,37 +340,103 @@ fun ConfirmKineticButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize().offset(y = 6.dp).alpha(0.4f),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.scrim
-        ) {}
-
-        Surface(
-            modifier = Modifier.fillMaxSize().graphicsLayer { translationY = -zOffset },
-            shape = RoundedCornerShape(16.dp),
-            color = if (enabled) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-            border = if (enabled) null else BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = BgDeepDark)
-                } else {
-                    Text(
-                        text = "GET STARTED",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp
-                        ),
-                        color = if (enabled) BgDeepDark else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                    )
-                }
-            }
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(26.dp), color = Color.Black, strokeWidth = 3.dp)
+        } else {
+            Text(
+                text = text.uppercase(),
+                style = FliqTheme.typography.label.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp,
+                    fontSize = 14.sp
+                ),
+                color = if (enabled) Color.Black else Color.White.copy(alpha = 0.3f)
+            )
         }
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+private fun AuthBackground() {
+    val config = LocalConfiguration.current
+    val infiniteTransition = rememberInfiniteTransition(label = "auth_bg")
+    val animAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(tween(8000), RepeatMode.Reverse),
+        label = "alpha"
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        0.0f to Color(0xFF1E293B).copy(alpha = 0.4f * animAlpha),
+                        0.6f to Color(0xFF0F172A),
+                        1.0f to Color(0xFF020617),
+                        center = Offset.Zero,
+                        radius = 2500f
+                    )
+                )
+        )
+    }
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        repeat(80) {
+            val randomX = Random.nextFloat() * size.width
+            val randomY = Random.nextFloat() * size.height
+            val randomAlpha = Random.nextFloat() * 0.3f + 0.1f
+            drawCircle(
+                color = Color.White.copy(alpha = randomAlpha),
+                radius = Random.nextFloat() * 1.5f,
+                center = Offset(randomX, randomY)
+            )
+        }
+    }
+    
+    repeat(30) {
+        FloatingSpaceParticle(config)
+    }
+}
+
+@Composable
+private fun FloatingSpaceParticle(config: android.content.res.Configuration) {
+    val infiniteTransition = rememberInfiniteTransition(label = "particle")
+    
+    val x = remember { Random.nextFloat() }
+    val y = remember { Random.nextFloat() }
+    val size = remember { Random.nextFloat() * 3f + 1f }.dp
+    val duration = remember { Random.nextInt(15000, 30000) }
+
+    val animY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -1200f,
+        animationSpec = infiniteRepeatable(tween(duration, easing = LinearEasing), RepeatMode.Restart),
+        label = "y"
+    )
+
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(tween(Random.nextInt(2000, 5000)), RepeatMode.Reverse),
+        label = "alpha"
+    )
+
+    Box(
+        modifier = Modifier
+            .offset(
+                x = (x * config.screenWidthDp.toFloat()).dp, 
+                y = (y * config.screenHeightDp.toFloat()).dp + animY.dp
+            )
+            .size(size)
+            .alpha(alpha)
+            .background(Color.White, CircleShape)
+    )
+}
+
+@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape")
 @Composable
 fun ProfileSetupScreenPreview() {
     FliqTheme {

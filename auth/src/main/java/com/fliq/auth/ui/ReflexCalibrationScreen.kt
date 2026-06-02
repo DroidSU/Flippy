@@ -1,21 +1,26 @@
 package com.fliq.auth.ui
 
-import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,17 +32,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,22 +57,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.core.theme.FliqTheme
-import com.fliq.core.theme.NeonCyan
-import com.fliq.core.theme.gameColors
-import com.fliq.game_engine.ui.MeshBackground
+import com.fliq.core.theme.components.FliqSurface
+import kotlin.random.Random
 
 enum class CalibrationState {
     IDLE, ACTIVE, FINISHED
@@ -82,16 +91,22 @@ fun ReflexCalibrationScreen(
     var currentTrial by remember { mutableIntStateOf(0) }
     val trials = remember { mutableStateListOf<Long>() }
     var lastOffset by remember { mutableLongStateOf(0L) }
-    
-    val gameColors = MaterialTheme.gameColors
+
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+
+    // Dynamic sizes for landscape optimization
+    val headerFontSize = (configuration.screenHeightDp * 0.06f).coerceIn(20f, 28f).sp
+    val instructionSpacing = (configuration.screenHeightDp * 0.025f).coerceIn(8f, 18f).dp
+
     val totalTrials = 10
     val loopDuration = 1000L
 
     val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
-    
+
     // Tone Generator for Metronome (Disabled in Preview)
-    val toneGenerator = remember { 
-        if (isPreview) null else ToneGenerator(AudioManager.STREAM_MUSIC, 60)
+    val toneGenerator = remember {
+        if (isPreview) null else ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 60)
     }
     DisposableEffect(Unit) {
         onDispose { toneGenerator?.release() }
@@ -112,7 +127,7 @@ fun ReflexCalibrationScreen(
     var lastBeepTime by remember { mutableLongStateOf(0L) }
     LaunchedEffect(progress) {
         // We trigger a beep when the bar is at the center (0.5)
-        if (progress in 0.5f..<0.6f && SystemClock.uptimeMillis() - lastBeepTime > 500) {
+        if (progress in 0.5f..0.6f && SystemClock.uptimeMillis() - lastBeepTime > 500) {
             if (currentState == CalibrationState.ACTIVE) {
                 toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
             }
@@ -123,7 +138,7 @@ fun ReflexCalibrationScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(gameColors.backgroundGradient))
+            .background(MaterialTheme.colorScheme.background)
             .pointerInput(currentState) {
                 if (currentState == CalibrationState.ACTIVE) {
                     detectTapGestures {
@@ -131,7 +146,7 @@ fun ReflexCalibrationScreen(
                         val cycleStartTime = tapTime - (progress * loopDuration).toLong()
                         val targetTime = cycleStartTime + (loopDuration / 2)
                         val diff = tapTime - targetTime
-                        
+
                         val normalizedDiff = when {
                             diff > 500 -> diff - 1000
                             diff < -500 -> diff + 1000
@@ -149,329 +164,413 @@ fun ReflexCalibrationScreen(
                 }
             }
     ) {
-        MeshBackground()
+        // Deep Space Background
+        AuthBackground()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
+                .padding(horizontal = 48.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Header System
+            // Header
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Surface(
-                    color = NeonCyan.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonCyan.copy(alpha = 0.3f))
-                ) {
-                    Text(
-                        text = "NEURAL SYNC ENGINE",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 2.sp,
-                            color = NeonCyan
-                        )
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
                 Text(
-                    text = "HARDWARE CALIBRATION",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Black,
-                        fontFamily = FontFamily.SansSerif
+                    text = "REFLEX SYNC",
+                    style = FliqTheme.typography.label.copy(
+                        fontSize = 12.sp,
+                        letterSpacing = 4.sp,
+                        fontWeight = FontWeight.ExtraBold
                     ),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "ACCURACY SETUP",
+                    style = FliqTheme.typography.heading.copy(fontSize = headerFontSize),
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(50.dp, 2.dp)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                 )
             }
 
-            Spacer(modifier = Modifier.weight(0.4f))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Main Dynamic Content
-            AnimatedContent(
-                targetState = currentState,
-                transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(400)) },
-                label = "state_transition"
-            ) { state ->
-                when (state) {
-                    CalibrationState.IDLE -> {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            InstructionCard()
-                            Spacer(modifier = Modifier.height(42.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(4f),
+                contentAlignment = Alignment.Center
+            ) {
+                AnimatedContent(
+                    targetState = currentState,
+                    transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(400)) },
+                    label = "state_transition",
+                    modifier = Modifier.fillMaxSize()
+                ) { state ->
+                    when (state) {
+                        CalibrationState.IDLE -> {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 32.dp),
+                                horizontalArrangement = Arrangement.spacedBy(48.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (showCancelButton) {
-                                    androidx.compose.material3.TextButton(onClick = onDismiss) {
-                                        Text(
-                                            "CANCEL",
-                                            color = Color.White.copy(alpha = 0.5f),
-                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                        )
+                                // Left: Mini Instructions
+                                InstructionPanel(
+                                    modifier = Modifier
+                                        .weight(1.5f)
+                                        .padding(vertical = 8.dp),
+                                    spacing = instructionSpacing
+                                )
+
+                                // Right: Actions
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Sync your device hardware for perfect precision.",
+                                        style = FliqTheme.typography.body.copy(fontSize = 14.sp),
+                                        color = Color.White.copy(alpha = 0.5f),
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    ConfirmTechnicalButton(
+                                        text = "START SYNC",
+                                        onClick = { currentState = CalibrationState.ACTIVE },
+                                        isLoading = false,
+                                        enabled = true
+                                    )
+
+                                    if (showCancelButton) {
+                                        androidx.compose.material3.TextButton(onClick = onDismiss) {
+                                            Text(
+                                                "CANCEL",
+                                                color = Color.White.copy(alpha = 0.3f),
+                                                style = FliqTheme.typography.label.copy(fontWeight = FontWeight.Bold)
+                                            )
+                                        }
                                     }
                                 }
-                                ConfirmKineticButton(
-                                    text = "START CALIBRATION",
-                                    onClick = { currentState = CalibrationState.ACTIVE },
-                                    isLoading = false,
-                                    enabled = true
-                                )
                             }
                         }
+
+                        CalibrationState.ACTIVE -> CalibrationTrack(progress, infiniteTransition)
+                        CalibrationState.FINISHED -> ResultCard(trials, onCalibrationComplete)
                     }
-                    CalibrationState.ACTIVE -> CalibrationTrack(progress, infiniteTransition)
-                    CalibrationState.FINISHED -> ResultCard(trials, onCalibrationComplete)
                 }
             }
 
-            Spacer(modifier = Modifier.weight(0.6f))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Active Stats
-            if (currentState == CalibrationState.ACTIVE) {
-                TrialProgressIndicator(currentTrial, totalTrials, lastOffset)
+            Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.BottomCenter) {
+                if (currentState == CalibrationState.ACTIVE) {
+                    TrialProgressIndicator(currentTrial, totalTrials, lastOffset)
+                }
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-fun InstructionCard() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+fun InstructionPanel(modifier: Modifier = Modifier, spacing: Dp = 12.dp) {
+    val scrollState = rememberScrollState()
+    FliqSurface(
+        modifier = modifier,
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White.copy(alpha = 0.03f),
+        showBorder = true,
+        elevation = 8.dp
     ) {
-        Text(
-            text = "Follow these steps to ensure perfect touch synchronization:",
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(spacing, Alignment.Top),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Column {
+                Text(
+                    text = "SETUP GUIDE",
+                    style = FliqTheme.typography.label.copy(
+                        fontSize = 10.sp,
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(30.dp, 1.dp)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                )
+            }
 
-        InstructionItem(
-            icon = Icons.Default.GraphicEq,
-            title = "Listen to the Rhythm",
-            desc = "A metronome will play a steady beat. Use speakers or wired headphones for best results."
-        )
+            InstructionItem(
+                icon = Icons.Default.GraphicEq,
+                title = "Listen to Rhythm",
+                desc = "Steady metronome beats will play."
+            )
 
-        InstructionItem(
-            icon = Icons.Default.RadioButtonChecked,
-            title = "Watch the Pulse",
-            desc = "A white bar will slide across the screen. Focus on the Cyan center line."
-        )
+            InstructionItem(
+                icon = Icons.Default.RadioButtonChecked,
+                title = "Watch Pulse",
+                desc = "Focus on the primary center line."
+            )
 
-        InstructionItem(
-            icon = Icons.Default.Timer,
-            title = "Tap on the Beat",
-            desc = "Tap exactly when the white bar hits the center line. We will take 10 samples."
-        )
+            InstructionItem(
+                icon = Icons.Default.Timer,
+                title = "Tap on Beat",
+                desc = "Tap exactly when bar hits center."
+            )
+        }
     }
 }
 
 @Composable
-fun InstructionItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, desc: String) {
-    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+fun InstructionItem(
+    icon: ImageVector,
+    title: String,
+    desc: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = NeonCyan,
-            modifier = Modifier.size(24.dp)
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
         )
         Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
+                style = FliqTheme.typography.body.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                ),
+                color = Color.White
             )
             Text(
                 text = desc,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                style = FliqTheme.typography.body.copy(fontSize = 12.sp),
+                color = Color.White.copy(alpha = 0.5f)
             )
         }
     }
 }
 
 @Composable
-fun CalibrationTrack(progress: Float, infiniteTransition: androidx.compose.animation.core.InfiniteTransition) {
+fun CalibrationTrack(
+    progress: Float,
+    infiniteTransition: androidx.compose.animation.core.InfiniteTransition
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val barGlowRadius = with(density) { 30.dp.toPx() }
+    val trailLength = with(density) { 150.dp.toPx() }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp),
+            .height(180.dp),
         contentAlignment = Alignment.Center
     ) {
         // Track Base
-        Canvas(modifier = Modifier.fillMaxWidth().height(40.dp)) {
+        Canvas(modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)) {
             val trackHeight = 2.dp.toPx()
             drawLine(
-                color = Color.White.copy(alpha = 0.1f),
+                color = Color.White.copy(alpha = 0.05f),
                 start = Offset(0f, size.height / 2),
                 end = Offset(size.width, size.height / 2),
                 strokeWidth = trackHeight,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
             )
         }
 
         // Target Zone (Center)
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(80.dp)
-                    .background(NeonCyan, CircleShape)
-            )
-        }
-        
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(100.dp)
+                .background(primaryColor, CircleShape)
+        )
+
         // Pulsing Target Glow
         val pulseAlpha by infiniteTransition.animateFloat(
             initialValue = 0.1f,
-            targetValue = 0.5f,
+            targetValue = 0.4f,
             animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
             label = "pulse"
         )
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(120.dp)
                 .background(
                     Brush.radialGradient(
-                        listOf(NeonCyan.copy(alpha = pulseAlpha), Color.Transparent)
+                        listOf(primaryColor.copy(alpha = pulseAlpha), Color.Transparent)
                     )
                 )
         )
 
         // The Sliding Bar
-        Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) {
-            val barWidth = 8.dp.toPx()
+        Canvas(modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)) {
+            val barWidth = 6.dp.toPx()
             val x = size.width * progress
-            
-            // Neon Trail
+
+            // Energy Trail
             drawRect(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color.Transparent, NeonCyan.copy(alpha = 0.4f)),
-                    startX = x - 120.dp.toPx(),
+                    colors = listOf(Color.Transparent, primaryColor.copy(alpha = 0.3f)),
+                    startX = x - trailLength,
                     endX = x
                 ),
-                topLeft = Offset(x - 120.dp.toPx(), size.height / 2 - 2.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(120.dp.toPx(), 4.dp.toPx())
+                topLeft = Offset(x - trailLength, size.height / 2 - 2.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(trailLength, 4.dp.toPx())
             )
 
             // Bar
             drawRect(
                 color = Color.White,
-                topLeft = Offset(x - barWidth / 2, size.height / 2 - 40.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(barWidth, 80.dp.toPx())
+                topLeft = Offset(x - barWidth / 2, size.height / 2 - 50.dp.toPx()),
+                size = androidx.compose.ui.geometry.Size(barWidth, 100.dp.toPx())
             )
-            
+
             // Bar Glow
-            drawRect(
+            drawCircle(
                 brush = Brush.radialGradient(
-                    listOf(Color.White.copy(alpha = 0.5f), Color.Transparent),
+                    listOf(Color.White.copy(alpha = 0.4f), Color.Transparent),
                     center = Offset(x, size.height / 2),
-                    radius = 20.dp.toPx()
+                    radius = barGlowRadius
                 ),
-                topLeft = Offset(x - 20.dp.toPx(), size.height / 2 - 40.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(40.dp.toPx(), 80.dp.toPx())
+                center = Offset(x, size.height / 2),
+                radius = barGlowRadius
             )
         }
     }
 }
 
 @Composable
-fun ResultCard(trials: List<Long>, onComplete: (Long) -> Unit) {
+fun ResultCard(trials: List<Long>, onComplete: (Long) -> Unit, modifier: Modifier = Modifier) {
     val average = trials.filter { it in -200..300 }.average().toLong().coerceAtLeast(0L)
-    
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    FliqSurface(
+        modifier = modifier
+            .fillMaxWidth(0.7f)
+            .padding(vertical = 16.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = Color.White.copy(alpha = 0.05f),
+        showBorder = true,
+        elevation = 20.dp
     ) {
-        Icon(
-            imageVector = Icons.Default.RadioButtonChecked,
-            contentDescription = null,
-            tint = NeonCyan,
-            modifier = Modifier.size(48.dp)
-        )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.RadioButtonChecked,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(56.dp)
+                )
 
-        Text(
-            text = "CALIBRATION COMPLETE",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Text(
-            text = "Your device latency has been measured and neutralized. The game engine will now account for this delay to ensure perfect fairness.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "SYSTEM OFFSET",
-                style = MaterialTheme.typography.labelSmall,
-                color = NeonCyan
-            )
-            Text(
-                text = "${average}ms",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Black,
-                    fontFamily = FontFamily.Monospace,
+                Text(
+                    text = "SETUP COMPLETE",
+                    style = FliqTheme.typography.heading.copy(fontSize = 20.sp),
                     color = Color.White
                 )
-            )
+
+                Text(
+                    text = "Latency Neutralized. Perfect fairness achieved.",
+                    style = FliqTheme.typography.body.copy(fontSize = 14.sp),
+                    color = Color.White.copy(alpha = 0.5f),
+                    textAlign = TextAlign.Center
+                )
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "SYSTEM OFFSET",
+                        style = FliqTheme.typography.label.copy(
+                            fontSize = 10.sp,
+                            letterSpacing = 2.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${average}ms",
+                        style = FliqTheme.typography.heading.copy(
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Black
+                        ),
+                        color = Color.White
+                    )
+                }
+
+                ConfirmTechnicalButton(
+                    text = "SAVE SETUP",
+                    onClick = { onComplete(average) },
+                    isLoading = false,
+                    enabled = true
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ConfirmKineticButton(
-            text = "SAVE & CONTINUE",
-            onClick = { onComplete(average) },
-            isLoading = false,
-            enabled = true
-        )
     }
 }
 
 @Composable
 fun TrialProgressIndicator(current: Int, total: Int, lastOffset: Long) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(total) { index ->
+                val isActive = index < current
                 Box(
                     modifier = Modifier
-                        .size(height = 6.dp, width = 20.dp)
+                        .size(height = 4.dp, width = 24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (index < current) NeonCyan 
+                            if (isActive) MaterialTheme.colorScheme.primary
                             else Color.White.copy(alpha = 0.1f)
                         )
                 )
             }
         }
-        
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(Icons.Default.Info, contentDescription = null, tint = Color.White.copy(alpha = 0.2f), modifier = Modifier.size(14.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier.size(16.dp)
+            )
             Text(
-                text = if (lastOffset != 0L) "Last Sync: ${lastOffset}ms" else "Waiting for input...",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                text = if (lastOffset != 0L) "LATENCY: ${lastOffset}ms" else "AWAITING SYNC...",
+                style = FliqTheme.typography.label.copy(fontSize = 10.sp, letterSpacing = 1.sp),
                 color = Color.White.copy(alpha = 0.4f)
             )
         }
@@ -479,43 +578,106 @@ fun TrialProgressIndicator(current: Int, total: Int, lastOffset: Long) {
 }
 
 @Composable
-fun ConfirmKineticButton(
-    text: String = "CONFIRM",
-    onClick: () -> Unit,
-    isLoading: Boolean,
-    enabled: Boolean
-) {
-    Surface(
-        onClick = onClick,
-        enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(16.dp),
-        color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-        modifier = Modifier.wrapContentSize(align = Alignment.Center)
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)) {
-            if (isLoading) {
-                androidx.compose.material3.CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+private fun AuthBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "auth_bg")
+    val animAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(tween(8000), RepeatMode.Reverse),
+        label = "alpha"
+    )
+
+    // Pre-generate stars so they don't flicker/regenerate every frame
+    val stars = remember {
+        List(80) {
+            Triple(Random.nextFloat(), Random.nextFloat(), Random.nextFloat() * 0.3f + 0.1f)
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        0.0f to Color(0xFF1E293B).copy(alpha = 0.4f * animAlpha),
+                        0.6f to Color(0xFF0F172A),
+                        1.0f to Color(0xFF020617),
+                        center = Offset.Zero,
+                        radius = 2500f
+                    )
                 )
-            } else {
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Black),
-                    color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
-            }
+        )
+    }
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        stars.forEach { (x, y, alpha) ->
+            drawCircle(
+                color = Color.White.copy(alpha = alpha),
+                radius = 1.5f,
+                center = Offset(x * size.width, y * size.height)
+            )
         }
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+fun ConfirmTechnicalButton(
+    text: String,
+    onClick: () -> Unit,
+    isLoading: Boolean,
+    enabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        if (isPressed) 0.96f else 1f,
+        spring(Spring.DampingRatioMediumBouncy),
+        label = "s"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .scale(scale)
+            .alpha(if (enabled) 1f else 0.5f)
+            .background(
+                if (enabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.1f),
+                RoundedCornerShape(16.dp)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled && !isLoading,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.Black)
+        } else {
+            Text(
+                text = text.uppercase(),
+                style = FliqTheme.typography.label.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp,
+                    fontSize = 14.sp
+                ),
+                color = if (enabled) Color.Black else Color.White.copy(alpha = 0.3f)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape")
 @Composable
 fun ReflexCalibrationScreenPreview() {
     FliqTheme {
         ReflexCalibrationScreen(
-            onCalibrationComplete = {_ ->}
+            onCalibrationComplete = { _ -> }
         )
     }
 }

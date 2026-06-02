@@ -10,7 +10,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -124,12 +123,8 @@ fun QuestMapScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // 1. Ambient Background
-        Box(modifier = Modifier.graphicsLayer { translationX = -scrollState.value * 0.2f }) {
-            QuestMapBackground()
-        }
+        QuestMapBackground()
 
-        // 2. Horizontal Map
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -213,7 +208,6 @@ fun QuestMapScreen(
             }
         }
 
-        // 3. Top Overlay HUD
         QuestMapHUD(
             xp = xp,
             coins = coins,
@@ -254,22 +248,22 @@ private fun QuestMapBackground() {
         )
     }
 
-    // Static Stars (Distant)
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        repeat(80) {
-            val randomX = Random.nextFloat() * size.width
-            val randomY = Random.nextFloat() * size.height
-            val randomAlpha = Random.nextFloat() * 0.4f + 0.1f
-            drawCircle(
-                color = Color.White.copy(alpha = randomAlpha),
-                radius = Random.nextFloat() * 1.5f,
-                center = Offset(randomX, randomY)
-            )
-        }
-    }
+//    // Static Stars (Distant)
+//    Canvas(modifier = Modifier.fillMaxSize()) {
+//        repeat(30) {
+//            val randomX = Random.nextFloat() * size.width
+//            val randomY = Random.nextFloat() * size.height
+//            val randomAlpha = Random.nextFloat() * 0.4f + 0.1f
+//            drawCircle(
+//                color = Color.White.copy(alpha = randomAlpha),
+//                radius = Random.nextFloat() * 1.5f,
+//                center = Offset(randomX, randomY)
+//            )
+//        }
+//    }
 
     // Floating Space Particles (Moving)
-    repeat(45) {
+    repeat(60) {
         FloatingSpaceParticle()
     }
 }
@@ -361,7 +355,7 @@ private fun QuestMapHUD(
                 
                 Column {
                     Text(
-                        text = "WORLD 01: NEON DISTRICT",
+                        text = "PLAYER RANK: ROOKIE",
                         style = FliqTheme.typography.label.copy(
                             fontSize = 9.sp, 
                             letterSpacing = 2.sp, 
@@ -372,7 +366,7 @@ private fun QuestMapHUD(
                     Text(
                         text = username.uppercase(), 
                         style = FliqTheme.typography.heading.copy(
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                             letterSpacing = 1.sp
                         ),
                         color = Color.White
