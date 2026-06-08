@@ -1,6 +1,5 @@
 package com.fliq.auth.ui
 
-import android.media.ToneGenerator
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
@@ -49,10 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,49 +63,68 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.fliq.auth.viewmodel.CalibrationState
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.components.FliqSurface
 import kotlin.random.Random
 
-enum class CalibrationState {
-    IDLE, ACTIVE, FINISHED
-}
-
 @Composable
 fun ReflexCalibrationScreen(
+    currentState: CalibrationState,
+    currentTrial: Int,
+    totalTrials: Int,
+    lastOffset: Long,
+    trials: List<Long>,
+    averageOffset: Long,
+    onStartCalibration: () -> Unit,
+    onRecordTrial: (Long) -> Unit,
     onCalibrationComplete: (Long) -> Unit,
+    onRetake: () -> Unit,
     onDismiss: () -> Unit = {},
     showCancelButton: Boolean = true
 ) {
-    var currentState by remember { mutableStateOf(CalibrationState.IDLE) }
-    var currentTrial by remember { mutableIntStateOf(0) }
-    val trials = remember { mutableStateListOf<Long>() }
-    var lastOffset by remember { mutableLongStateOf(0L) }
-
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Dynamic sizes for landscape optimization
-    val headerFontSize = (configuration.screenHeightDp * 0.06f).coerceIn(20f, 28f).sp
-    val instructionSpacing = (configuration.screenHeightDp * 0.025f).coerceIn(8f, 18f).dp
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    val totalTrials = 10
+    // Dynamic sizes for landscape optimization
+    val headerFontSize = (configuration.screenHeightDp * 0.06f).coerceIn(18f, 28f).sp
+    val instructionSpacing = (configuration.screenHeightDp * 0.025f).coerceIn(if (isLandscape) 6f else 8f, 18f).dp
+
     val loopDuration = 1000L
 
-    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
+    val isPreview = LocalInspectionMode.current
 
-    // Tone Generator for Metronome (Disabled in Preview)
+    // Tone Generator for Metronome (Using reflection to avoid ClassNotFoundException in Previews)
     val toneGenerator = remember {
-        if (isPreview) null else ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 60)
+        if (isPreview) null else {
+            try {
+                val clazz = Class.forName("android.media.ToneGenerator")
+                val constructor = clazz.getConstructor(Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                constructor.newInstance(android.media.AudioManager.STREAM_MUSIC, 60)
+            } catch (t: Throwable) {
+                null
+            }
+        }
     }
     DisposableEffect(Unit) {
-        onDispose { toneGenerator?.release() }
+        onDispose {
+            toneGenerator?.let { tg ->
+                try {
+                    tg.javaClass.getMethod("release").invoke(tg)
+                } catch (t: Throwable) {
+                    // Ignore
+                }
+            }
+        }
     }
 
     // Animation for the sliding bar
@@ -129,7 +144,15 @@ fun ReflexCalibrationScreen(
         // We trigger a beep when the bar is at the center (0.5)
         if (progress in 0.5f..0.6f && SystemClock.uptimeMillis() - lastBeepTime > 500) {
             if (currentState == CalibrationState.ACTIVE) {
-                toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
+                toneGenerator?.let { tg ->
+                    try {
+                        // 24 is ToneGenerator.TONE_PROP_BEEP
+                        tg.javaClass.getMethod("startTone", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                            .invoke(tg, 24, 40)
+                    } catch (t: Throwable) {
+                        // Ignore
+                    }
+                }
             }
             lastBeepTime = SystemClock.uptimeMillis()
         }
@@ -153,13 +176,7 @@ fun ReflexCalibrationScreen(
                             else -> diff
                         }
 
-                        trials.add(normalizedDiff)
-                        lastOffset = normalizedDiff
-                        currentTrial++
-
-                        if (currentTrial >= totalTrials) {
-                            currentState = CalibrationState.FINISHED
-                        }
+                        onRecordTrial(normalizedDiff)
                     }
                 }
             }
@@ -170,7 +187,10 @@ fun ReflexCalibrationScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp, vertical = 24.dp),
+                .padding(
+                    horizontal = if (isLandscape) 32.dp else 48.dp,
+                    vertical = if (isLandscape) 16.dp else 24.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header
@@ -197,13 +217,13 @@ fun ReflexCalibrationScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(if (isLandscape) 0.3f else 1f))
 
             // Main Dynamic Content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(4f),
+                    .weight(if (isLandscape) 8f else 4f),
                 contentAlignment = Alignment.Center
             ) {
                 AnimatedContent(
@@ -214,26 +234,26 @@ fun ReflexCalibrationScreen(
                 ) { state ->
                     when (state) {
                         CalibrationState.IDLE -> {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 32.dp),
-                                horizontalArrangement = Arrangement.spacedBy(48.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Left: Mini Instructions
-                                InstructionPanel(
+                                Row(
                                     modifier = Modifier
-                                        .weight(1.5f)
-                                        .padding(vertical = 8.dp),
-                                    spacing = instructionSpacing
-                                )
+                                        .fillMaxSize()
+                                        .padding(horizontal = if (isLandscape) 16.dp else 32.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 32.dp else 48.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Left: Mini Instructions
+                                    InstructionPanel(
+                                        modifier = Modifier
+                                            .weight(if (isLandscape) 1.2f else 1.5f)
+                                            .padding(vertical = if (isLandscape) 4.dp else 8.dp),
+                                        spacing = instructionSpacing
+                                    )
 
                                 // Right: Actions
                                 Column(
                                     modifier = Modifier.weight(1f),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    verticalArrangement = Arrangement.spacedBy(if (isLandscape) 12.dp else 16.dp)
                                 ) {
                                     Text(
                                         text = "Sync your device hardware for perfect precision.",
@@ -246,7 +266,7 @@ fun ReflexCalibrationScreen(
 
                                     ConfirmTechnicalButton(
                                         text = "START SYNC",
-                                        onClick = { currentState = CalibrationState.ACTIVE },
+                                        onClick = onStartCalibration,
                                         isLoading = false,
                                         enabled = true
                                     )
@@ -265,15 +285,15 @@ fun ReflexCalibrationScreen(
                         }
 
                         CalibrationState.ACTIVE -> CalibrationTrack(progress, infiniteTransition)
-                        CalibrationState.FINISHED -> ResultCard(trials, onCalibrationComplete)
+                        CalibrationState.FINISHED -> ResultCard(trials, averageOffset, onCalibrationComplete, onRetake)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(if (isLandscape) 0.3f else 1f))
 
             // Active Stats
-            Box(modifier = Modifier.height(60.dp), contentAlignment = Alignment.BottomCenter) {
+            Box(modifier = Modifier.height(if (isLandscape) 40.dp else 60.dp), contentAlignment = Alignment.BottomCenter) {
                 if (currentState == CalibrationState.ACTIVE) {
                     TrialProgressIndicator(currentTrial, totalTrials, lastOffset)
                 }
@@ -285,6 +305,9 @@ fun ReflexCalibrationScreen(
 @Composable
 fun InstructionPanel(modifier: Modifier = Modifier, spacing: Dp = 12.dp) {
     val scrollState = rememberScrollState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     FliqSurface(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
@@ -294,7 +317,10 @@ fun InstructionPanel(modifier: Modifier = Modifier, spacing: Dp = 12.dp) {
     ) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .padding(
+                    horizontal = if (isLandscape) 20.dp else 24.dp,
+                    vertical = if (isLandscape) 16.dp else 20.dp
+                )
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(spacing, Alignment.Top),
             horizontalAlignment = Alignment.Start
@@ -467,68 +493,174 @@ fun CalibrationTrack(
 }
 
 @Composable
-fun ResultCard(trials: List<Long>, onComplete: (Long) -> Unit, modifier: Modifier = Modifier) {
-    val average = trials.filter { it in -200..300 }.average().toLong().coerceAtLeast(0L)
+fun ResultCard(
+    trials: List<Long>,
+    average: Long,
+    onComplete: (Long) -> Unit,
+    onRetake: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     FliqSurface(
         modifier = modifier
-            .fillMaxWidth(0.7f)
-            .padding(vertical = 16.dp),
-        shape = RoundedCornerShape(28.dp),
+            .fillMaxWidth(if (isLandscape) 0.85f else 0.7f)
+            .padding(vertical = if (isLandscape) 8.dp else 16.dp),
+        shape = RoundedCornerShape(if (isLandscape) 20.dp else 28.dp),
         color = Color.White.copy(alpha = 0.05f),
         showBorder = true,
         elevation = 20.dp
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+        if (isLandscape) {
+            Row(
+                modifier = Modifier.padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.RadioButtonChecked,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(56.dp)
-                )
-
-                Text(
-                    text = "SETUP COMPLETE",
-                    style = FliqTheme.typography.heading.copy(fontSize = 20.sp),
-                    color = Color.White
-                )
-
-                Text(
-                    text = "Latency Neutralized. Perfect fairness achieved.",
-                    style = FliqTheme.typography.body.copy(fontSize = 14.sp),
-                    color = Color.White.copy(alpha = 0.5f),
-                    textAlign = TextAlign.Center
-                )
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "SYSTEM OFFSET",
-                        style = FliqTheme.typography.label.copy(
-                            fontSize = 10.sp,
-                            letterSpacing = 2.sp
-                        ),
-                        color = MaterialTheme.colorScheme.primary
+                // Left side: Status
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.RadioButtonChecked,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(40.dp)
                     )
+
                     Text(
-                        text = "${average}ms",
-                        style = FliqTheme.typography.heading.copy(
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Black
-                        ),
+                        text = "SETUP COMPLETE",
+                        style = FliqTheme.typography.heading.copy(fontSize = 18.sp),
                         color = Color.White
+                    )
+
+                    Text(
+                        text = "Latency Neutralized. Perfect fairness achieved.",
+                        style = FliqTheme.typography.body.copy(fontSize = 12.sp),
+                        color = Color.White.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center
                     )
                 }
 
-                ConfirmTechnicalButton(
-                    text = "SAVE SETUP",
-                    onClick = { onComplete(average) },
-                    isLoading = false,
-                    enabled = true
-                )
+                // Right side: Result and Action
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "SYSTEM OFFSET",
+                            style = FliqTheme.typography.label.copy(
+                                fontSize = 10.sp,
+                                letterSpacing = 2.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${average}ms",
+                            style = FliqTheme.typography.heading.copy(
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Black
+                            ),
+                            color = Color.White
+                        )
+                    }
+
+                    ConfirmTechnicalButton(
+                        text = "SAVE SETUP",
+                        onClick = { onComplete(average) },
+                        isLoading = false,
+                        enabled = true
+                    )
+
+                    androidx.compose.material3.TextButton(
+                        onClick = onRetake,
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text(
+                            text = "RE-TAKE TEST",
+                            style = FliqTheme.typography.label.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.RadioButtonChecked,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(56.dp)
+                    )
+
+                    Text(
+                        text = "SETUP COMPLETE",
+                        style = FliqTheme.typography.heading.copy(fontSize = 20.sp),
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = "Latency Neutralized. Perfect fairness achieved.",
+                        style = FliqTheme.typography.body.copy(fontSize = 14.sp),
+                        color = Color.White.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "SYSTEM OFFSET",
+                            style = FliqTheme.typography.label.copy(
+                                fontSize = 10.sp,
+                                letterSpacing = 2.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${average}ms",
+                            style = FliqTheme.typography.heading.copy(
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Black
+                            ),
+                            color = Color.White
+                        )
+                    }
+
+                    ConfirmTechnicalButton(
+                        text = "SAVE SETUP",
+                        onClick = { onComplete(average) },
+                        isLoading = false,
+                        enabled = true
+                    )
+
+                    androidx.compose.material3.TextButton(
+                        onClick = onRetake,
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text(
+                            text = "RE-TAKE TEST",
+                            style = FliqTheme.typography.label.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -632,6 +764,9 @@ fun ConfirmTechnicalButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     val scale by animateFloatAsState(
         if (isPressed) 0.96f else 1f,
         spring(Spring.DampingRatioMediumBouncy),
@@ -641,7 +776,7 @@ fun ConfirmTechnicalButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(if (isLandscape) 48.dp else 56.dp)
             .scale(scale)
             .alpha(if (enabled) 1f else 0.5f)
             .background(
@@ -672,12 +807,21 @@ fun ConfirmTechnicalButton(
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape")
+@Preview(showBackground = true, device = "spec:width=800dp,height=360dp,orientation=landscape")
 @Composable
 fun ReflexCalibrationScreenPreview() {
     FliqTheme {
         ReflexCalibrationScreen(
-            onCalibrationComplete = { _ -> }
+            currentState = CalibrationState.IDLE,
+            currentTrial = 0,
+            totalTrials = 10,
+            lastOffset = 0L,
+            trials = emptyList(),
+            averageOffset = 0L,
+            onStartCalibration = {},
+            onRecordTrial = {},
+            onCalibrationComplete = { _ -> },
+            onRetake = {}
         )
     }
 }

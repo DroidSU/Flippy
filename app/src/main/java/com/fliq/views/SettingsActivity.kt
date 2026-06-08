@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.fliq.auth.viewmodel.CalibrationViewModel
 import com.fliq.common.UtilityMethods
 import com.fliq.core.settings.SettingsRepository
 import com.fliq.core.theme.FliqTheme
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class SettingsActivity : ComponentActivity() {
     private val viewModel: SettingsViewModel by viewModels()
+    private val calibrationViewModel: CalibrationViewModel by viewModels()
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -36,6 +38,7 @@ class SettingsActivity : ComponentActivity() {
             val gameSoundEnabled by viewModel.gameSoundEnabled.collectAsState()
             val hapticFeedbackEnabled by viewModel.hapticFeedbackEnabled.collectAsState()
             val showCalibration by viewModel.showCalibration.collectAsState()
+            val calState by calibrationViewModel.calibrationState.collectAsState()
 
             FliqTheme(settingsRepository = settingsRepository) {
                 if (showCalibration) {
@@ -45,9 +48,18 @@ class SettingsActivity : ComponentActivity() {
                     }
 
                     com.fliq.auth.ui.ReflexCalibrationScreen(
+                        currentState = calState.currentState,
+                        currentTrial = calState.currentTrial,
+                        totalTrials = calState.totalTrials,
+                        lastOffset = calState.lastOffset,
+                        trials = calState.trials,
+                        averageOffset = calState.averageOffset,
+                        onStartCalibration = calibrationViewModel::startCalibration,
+                        onRecordTrial = calibrationViewModel::recordTrial,
                         onCalibrationComplete = { offset ->
                             viewModel.saveLatencyOffset(offset)
                         },
+                        onRetake = calibrationViewModel::startCalibration,
                         onDismiss = {
                             viewModel.onCalibrationDismiss()
                         }

@@ -1,6 +1,5 @@
 package com.fliq.zen_mode.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.fliq.common.Badge
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.components.StarBackground
 import com.fliq.core.theme.gameColors
 import com.fliq.game_engine.models.EffectState
 import com.fliq.game_engine.models.EffectType
@@ -285,35 +285,6 @@ fun ZenScreen(
             if (showRotationPrompt && !isLandscape) {
                 ZenRotationOverlay(onDismiss = onRotationPromptDismissed)
             }
-        }
-    }
-}
-
-@Composable
-fun StarBackground() {
-    val configuration = LocalConfiguration.current
-    val starCount = remember(configuration.screenWidthDp, configuration.screenHeightDp) {
-        val area = configuration.screenWidthDp * configuration.screenHeightDp
-        (area / 2500).coerceIn(50, 200)
-    }
-
-    val stars = remember(starCount) {
-        List(starCount) {
-            val x = kotlin.random.Random.nextFloat()
-            val y = kotlin.random.Random.nextFloat()
-            val starSize = kotlin.random.Random.nextFloat() * 1.5f + 0.5f
-            val alpha = kotlin.random.Random.nextFloat() * 0.3f + 0.2f
-            Triple(x, y, starSize to alpha)
-        }
-    }
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        stars.forEach { (x, y, data) ->
-            val (starSize, alpha) = data
-            drawCircle(
-                color = Color.White.copy(alpha = alpha),
-                radius = starSize.dp.toPx(),
-                center = Offset(x * size.width, y * size.height)
-            )
         }
     }
 }

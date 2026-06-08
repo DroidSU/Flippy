@@ -1,5 +1,6 @@
 package com.fliq.views.v2
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.RepeatMode
@@ -16,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,13 +40,17 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,8 +73,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,9 +85,14 @@ import com.fliq.core.theme.CoreRed
 import com.fliq.core.theme.ElectricCyan
 import com.fliq.core.theme.FliqTheme
 import com.fliq.core.theme.Gold
+import com.fliq.core.theme.components.BeatingHeartIcon
 import com.fliq.core.theme.components.FliqButton
 import com.fliq.core.theme.components.FliqCard
+import com.fliq.core.theme.components.FliqStatBlock
+import com.fliq.core.theme.components.FliqStatDivider
 import com.fliq.core.theme.components.FliqSurface
+import com.fliq.core.theme.components.StarBackground
+import com.fliq.core.util.ChamferedCornerShape
 import com.fliq.game_engine.models.v2.Boost
 import com.fliq.game_engine.models.v2.GameEffectV2
 import com.fliq.game_engine.models.v2.GameStage
@@ -87,6 +101,7 @@ import com.fliq.game_engine.models.v2.GoalType
 import com.fliq.game_engine.models.v2.TileState
 import com.fliq.game_engine.models.v2.TileType
 import com.fliq.game_engine.models.v2.TileV2
+import com.fliq.game_engine.ui.MeshBackground
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -109,6 +124,8 @@ fun GameScreenV2(
     onLoadStage: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val tileBounds = remember { mutableStateMapOf<Int, Rect>() }
     val activeParticles = remember { mutableStateListOf<Pair<Offset, Color>>() }
 
@@ -133,7 +150,7 @@ fun GameScreenV2(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Brush.verticalGradient(FliqTheme.colors.backgroundGradient))
             .pointerInput(gameState) {
                 if (gameState == GameStateV2.ACTION || gameState == GameStateV2.FEVER) {
                     detectDragGestures(
@@ -149,6 +166,9 @@ fun GameScreenV2(
                 }
             }
     ) {
+        StarBackground()
+        MeshBackground(streak = combo)
+
         // Fever Mode Glow
         if (gameState == GameStateV2.FEVER) {
             val feverColor by rememberInfiniteTransition(label = "fever").animateColor(
@@ -164,41 +184,99 @@ fun GameScreenV2(
             )
         }
 
-        // 1. Unified HUD
-        GameHUD(
-            score = score,
-            combo = combo,
-            lives = lives,
-            progress = progress,
-            onPauseClick = onPauseClick
-        )
+        if (isLandscape) {
+            // Landscape Layout
+            Box(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+                // 1. Floating HUD
+                GameHUDLandscape(
+                    score = score,
+                    combo = combo,
+                    lives = lives,
+                    progress = progress,
+                    currentStage = currentStage,
+                    onPauseClick = onPauseClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
 
-        // 2. The Game Grid
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 120.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            GameGrid(
-                tiles = tiles,
-                onTileClick = onTileTapped,
-                onTileBoundsCalculated = { id, rect -> tileBounds[id] = rect }
-            )
+                // 2. Game Grid
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GameGrid(
+                        tiles = tiles,
+                        onTileClick = onTileTapped,
+                        onTileBoundsCalculated = { id, rect -> tileBounds[id] = rect },
+                        modifier = Modifier.fillMaxHeight().aspectRatio(1f)
+                    )
+                }
+
+                // 3. Navigation Buttons
+                Row(
+                    modifier = Modifier.align(Alignment.BottomStart),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    FliqIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onClick = onBackClick
+                    )
+                    FliqIconButton(
+                        icon = Icons.AutoMirrored.Filled.HelpOutline,
+                        onClick = {} // Help logic
+                    )
+                }
+
+                // 4. Action Button (For Briefing)
+                if (gameState == GameStateV2.BRIEFING) {
+                    FliqActionButton(
+                        text = "PLAY",
+                        onClick = onStartStage,
+                        modifier = Modifier.align(Alignment.BottomEnd)
+                    )
+                }
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // 1. Unified HUD
+                GameHUD(
+                    score = score,
+                    combo = combo,
+                    lives = lives,
+                    progress = progress,
+                    onPauseClick = onPauseClick
+                )
+
+                // 2. The Game Grid
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    GameGrid(
+                        tiles = tiles,
+                        onTileClick = onTileTapped,
+                        onTileBoundsCalculated = { id, rect -> tileBounds[id] = rect }
+                    )
+                }
+            }
         }
 
-        // 3. Overlay System
-        AnimatedVisibility(
-            visible = gameState == GameStateV2.BRIEFING,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            BriefingOverlay(
-                stage = currentStage,
-                selectedBoost = selectedBoost,
-                onBoostSelect = onBoostSelect,
-                onStart = onStartStage
-            )
+        // 3. Overlay System (Briefing is semi-integrated in landscape)
+        if (!isLandscape) {
+            AnimatedVisibility(
+                visible = gameState == GameStateV2.BRIEFING,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                BriefingOverlay(
+                    stage = currentStage,
+                    selectedBoost = selectedBoost,
+                    isLandscape = isLandscape,
+                    onBoostSelect = onBoostSelect,
+                    onStart = onStartStage
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -247,25 +325,200 @@ fun GameScreenV2(
 }
 
 @Composable
+private fun GameHUDLandscape(
+    score: Int,
+    combo: Int,
+    lives: Int,
+    progress: Float,
+    currentStage: GameStage?,
+    onPauseClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.width(200.dp),
+        shape = ChamferedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+        border = BorderStroke(
+            1.dp,
+            Brush.linearGradient(
+                listOf(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    Color.Transparent,
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                )
+            )
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Mode Info
+            Column {
+                Text(
+                    text = currentStage?.title?.uppercase() ?: "STAGE ${currentStage?.stageNumber ?: 0}",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = Color.White
+                )
+                Text(
+                    text = "STAY CALM",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 8.sp,
+                        letterSpacing = 2.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            FliqStatDivider()
+
+            FliqStatBlock(label = "SCORE", value = score.toString().padStart(3, '0'))
+
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "COMBO",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+                Text(
+                    "x$combo",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            FliqStatDivider()
+
+            // In V2 we use progress, we can show it as a percentage or a bar
+            Column {
+                Text(
+                    text = "PROGRESS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = Color.White.copy(alpha = 0.1f),
+                )
+            }
+
+            FliqStatDivider()
+
+            Column {
+                Text(
+                    text = "LIVES",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+                Row(
+                    modifier = Modifier.padding(top = 8.dp).clickable { onPauseClick() }
+                ) {
+                    repeat(3) { index ->
+                        BeatingHeartIcon(
+                            isAlive = index < lives,
+                            size = 22.dp,
+                            modifier = Modifier.padding(horizontal = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FliqIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+        modifier = modifier.size(46.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun FliqActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .height(56.dp)
+            .widthIn(min = 160.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary,
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.2f),
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.2f)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp
+                ),
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
 private fun GameHUD(
     score: Int,
     combo: Int,
     lives: Int,
     progress: Float,
-    onPauseClick: () -> Unit
+    onPauseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isLandscape: Boolean = false
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    if (isLandscape) {
+        Column(
+            modifier = modifier
+                .statusBarsPadding()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
-            // Combo Meter
             Column {
                 Text(
                     "COMBO",
@@ -274,45 +527,105 @@ private fun GameHUD(
                 )
                 Text(
                     "x$combo",
-                    style = FliqTheme.typography.heading.copy(fontSize = 32.sp),
+                    style = FliqTheme.typography.heading.copy(fontSize = 24.sp),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            // Score
             Text(
                 score.toString().padStart(6, '0'),
-                style = FliqTheme.typography.scoreDisplay.copy(fontSize = 32.sp),
+                style = FliqTheme.typography.scoreDisplay.copy(fontSize = 24.sp),
                 color = Color.White
             )
 
-            // Hearts
-            Row(
+            Column(
                 modifier = Modifier.clickable(onClick = onPauseClick),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalAlignment = Alignment.Start
             ) {
-                repeat(3) { index ->
-                    Text(
-                        if (index < lives) "❤" else "♡",
-                        color = if (index < lives) Color.Red else Color.White.copy(alpha = 0.3f),
-                        fontSize = 24.sp,
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    )
+                Row {
+                    repeat(3) { index ->
+                        Text(
+                            if (index < lives) "❤" else "♡",
+                            color = if (index < lives) Color.Red else Color.White.copy(alpha = 0.3f),
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+                // Progress Bar (Vertical-ish if we wanted, but horizontal is fine here)
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(4.dp)
+                        .clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = Color.White.copy(alpha = 0.1f),
+                )
             }
         }
-
-        // Progress Bar
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier
+    } else {
+        Column(
+            modifier = modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp)
-                .height(4.dp)
-                .clip(CircleShape),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = Color.White.copy(alpha = 0.1f),
-        )
+                .statusBarsPadding()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Combo Meter
+                Column {
+                    Text(
+                        "COMBO",
+                        style = FliqTheme.typography.label,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        "x$combo",
+                        style = FliqTheme.typography.heading.copy(fontSize = 32.sp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                // Score
+                Text(
+                    score.toString().padStart(6, '0'),
+                    style = FliqTheme.typography.scoreDisplay.copy(fontSize = 32.sp),
+                    color = Color.White
+                )
+
+                // Hearts
+                Row(
+                    modifier = Modifier.clickable(onClick = onPauseClick),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    repeat(3) { index ->
+                        Text(
+                            if (index < lives) "❤" else "♡",
+                            color = if (index < lives) Color.Red else Color.White.copy(alpha = 0.3f),
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(horizontal = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .height(4.dp)
+                    .clip(CircleShape),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = Color.White.copy(alpha = 0.1f),
+            )
+        }
     }
 }
 
@@ -320,11 +633,12 @@ private fun GameHUD(
 private fun GameGrid(
     tiles: List<TileV2>,
     onTileClick: (Int) -> Unit,
-    onTileBoundsCalculated: (Int, Rect) -> Unit
+    onTileBoundsCalculated: (Int, Rect) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(24.dp)
             .aspectRatio(1f),
@@ -376,10 +690,10 @@ private fun TileItem(
             .aspectRatio(1f)
             .scale(scale)
             .alpha(opacity)
-            .onGloballyPositioned { onBoundsCalculated(it.boundsInParent()) }
+            .onGloballyPositioned { onBoundsCalculated(it.boundsInRoot()) }
             .graphicsLayer {
                 shadowElevation = if (tile.state == TileState.ACTIVE) 20f else 0f
-                shape = RoundedCornerShape(24.dp)
+                shape = CircleShape
                 clip = true
             }
             .background(containerColor)
@@ -391,15 +705,23 @@ private fun TileItem(
                         Color.Transparent
                     )
                 ),
-                shape = RoundedCornerShape(24.dp)
+                shape = CircleShape
             )
             .clickable(enabled = tile.state == TileState.ACTIVE, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         if (tile.state == TileState.ACTIVE) {
+            // Internal Star Icon
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = accentColor.copy(alpha = 0.3f),
+                modifier = Modifier.size(24.dp)
+            )
+
             Box(
                 modifier = Modifier
-                    .size(if (isBomb) 32.dp else 24.dp)
+                    .size(if (isBomb) 12.dp else 8.dp)
                     .graphicsLayer {
                         shadowElevation = 30f
                     }
@@ -409,16 +731,16 @@ private fun TileItem(
             val infiniteTransition = rememberInfiniteTransition(label = "tile_glow")
             val pulseScale by infiniteTransition.animateFloat(
                 initialValue = 1f,
-                targetValue = 1.4f,
-                animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+                targetValue = 1.6f,
+                animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
                 label = "pulse"
             )
             
             Box(
                 modifier = Modifier
-                    .size(if (isBomb) 32.dp else 24.dp)
+                    .size(if (isBomb) 16.dp else 12.dp)
                     .scale(pulseScale)
-                    .border(1.dp, accentColor.copy(alpha = 0.3f), CircleShape)
+                    .border(1.dp, accentColor.copy(alpha = 0.4f), CircleShape)
             )
         }
 
@@ -437,7 +759,8 @@ private fun BriefingOverlay(
     stage: GameStage?,
     selectedBoost: Boost?,
     onBoostSelect: (Boost) -> Unit,
-    onStart: () -> Unit
+    onStart: () -> Unit,
+    isLandscape: Boolean = false
 ) {
     Box(
         modifier = Modifier
@@ -448,114 +771,155 @@ private fun BriefingOverlay(
     ) {
         FliqCard(
             modifier = Modifier
-                .widthIn(max = 400.dp)
-                .padding(24.dp),
+                .widthIn(max = if (isLandscape) 600.dp else 400.dp)
+                .padding(if (isLandscape) 8.dp else 24.dp),
             elevation = FliqTheme.elevation.overlay
         ) {
             Column(
-                modifier = Modifier.padding(FliqTheme.spacing.cardPadding),
+                modifier = Modifier
+                    .padding(FliqTheme.spacing.cardPadding)
+                    .then(if (isLandscape) Modifier.verticalScroll(rememberScrollState()) else Modifier),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "STAGE ${stage?.stageNumber ?: 0}",
-                    style = FliqTheme.typography.label,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stage?.title?.uppercase() ?: "",
-                    style = FliqTheme.typography.heading,
-                    color = Color.White
-                )
-                
-                Spacer(modifier = Modifier.height(FliqTheme.spacing.large))
-                
-                FliqSurface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    showBorder = true
-                ) {
-                    Text(
-                        text = stage?.classType?.name ?: "",
-                        style = FliqTheme.typography.label.copy(fontSize = 10.sp),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(FliqTheme.spacing.large))
-
-                Column(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    stage?.goals?.forEach { goal ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Star,
-                                null,
-                                tint = if (goal.starIndex == 1) Color.White else Gold,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                    Column(horizontalAlignment = if (isLandscape) Alignment.Start else Alignment.CenterHorizontally) {
+                        Text(
+                            text = "STAGE ${stage?.stageNumber ?: 0}",
+                            style = FliqTheme.typography.label,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stage?.title?.uppercase() ?: "",
+                            style = FliqTheme.typography.heading.copy(fontSize = if (isLandscape) 20.sp else 24.sp),
+                            color = Color.White
+                        )
+                    }
+                    
+                    if (isLandscape) {
+                        FliqSurface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            showBorder = true
+                        ) {
                             Text(
-                                text = when (goal.type) {
-                                    GoalType.CLEAR -> "Finish the level"
-                                    GoalType.ACCURACY -> "Accuracy > ${(goal.targetValue * 100).toInt()}%"
-                                    GoalType.COMBO -> "Combo > ${goal.targetValue.toInt()}x"
-                                    GoalType.TIME -> "Finish in < ${goal.targetValue.toInt()}s"
-                                },
-                                style = FliqTheme.typography.body.copy(fontSize = 14.sp),
-                                color = Color.White.copy(alpha = 0.7f)
+                                text = stage?.classType?.name ?: "",
+                                style = FliqTheme.typography.label.copy(fontSize = 10.sp),
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
+                    }
+                }
+                
+                if (!isLandscape) {
+                    Spacer(modifier = Modifier.height(FliqTheme.spacing.large))
+                    
+                    FliqSurface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        showBorder = true
+                    ) {
+                        Text(
+                            text = stage?.classType?.name ?: "",
+                            style = FliqTheme.typography.label.copy(fontSize = 10.sp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(FliqTheme.spacing.large))
 
-                Text(
-                    "SELECT BOOST (OPTIONAL)",
-                    style = FliqTheme.typography.label.copy(fontSize = 10.sp),
-                    color = Color.White.copy(alpha = 0.4f)
-                )
-                Spacer(modifier = Modifier.height(FliqTheme.spacing.small))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Boost.entries.forEach { boost ->
-                        val isSelected = selectedBoost == boost
-                        FliqSurface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(64.dp)
-                                .clickable { onBoostSelect(boost) },
-                            shape = FliqTheme.shapes.medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f),
-                            showBorder = isSelected
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
+                val content = @Composable {
+                    Column(
+                        modifier = if (isLandscape) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        stage?.goals?.forEach { goal ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = boost.icon,
-                                    contentDescription = null,
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
-                                    modifier = Modifier.size(24.dp)
+                                    Icons.Default.Star,
+                                    null,
+                                    tint = if (goal.starIndex == 1) Color.White else Gold,
+                                    modifier = Modifier.size(16.dp)
                                 )
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    boost.title.uppercase(),
-                                    style = FliqTheme.typography.label.copy(fontSize = 8.sp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f)
+                                    text = when (goal.type) {
+                                        GoalType.CLEAR -> "Finish the level"
+                                        GoalType.ACCURACY -> "Accuracy > ${(goal.targetValue * 100).toInt()}%"
+                                        GoalType.COMBO -> "Combo > ${goal.targetValue.toInt()}x"
+                                        GoalType.TIME -> "Finish in < ${goal.targetValue.toInt()}s"
+                                    },
+                                    style = FliqTheme.typography.body.copy(fontSize = 14.sp),
+                                    color = Color.White.copy(alpha = 0.7f)
                                 )
+                            }
+                        }
+                    }
+
+                    if (isLandscape) Spacer(modifier = Modifier.width(24.dp))
+
+                    Column(
+                        modifier = if (isLandscape) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "SELECT BOOST (OPTIONAL)",
+                            style = FliqTheme.typography.label.copy(fontSize = 10.sp),
+                            color = Color.White.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(FliqTheme.spacing.small))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Boost.entries.forEach { boost ->
+                                val isSelected = selectedBoost == boost
+                                FliqSurface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(if (isLandscape) 56.dp else 64.dp)
+                                        .clickable { onBoostSelect(boost) },
+                                    shape = FliqTheme.shapes.medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f),
+                                    showBorder = isSelected
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = boost.icon,
+                                            contentDescription = null,
+                                            tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f),
+                                            modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp)
+                                        )
+                                        Text(
+                                            boost.title.uppercase(),
+                                            style = FliqTheme.typography.label.copy(fontSize = 8.sp),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.3f)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(FliqTheme.spacing.extraLarge))
+                if (isLandscape) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        content()
+                    }
+                } else {
+                    content()
+                }
+
+                Spacer(modifier = Modifier.height(if (isLandscape) FliqTheme.spacing.large else FliqTheme.spacing.extraLarge))
 
                 FliqButton(
                     text = "START ACTION",
@@ -583,12 +947,12 @@ private fun CountdownOverlay() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = "spec:width=800dp,height=360dp,orientation=landscape")
 @Composable
 fun GameScreenV2Preview() {
     FliqTheme {
         GameScreenV2(
-            gameState = GameStateV2.ACTION,
+            gameState = GameStateV2.IDLE,
             tiles = List(16) { TileV2(it, TileType.COIN, TileState.ACTIVE) },
             score = 1250,
             combo = 5,

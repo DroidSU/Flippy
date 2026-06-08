@@ -50,6 +50,7 @@ import com.fliq.core.theme.Gold
 import com.fliq.core.theme.components.FliqButton
 import com.fliq.core.theme.components.FliqCard
 import com.fliq.core.theme.components.FliqSurface
+import com.fliq.core.theme.components.StarBackground
 import kotlinx.coroutines.delay
 
 @Composable
@@ -82,6 +83,7 @@ fun VaultOverlay(
             .zIndex(20f),
         contentAlignment = Alignment.Center
     ) {
+        StarBackground()
         FliqCard(
             modifier = Modifier
                 .widthIn(max = 400.dp)

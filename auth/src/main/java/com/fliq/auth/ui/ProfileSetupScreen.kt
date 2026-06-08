@@ -82,6 +82,8 @@ fun ProfileSetupScreen(
     onSave: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(Unit) {
         if (username.isEmpty()) {
@@ -99,28 +101,33 @@ fun ProfileSetupScreen(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp, vertical = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(48.dp),
+                .padding(
+                    horizontal = if (isLandscape) 32.dp else 48.dp,
+                    vertical = if (isLandscape) 16.dp else 24.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(if (isLandscape) 32.dp else 48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Left Side: Avatar Selection
             Column(
                 modifier = Modifier
-                    .weight(1.2f)
+                    .weight(if (isLandscape) 1.5f else 1.2f)
                     .fillMaxHeight()
             ) {
                 SetupHeader(
                     title = "SELECT AVATAR",
-                    subtitle = "Pick your representation"
+                    subtitle = "Pick your representation",
+                    isLandscape = isLandscape
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(if (isLandscape) 8.dp else 16.dp))
                 
                 Box(modifier = Modifier.weight(1f)) {
                     AvatarGrid(
                         selectedId = avatarId,
                         onAvatarSelected = onAvatarChanged,
-                        isLoading = isLoading
+                        isLoading = isLoading,
+                        columns = 4
                     )
                 }
             }
@@ -130,43 +137,50 @@ fun ProfileSetupScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = if (isLandscape) Arrangement.Top else Arrangement.Center
             ) {
                 SetupHeader(
                     title = "PROFILE DETAILS",
-                    subtitle = "Set display name"
+                    subtitle = "Set display name",
+                    isLandscape = isLandscape
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
 
                 TechnicalUsernameField(
                     username = username,
                     onUsernameChanged = onUsernameChanged,
                     isLoading = isLoading,
-                    focusRequester = focusRequester
+                    focusRequester = focusRequester,
+                    height = if (isLandscape) 56.dp else 68.dp
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(if (isLandscape) 20.dp else 32.dp))
 
                 ConfirmSetupButton(
                     text = "COMPLETE SETUP",
                     onClick = onSave,
                     isLoading = isLoading,
-                    enabled = username.isNotBlank()
+                    enabled = username.isNotBlank(),
+                    height = if (isLandscape) 52.dp else 60.dp
                 )
+
+                if (isLandscape) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SetupHeader(title: String, subtitle: String) {
+private fun SetupHeader(title: String, subtitle: String, isLandscape: Boolean = false) {
     Column {
         Text(
             text = title,
             style = FliqTheme.typography.label.copy(
-                fontSize = 12.sp,
-                letterSpacing = 4.sp,
+                fontSize = if (isLandscape) 10.sp else 12.sp,
+                letterSpacing = if (isLandscape) 3.sp else 4.sp,
                 fontWeight = FontWeight.ExtraBold
             ),
             color = MaterialTheme.colorScheme.primary
@@ -174,13 +188,13 @@ private fun SetupHeader(title: String, subtitle: String) {
         Text(
             text = subtitle.uppercase(),
             style = FliqTheme.typography.heading.copy(
-                fontSize = 24.sp,
+                fontSize = if (isLandscape) 18.sp else 24.sp,
                 fontWeight = FontWeight.Bold
             ),
             color = Color.White
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(modifier = Modifier.size(50.dp, 2.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)))
+        Spacer(modifier = Modifier.height(if (isLandscape) 6.dp else 12.dp))
+        Box(modifier = Modifier.size(if (isLandscape) 40.dp else 50.dp, 2.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)))
     }
 }
 
@@ -189,12 +203,13 @@ fun TechnicalUsernameField(
     username: String,
     onUsernameChanged: (String) -> Unit,
     isLoading: Boolean,
-    focusRequester: FocusRequester
+    focusRequester: FocusRequester,
+    height: androidx.compose.ui.unit.Dp = 68.dp
 ) {
     FliqSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(68.dp),
+            .height(height),
         shape = RoundedCornerShape(18.dp),
         color = Color.White.copy(alpha = 0.05f),
         showBorder = true,
@@ -212,7 +227,7 @@ fun TechnicalUsernameField(
                     .focusRequester(focusRequester),
                 textStyle = FliqTheme.typography.heading.copy(
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = if (height < 60.dp) 18.sp else 20.sp,
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.Bold
                 ),
@@ -226,7 +241,7 @@ fun TechnicalUsernameField(
                             text = "PLAYER NAME",
                             style = FliqTheme.typography.heading.copy(
                                 color = Color.White.copy(alpha = 0.2f),
-                                fontSize = 18.sp
+                                fontSize = if (height < 60.dp) 16.sp else 18.sp
                             )
                         )
                     }
@@ -238,7 +253,12 @@ fun TechnicalUsernameField(
                 onClick = { onUsernameChanged(UtilityMethods.generateUniqueUsername()) },
                 enabled = !isLoading
             ) {
-                Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    Icons.Default.Refresh, 
+                    null, 
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(if (height < 60.dp) 20.dp else 24.dp)
+                )
             }
         }
     }
@@ -248,10 +268,11 @@ fun TechnicalUsernameField(
 fun AvatarGrid(
     selectedId: Int,
     onAvatarSelected: (Int) -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    columns: Int = 4
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
+        columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -315,7 +336,8 @@ fun ConfirmSetupButton(
     text: String,
     onClick: () -> Unit,
     isLoading: Boolean,
-    enabled: Boolean
+    enabled: Boolean,
+    height: androidx.compose.ui.unit.Dp = 60.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -325,7 +347,7 @@ fun ConfirmSetupButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(height)
             .scale(scale)
             .alpha(if (enabled) 1f else 0.5f)
             .background(
@@ -436,7 +458,7 @@ private fun FloatingSpaceParticle(config: android.content.res.Configuration) {
     )
 }
 
-@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,orientation=landscape")
+@Preview(showBackground = true, device = "spec:width=800dp,height=360dp,orientation=landscape")
 @Composable
 fun ProfileSetupScreenPreview() {
     FliqTheme {

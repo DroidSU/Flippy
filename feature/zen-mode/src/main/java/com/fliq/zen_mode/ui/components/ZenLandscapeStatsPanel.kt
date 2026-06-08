@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fliq.common.UtilityMethods
 import com.fliq.core.theme.FliqTheme
+import com.fliq.core.theme.components.BeatingHeartIcon
 import com.fliq.core.util.ChamferedCornerShape
 
 @Composable

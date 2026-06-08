@@ -47,6 +47,7 @@ class CalibrationActivity : ComponentActivity() {
         setContent {
             FliqTheme(settingsRepository = settingsRepository) {
                 val uiState by viewModel.uiState.collectAsState()
+                val calState by viewModel.calibrationState.collectAsState()
 
                 if (uiState is AppUIState.Success) {
                     startActivity(Intent(this, MainActivity::class.java))
@@ -59,9 +60,18 @@ class CalibrationActivity : ComponentActivity() {
                 }
 
                 ReflexCalibrationScreen(
+                    currentState = calState.currentState,
+                    currentTrial = calState.currentTrial,
+                    totalTrials = calState.totalTrials,
+                    lastOffset = calState.lastOffset,
+                    trials = calState.trials,
+                    averageOffset = calState.averageOffset,
+                    onStartCalibration = viewModel::startCalibration,
+                    onRecordTrial = viewModel::recordTrial,
                     onCalibrationComplete = { offset ->
                         viewModel.saveLatencyOffset(offset)
                     },
+                    onRetake = viewModel::startCalibration,
                     onDismiss = {
                         finish()
                     },
