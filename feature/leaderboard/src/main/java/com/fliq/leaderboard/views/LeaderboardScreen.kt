@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +88,8 @@ fun LeaderboardScreen(
         Challenge.FRENZY -> Gold
     }
 
+    val layoutDirection = LocalLayoutDirection.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -99,66 +104,77 @@ fun LeaderboardScreen(
                 LeaderboardTopBar(onBackClick = onBackClick)
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                // 1. Challenge Selector
-                ChallengeSelectorTabs(
-                    selectedChallenge = selectedChallenge,
-                    onChallengeSelected = onChallengeSelected
-                )
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = paddingValues.calculateStartPadding(layoutDirection),
+                            end = paddingValues.calculateEndPadding(layoutDirection),
+                            top = paddingValues.calculateTopPadding()
+                        )
+                ) {
+                    // 1. Challenge Selector
+                    ChallengeSelectorTabs(
+                        selectedChallenge = selectedChallenge,
+                        onChallengeSelected = onChallengeSelected
+                    )
 
-                if (uiState is AppUIState.Loading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = accentColor)
-                    }
-                } else if (leaderboard.isEmpty()) {
-                    EmptyLeaderboardState(accentColor = accentColor)
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 120.dp)
-                    ) {
-                        // 2. Champions Podium
-                        if (leaderboard.isNotEmpty()) {
-                            item {
-                                ChampionsPodium(
-                                    topThree = leaderboard.take(3)
+                    if (uiState is AppUIState.Loading) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = accentColor)
+                        }
+                    } else if (leaderboard.isEmpty()) {
+                        EmptyLeaderboardState(accentColor = accentColor)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = paddingValues.calculateBottomPadding() + 120.dp)
+                        ) {
+                            // 2. Champions Podium
+                            if (leaderboard.isNotEmpty()) {
+                                item {
+                                    ChampionsPodium(
+                                        topThree = leaderboard.take(3)
+                                    )
+                                }
+                            }
+
+                            // 3. Global Rankings (4+)
+                            val remainingRankings = if (leaderboard.size > 3) leaderboard.drop(3) else emptyList()
+                            itemsIndexed(remainingRankings) { index, item ->
+                                RankingRowItem(
+                                    rank = index + 4,
+                                    model = item,
+                                    isCurrentUser = item.playerId == currentUserId,
+                                    accentColor = accentColor
                                 )
                             }
                         }
-
-                        // 3. Global Rankings (4+)
-                        val remainingRankings = if (leaderboard.size > 3) leaderboard.drop(3) else emptyList()
-                        itemsIndexed(remainingRankings) { index, item ->
-                            RankingRowItem(
-                                rank = index + 4,
-                                model = item,
-                                isCurrentUser = item.playerId == currentUserId,
-                                accentColor = accentColor
-                            )
-                        }
                     }
                 }
-            }
 
-            // 4. Fixed Personal Rank HUD
-            val myRankItem = leaderboard.find { it.playerId == currentUserId }
-            val myRankIndex = if (myRankItem != null) leaderboard.indexOf(myRankItem) + 1 else -1
+                // 4. Fixed Personal Rank HUD
+                val myRankItem = leaderboard.find { it.playerId == currentUserId }
+                val myRankIndex = if (myRankItem != null) leaderboard.indexOf(myRankItem) + 1 else -1
 
-            if (myRankIndex != -1) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 32.dp, start = 24.dp, end = 24.dp)
-                ) {
-                    PersonalRankHUD(
-                        rank = myRankIndex,
-                        model = myRankItem!!,
-                        accentColor = accentColor
-                    )
+                // Hide HUD if user is in top 5 or not in the list
+                if (myRankIndex > 5) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(
+                                start = 24.dp + paddingValues.calculateStartPadding(layoutDirection),
+                                end = 24.dp + paddingValues.calculateEndPadding(layoutDirection),
+                                bottom = 32.dp + paddingValues.calculateBottomPadding()
+                            )
+                    ) {
+                        PersonalRankHUD(
+                            rank = myRankIndex,
+                            model = myRankItem!!,
+                            accentColor = accentColor
+                        )
+                    }
                 }
             }
         }

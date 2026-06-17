@@ -76,7 +76,7 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admob_app_id}" />
 
-        <provider xmlns:tools="http://schemas.android.com/tools"
+        <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false">

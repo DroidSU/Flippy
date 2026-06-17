@@ -386,6 +386,7 @@ class ZenViewModel @Inject constructor(
         coinsMissedConsecutively++
         if (perfectStreak < _streak.value) perfectStreak = _streak.value
         _streak.value = 0
+
         if (coinsMissedConsecutively >= threshold) {
             _lives.update { (it - 1).coerceAtLeast(0) }
             coinsMissedConsecutively = 0

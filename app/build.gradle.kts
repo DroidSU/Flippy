@@ -16,6 +16,8 @@ if (localPropertiesFile.exists()) {
 }
 
 val googleWebClientId: String = localProperties.getProperty("google.web.client.id") ?: ""
+val releaseAdmobAppId: String = localProperties.getProperty("admob.app.id") ?: ""
+val releaseAdmobRewardedInterstitialId: String = localProperties.getProperty("admob.adunit.rewarded_interstitial") ?: ""
 
 android {
     namespace = "com.fliq"
@@ -25,8 +27,8 @@ android {
         applicationId = "com.fliq"
         minSdk = 28
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 5
+        versionName = "1.4-rc.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -50,7 +52,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Test AdMob IDs
+            // Test AdMob IDs (current ones)
             manifestPlaceholders["admob_app_id"] = "ca-app-pub-1987028719507493~7400511270"
             buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/5354046379\"")
         }
@@ -63,12 +65,9 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             
-            // Forces use of Test IDs during Alpha testing
-            val testAppId = "ca-app-pub-1987028719507493~7400511270"
-            val testAdUnitId = "ca-app-pub-3940256099942544/5354046379"
-            
-            manifestPlaceholders["admob_app_id"] = testAppId
-            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$testAdUnitId\"")
+            // Production AdMob IDs from local.properties
+            manifestPlaceholders["admob_app_id"] = releaseAdmobAppId
+            buildConfigField("String", "ADMOB_REWARDED_INTERSTITIAL_ID", "\"$releaseAdmobRewardedInterstitialId\"")
         }
     }
     compileOptions {

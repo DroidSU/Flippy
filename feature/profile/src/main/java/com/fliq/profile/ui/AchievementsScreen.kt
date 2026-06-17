@@ -310,7 +310,7 @@ private fun AchievementGridItem(
                             Icon(
                                 imageVector = badge.icon,
                                 contentDescription = null,
-                                tint = accentColor,
+                                tint = badge.iconTint ?: accentColor,
                                 modifier = Modifier.size(22.dp)
                             )
                         } else {

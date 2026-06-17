@@ -188,7 +188,7 @@ fun MeshBackground(streak: Int = 0) {
     
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val particleCount = if (isLandscape) 25 else 15
+    val particleCount = if (isLandscape) 25 else 20
 
     // Floating Particles
     repeat(particleCount) {

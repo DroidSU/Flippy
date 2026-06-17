@@ -23,8 +23,8 @@ object AchievementManager {
         }
 
         // Survivor
-        if (match.gameDuration >= 60000) unlockedBadges.add(Badge.STAYIN_ALIVE)
-        if (match.gameDuration >= 300000) unlockedBadges.add(Badge.MARATHONER)
+//        if (match.gameDuration >= 60000) unlockedBadges.add(Badge.STAYIN_ALIVE)
+//        if (match.gameDuration >= 300000) unlockedBadges.add(Badge.MARATHONER)
         if (clutchTime >= 30000) unlockedBadges.add(Badge.AGAINST_ALL_ODDS)
 
         // Perfectionist
@@ -62,7 +62,7 @@ object AchievementManager {
         }
         
         if (match.challengeName == "ZEN_MODE" && match.score >= 50) {
-            unlockedBadges.add(Badge.ZEN_MASTER)
+//            unlockedBadges.add(Badge.ZEN_MASTER)
         }
 
         return unlockedBadges

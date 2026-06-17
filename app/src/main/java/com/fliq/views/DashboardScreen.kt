@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,6 +61,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -91,6 +94,7 @@ fun DashboardScreen(
     onSettingsClick: () -> Unit
 ) {
     val gameColors = MaterialTheme.gameColors
+    val layoutDirection = LocalLayoutDirection.current
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -106,7 +110,11 @@ fun DashboardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(
+                        top = innerPadding.calculateTopPadding(),
+                        start = innerPadding.calculateStartPadding(layoutDirection),
+                        end = innerPadding.calculateEndPadding(layoutDirection)
+                    )
             ) {
                 DashboardHeader(
                     userName = userName,
@@ -115,7 +123,12 @@ fun DashboardScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 24.dp),
+                    contentPadding = PaddingValues(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 24.dp,
+                        bottom = innerPadding.calculateBottomPadding() + 110.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
@@ -161,10 +174,6 @@ fun DashboardScreen(
                             )
                         }
                     }
-
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
                 }
             }
 
@@ -172,7 +181,11 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
+                    .padding(
+                        start = innerPadding.calculateStartPadding(layoutDirection),
+                        end = innerPadding.calculateEndPadding(layoutDirection),
+                        bottom = innerPadding.calculateBottomPadding() + 32.dp
+                    )
             ) {
                 DashboardNavBar(
                     onLeaderboardClick = onLeaderboardClick,
